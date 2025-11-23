@@ -1,0 +1,20 @@
+5-11-20 Todo
+Save SampleDirectory CheckStatus
+Add number keys to associate with sample (keep it mono sound, but faster swapping 
+    • Add Cue Point Saving, hold 1 second to set at the current point, 3 seconds to remove cue for any key, handle key event. Save, Load, and Reset the cue points bound to buttons, but the actual cue points are saved to the sample
+    • Cue Points:
+        ◦ Save Cue Points on the Sample
+        ◦ The Cue Point Keyboard Button Configuration is saved by user action exclusively, does not save on close.
+    • Add Audio Player Box with controls, time bar
+    • Add Extended Sample Editor, with advanced editing of cue points, view all tags, ect. 
+        ◦ Possibly take up space with the audioplayer, but the selected sample in the extended editor does not need to be the one that was just playing
+    • Add Sample Notes with the Information I Circle that can be hovered over to show any inputted info
+        ◦ Only Show the Circle I if anything was inputted by user
+        ◦ Edit the note in the extended editor
+    • Add Window Option to allow showing/hiding select windows
+    • Add Exit Warning
+        ◦ All Cue Points will be unbound, are you sure you want to quit?
+    • Add small effect changes
+        ◦ Audio Playback Speed
+        ◦ Filters?
+    • Ableton Sync? (VST probably)
