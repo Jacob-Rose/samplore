@@ -202,55 +202,62 @@ void SampleTile::mouseUp(const MouseEvent& e)
 			}
 			*/
 			else
-			{	
+			{
 				PopupMenu menu;
 				menu.addItem((int)RightClickOptions::openExplorer, "Open in Explorer", true, false); //QEDITOR IS THE PLACE TO BREAK A SAMPLE
 				menu.addSeparator();
 				menu.addItem((int)RightClickOptions::renameSample, "Rename", true, false);
 				menu.addItem((int)RightClickOptions::deleteSample, "Move To Trash", true, false);
-				//menu.addSeparator();
-				//menu.addItem((int)RightClickOptions::addTriggerKeyAtStart, "Add Trigger at Start", false, false);
-				//menu.addItem((int)RightClickOptions::addTriggerKeyAtCue, "Add Trigger at Cue", false, false);
-				int selection = menu.show();
-				if (selection == (int)RightClickOptions::openExplorer)
+
+				auto sampleFile = mSample.getFile();
+				menu.showMenuAsync(PopupMenu::Options(), [this, sampleFile](int selection)
 				{
-					mSample.getFile().revealToUser();
-				}
-				else if (selection == (int)RightClickOptions::renameSample)
-				{
-					//rename sample (do not activate until the list updated with the new name)
-					FileChooser newFile("rename file", mSample.getFile());
-					if (newFile.browseForFileToSave(true))
+					if (selection == (int)RightClickOptions::openExplorer)
 					{
-						if (mSample.getFile().moveFileTo(newFile.getResult()))
-						{
-							SamplifyProperties::getInstance()->getSampleLibrary()->refreshCurrentSamples();
-						}
+						sampleFile.revealToUser();
 					}
-				}
-				else if (selection == (int)RightClickOptions::deleteSample)
-				{
-					int shouldDelete = NativeMessageBox::showYesNoBox(AlertWindow::AlertIconType::WarningIcon, "Delete Sample?", "Are you sure you want to delete this sample?");
-					if (shouldDelete == 1)
+					else if (selection == (int)RightClickOptions::renameSample)
 					{
-						if (mSample.getFile().moveToTrash())
-						{
-							SamplifyProperties::getInstance()->getSampleLibrary()->refreshCurrentSamples();
-						}
-						else
-						{
-							NativeMessageBox::showMessageBox(AlertWindow::AlertIconType::WarningIcon, "Error in Throwing Away", "Failed to move item to trash, check if it is full!");
-						}
+						mFileChooser = std::make_unique<FileChooser>("rename file", sampleFile);
+						mFileChooser->launchAsync(FileBrowserComponent::saveMode | FileBrowserComponent::canSelectFiles,
+							[this, sampleFile](const FileChooser& fc)
+							{
+								auto result = fc.getResult();
+								if (result != File() && sampleFile.moveFileTo(result))
+								{
+									SamplifyProperties::getInstance()->getSampleLibrary()->refreshCurrentSamples();
+								}
+							});
 					}
-				}
-				else if (selection == (int)RightClickOptions::addTriggerKeyAtStart)
-				{
-					//todo
-				}
-				else if (selection == (int)RightClickOptions::addTriggerKeyAtCue)
-				{
-					//todo
-				}
+					else if (selection == (int)RightClickOptions::deleteSample)
+					{
+						auto options = MessageBoxOptions()
+							.withIconType(MessageBoxIconType::WarningIcon)
+							.withTitle("Delete Sample?")
+							.withMessage("Are you sure you want to delete this sample?")
+							.withButton("Yes")
+							.withButton("No");
+						NativeMessageBox::showAsync(options, [sampleFile](int result)
+						{
+							if (result == 1) // Yes
+							{
+								if (sampleFile.moveToTrash())
+								{
+									SamplifyProperties::getInstance()->getSampleLibrary()->refreshCurrentSamples();
+								}
+								else
+								{
+									auto errorOptions = MessageBoxOptions()
+										.withIconType(MessageBoxIconType::WarningIcon)
+										.withTitle("Error in Throwing Away")
+										.withMessage("Failed to move item to trash, check if it is full!")
+										.withButton("OK");
+									NativeMessageBox::showAsync(errorOptions, nullptr);
+								}
+							}
+						});
+					}
+				});
 			}
 		}
 	}

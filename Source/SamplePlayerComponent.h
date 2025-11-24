@@ -51,6 +51,10 @@ namespace samplify
 
         Rectangle<int> m_ThumbnailRect;
         Rectangle<int> m_TitleRect;
+
+        std::unique_ptr<ColourSelector> mColourSelector;
+        void onColourChanged(Colour newColour);
+
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SamplePlayerComponent)
     };
 }

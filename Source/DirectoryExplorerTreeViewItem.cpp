@@ -168,7 +168,7 @@ void DirectoryExplorerTreeViewItem::paintOpenCloseButton(Graphics& g, const Rect
 
 void DirectoryExplorerTreeViewItem::itemOpennessChanged(bool isNowOpen)
 {
-	if (isNowOpen)
+	if (isNowOpen && mShouldUseFile && mSampleDirectory != nullptr)
 	{
 		if (getNumSubItems() == 0)
 		{
@@ -176,7 +176,7 @@ void DirectoryExplorerTreeViewItem::itemOpennessChanged(bool isNowOpen)
 			int childDirCount = mSampleDirectory->getChildDirectoryCount();
 			for (int i = 0; i < childDirCount; i++)
 			{
-				DirectoryExplorerTreeViewItem* item = new DirectoryExplorerTreeViewItem(mSampleDirectory->getChildDirectory(i));  
+				DirectoryExplorerTreeViewItem* item = new DirectoryExplorerTreeViewItem(mSampleDirectory->getChildDirectory(i));
 				addSubItem(item);
 			}
 		}
@@ -201,15 +201,19 @@ void DirectoryExplorerTreeViewItem::itemClicked(const MouseEvent& e)
 		{
 			PopupMenu dirOptions;
 			dirOptions.addItem(1, "Select Exclusively");
-			int selection = dirOptions.show();
-			if (selection == 1)
+			auto* parentItem = getParentItem();
+			auto* sampleDir = mSampleDirectory.get();
+			dirOptions.showMenuAsync(PopupMenu::Options(), [parentItem, sampleDir](int selection)
 			{
-				if (DirectoryExplorerTreeViewItem* dirTVI = dynamic_cast<DirectoryExplorerTreeViewItem*>(getParentItem()))
+				if (selection == 1)
 				{
-					dirTVI->mSampleDirectory->setCheckStatus(CheckStatus::Disabled);
+					if (DirectoryExplorerTreeViewItem* dirTVI = dynamic_cast<DirectoryExplorerTreeViewItem*>(parentItem))
+					{
+						dirTVI->mSampleDirectory->setCheckStatus(CheckStatus::Disabled);
+					}
+					sampleDir->setCheckStatus(CheckStatus::Enabled);
 				}
-				mSampleDirectory->setCheckStatus(CheckStatus::Enabled);
-			}
+			});
 		}
 	}
 }

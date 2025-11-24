@@ -49,6 +49,13 @@ SamplePlayerComponent::~SamplePlayerComponent()
 
 void SamplePlayerComponent::changeListenerCallback(ChangeBroadcaster* source)
 {
+    // Handle colour selector changes
+    if (auto* selector = dynamic_cast<ColourSelector*>(source))
+    {
+        onColourChanged(selector->getCurrentColour());
+        return;
+    }
+
     Sample::Reference samp = getCurrentSample();
     if (!samp.isNull())
     {
@@ -77,21 +84,26 @@ void SamplePlayerComponent::textEditorTextChanged(TextEditor& e)
     getCurrentSample().setInfoText(e.getText());
 }
 
+void SamplePlayerComponent::onColourChanged(Colour newColour)
+{
+    Sample::Reference samp = getCurrentSample();
+    mSampleColorSelectorButton.setColour(TextButton::buttonColourId, newColour);
+    mSampleColorSelectorButton.setColour(TextButton::textColourOffId, newColour.getPerceivedBrightness() > 0.5f ? Colours::black : Colours::white);
+    samp.setColor(newColour);
+    resized();
+}
+
 void SamplePlayerComponent::buttonClicked(Button* b)
 {
     Sample::Reference samp = getCurrentSample();
     if (b->getName() == "SetSampleColor")
     {
-        //todo
-        ColourSelector selector;
-        selector.setSize(200, 200);
-        selector.setCurrentColour(samp.getColor().withAlpha(1.0f));
-        CallOutBox box = CallOutBox(selector, Rectangle<int>(0, 0, 200, 200), this);
-        box.runModalLoop();
-        mSampleColorSelectorButton.setColour(TextButton::buttonColourId, selector.getCurrentColour());
-        mSampleColorSelectorButton.setColour(TextButton::textColourOffId, selector.getCurrentColour().getPerceivedBrightness() > 0.5f ? Colours::black : Colours::white);
-        samp.setColor(selector.getCurrentColour());
-        resized();
+        mColourSelector = std::make_unique<ColourSelector>();
+        mColourSelector->setSize(200, 200);
+        mColourSelector->setCurrentColour(samp.getColor().withAlpha(1.0f));
+        mColourSelector->addChangeListener(this);
+        auto* selector = mColourSelector.get();
+        CallOutBox::launchAsynchronously(std::move(mColourSelector), b->getScreenBounds(), nullptr);
     }
     else if (b->getName() == "RemoveSampleColor")
     {
@@ -100,15 +112,13 @@ void SamplePlayerComponent::buttonClicked(Button* b)
     }
     else if (b->getName() == "ParentFolders")
     {
-        //todo
-        PopupMenu dirMenu = PopupMenu();
+        PopupMenu dirMenu;
         StringArray parentFolders = samp.getRelativeParentFolders();
         for (int i = 0; i < parentFolders.size(); i++)
         {
-            dirMenu.addItem(parentFolders[i]);
+            dirMenu.addItem(i + 1, parentFolders[i]);
         }
-        dirMenu.show();
-
+        dirMenu.showMenuAsync(PopupMenu::Options());
     }
 }
 

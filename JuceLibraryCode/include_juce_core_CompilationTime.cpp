@@ -6,4 +6,4 @@
 */
 
 #include "AppConfig.h"
-#include <juce_audio_processors/juce_audio_processors_ara.cpp>
+#include <juce_core/juce_core_CompilationTime.cpp>

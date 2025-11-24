@@ -85,6 +85,8 @@ namespace samplify
 
 		const int INFO_ICON_PADDING = 4;
 
+		std::unique_ptr<FileChooser> mFileChooser;
+
 		//Rectangle<float> m_FavoriteButtonRect;
 		//Rectangle<float> m_SaveForLaterRect;
 

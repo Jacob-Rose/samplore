@@ -54,6 +54,9 @@ namespace samplify
 		StringArray getMenuBarNames() override;
 		PopupMenu getMenuForIndex(int topLevelMenuIndex, const String& menuName) override;
 		void menuItemSelected(int menuItemID, int topLevelMenuIndex) override;
+
+	private:
+		std::unique_ptr<AlertWindow> mVolumeWindow;
 	};
 }
 #endif

@@ -13,7 +13,7 @@
 
 #include <JuceHeader.h>
 
-const enum class SortingMethod
+enum class SortingMethod
 {
 	None,//just append all additions
 	Newest,

@@ -22,13 +22,14 @@ namespace samplify
         PreferenceWindow();
         void closeButtonPressed() override { exitModalState(0); }
 
-        class View : public Component, public Button::Listener, public TextEditor::Listener
+        class View : public Component, public Button::Listener, public TextEditor::Listener, public ChangeListener
         {
         public:
             View();
 
             void buttonClicked(Button*) override;
             void textEditorTextChanged(TextEditor&) override;
+            void changeListenerCallback(ChangeBroadcaster* source) override;
 
             void paint(Graphics& g) override;
 
@@ -37,6 +38,9 @@ namespace samplify
             TextButton mAccentColorButton;
             TextEditor mSampleMinSizeValue;
             TextEditor mThumbnailLineCount;
+        private:
+            std::unique_ptr<ColourSelector> mColourSelector;
+            bool mEditingPrimaryColor = false;
         };
     private:
         View mView;

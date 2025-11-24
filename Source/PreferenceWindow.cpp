@@ -49,27 +49,42 @@ void PreferenceWindow::View::buttonClicked(Button* button)
 {
     if (button->getName() == "Set Primary Color")
     {
-        ColourSelector selector;
-        selector.setSize(200, 200);
-        selector.setCurrentColour(AppValues::getInstance().MAIN_BACKGROUND_COLOR);
-        CallOutBox box = CallOutBox(selector, Rectangle<int>(0, 0, 100, 100), this);
-        box.runModalLoop();
-        mPrimaryColorButton.setColour(TextButton::buttonColourId, selector.getCurrentColour());
-        mPrimaryColorButton.setColour(TextButton::textColourOffId, selector.getCurrentColour().getPerceivedBrightness() > 0.5f ? Colours::black : Colours::white);
-        AppValues::getInstance().MAIN_BACKGROUND_COLOR = selector.getCurrentColour();
-        SamplifyMainComponent::setupLookAndFeel(getLookAndFeel());
-        //todo setup laf
+        mEditingPrimaryColor = true;
+        mColourSelector = std::make_unique<ColourSelector>();
+        mColourSelector->setSize(200, 200);
+        mColourSelector->setCurrentColour(AppValues::getInstance().MAIN_BACKGROUND_COLOR);
+        mColourSelector->addChangeListener(this);
+        CallOutBox::launchAsynchronously(std::move(mColourSelector), button->getScreenBounds(), nullptr);
     }
     else if (button->getName() == "Set Accent Color")
     {
-        ColourSelector selector;
-        selector.setSize(200, 200);
-        selector.setCurrentColour(AppValues::getInstance().MAIN_FOREGROUND_COLOR);
-        CallOutBox box = CallOutBox(selector, Rectangle<int>(0, 0, 100, 100), this);
-        box.runModalLoop();
-        mAccentColorButton.setColour(TextButton::buttonColourId, selector.getCurrentColour());
-        mAccentColorButton.setColour(TextButton::textColourOffId, selector.getCurrentColour().getPerceivedBrightness() > 0.5f ? Colours::black : Colours::white);
-        AppValues::getInstance().MAIN_FOREGROUND_COLOR = selector.getCurrentColour();
+        mEditingPrimaryColor = false;
+        mColourSelector = std::make_unique<ColourSelector>();
+        mColourSelector->setSize(200, 200);
+        mColourSelector->setCurrentColour(AppValues::getInstance().MAIN_FOREGROUND_COLOR);
+        mColourSelector->addChangeListener(this);
+        CallOutBox::launchAsynchronously(std::move(mColourSelector), button->getScreenBounds(), nullptr);
+    }
+}
+
+void PreferenceWindow::View::changeListenerCallback(ChangeBroadcaster* source)
+{
+    if (auto* selector = dynamic_cast<ColourSelector*>(source))
+    {
+        Colour newColour = selector->getCurrentColour();
+        if (mEditingPrimaryColor)
+        {
+            mPrimaryColorButton.setColour(TextButton::buttonColourId, newColour);
+            mPrimaryColorButton.setColour(TextButton::textColourOffId, newColour.getPerceivedBrightness() > 0.5f ? Colours::black : Colours::white);
+            AppValues::getInstance().MAIN_BACKGROUND_COLOR = newColour;
+            SamplifyMainComponent::setupLookAndFeel(getLookAndFeel());
+        }
+        else
+        {
+            mAccentColorButton.setColour(TextButton::buttonColourId, newColour);
+            mAccentColorButton.setColour(TextButton::textColourOffId, newColour.getPerceivedBrightness() > 0.5f ? Colours::black : Colours::white);
+            AppValues::getInstance().MAIN_FOREGROUND_COLOR = newColour;
+        }
     }
 }
 

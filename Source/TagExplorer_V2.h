@@ -33,6 +33,7 @@ namespace samplify
 		TextButton mNewButtonTag;
 		Viewport mTagViewport;
 		TagContainer mTagsContainer;
+		std::unique_ptr<AlertWindow> mAlertWindow;
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TagExplorer_V2)
 	};
 }

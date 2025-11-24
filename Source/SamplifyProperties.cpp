@@ -23,14 +23,16 @@ SamplifyProperties::~SamplifyProperties()
 	cleanup();
 }
 
-File SamplifyProperties::browseForDirectory()
+void SamplifyProperties::browseForDirectory(std::function<void(const File&)> callback)
 {
-	FileChooser dirSelector(String("Select Music Directory"), File::getSpecialLocation(File::userHomeDirectory));
-	if (dirSelector.browseForDirectory())
-	{
-		return dirSelector.getResult();
-	}
-	return File();
+	mFileChooser = std::make_unique<FileChooser>("Select Music Directory", File::getSpecialLocation(File::userHomeDirectory));
+	mFileChooser->launchAsync(FileBrowserComponent::openMode | FileBrowserComponent::canSelectDirectories,
+		[callback](const FileChooser& fc)
+		{
+			auto result = fc.getResult();
+			if (callback)
+				callback(result);
+		});
 }
 
 void SamplifyProperties::cleanupInstance()
@@ -84,11 +86,13 @@ void SamplifyProperties::loadPropertiesFile()
 		int dirCount = propFile->getIntValue("directory count");
 		if (dirCount == 0)
 		{
-			File dir = browseForDirectory();
-			if (dir.exists())
+			browseForDirectory([this](const File& dir)
 			{
-				mSampleLibrary->addDirectory(dir);
-			}
+				if (dir.exists())
+				{
+					mSampleLibrary->addDirectory(dir);
+				}
+			});
 		}
 		else
 		{
@@ -122,11 +126,13 @@ void SamplifyProperties::loadPropertiesFile()
 	else
 	{
 		//run initial setup here
-		File dir = browseForDirectory();
-		if (dir.exists())
+		browseForDirectory([this](const File& dir)
 		{
-			mSampleLibrary->addDirectory(dir);
-		}
+			if (dir.exists())
+			{
+				mSampleLibrary->addDirectory(dir);
+			}
+		});
 	}
 }
 

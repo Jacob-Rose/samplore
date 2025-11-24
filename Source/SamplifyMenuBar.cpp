@@ -17,26 +17,44 @@ void SamplifyMainMenu::menuItemSelected(int menuItemID, int topLevelMenuIndex)
 {
 	if (menuItemID == addDirectory)
 	{
-		File dir = SamplifyProperties::browseForDirectory();
-		if (dir.exists())
+		SamplifyProperties::getInstance()->browseForDirectory([](const File& dir)
 		{
-			SamplifyProperties::getInstance()->getSampleLibrary()->addDirectory(dir);
-		}
+			if (dir.exists())
+			{
+				SamplifyProperties::getInstance()->getSampleLibrary()->addDirectory(dir);
+			}
+		});
 	}
 	else if (menuItemID == setVolume)
 	{
-		Slider slider;
-		slider.setRange(0, 2);
-		slider.setBounds(0, 0, 200, 40);
-		DialogWindow::showModalDialog("Set Gain", &slider, nullptr, Colours::slategrey, true, false);
-		SamplifyProperties::getInstance()->getAudioPlayer()->setVolumeMultiply(slider.getValue());
+		mVolumeWindow = std::make_unique<AlertWindow>("Set Gain", "", MessageBoxIconType::NoIcon);
+		mVolumeWindow->addCustomComponent(new Slider());
+		if (auto* slider = dynamic_cast<Slider*>(mVolumeWindow->getCustomComponent(0)))
+		{
+			slider->setRange(0, 2);
+			slider->setSize(200, 40);
+		}
+		mVolumeWindow->addButton("OK", 1);
+		mVolumeWindow->enterModalState(true, ModalCallbackFunction::create([this](int result)
+		{
+			if (result == 1 && mVolumeWindow)
+			{
+				if (auto* slider = dynamic_cast<Slider*>(mVolumeWindow->getCustomComponent(0)))
+				{
+					SamplifyProperties::getInstance()->getAudioPlayer()->setVolumeMultiply(slider->getValue());
+				}
+			}
+			mVolumeWindow.reset();
+		}), true);
 	}
 	else if (menuItemID == setPreferences)
 	{
-		PreferenceWindow window;
-		window.runModalLoop();
-		//NativeMessageBox::showMessageBox(AlertWindow::AlertIconType::InfoIcon, "Restart required", "Restarting is mandatory in order to ensure all changes show themselves");
-		JUCEApplication::getInstance()->systemRequestedQuit();
+		auto* window = new PreferenceWindow();
+		window->enterModalState(true, ModalCallbackFunction::create([window](int)
+		{
+			delete window;
+			JUCEApplication::getInstance()->systemRequestedQuit();
+		}), true);
 	}
 	else if (menuItemID == exitApplication)
 	{
@@ -70,8 +88,11 @@ void SamplifyMainMenu::menuItemSelected(int menuItemID, int topLevelMenuIndex)
 	}
 	else if (menuItemID == viewInformation)
 	{
-		InfoWindow window;
-		window.runModalLoop();
+		auto* window = new InfoWindow();
+		window->enterModalState(true, ModalCallbackFunction::create([window](int)
+		{
+			delete window;
+		}), true);
 	}
 	else if (menuItemID == visitWebsite)
 	{

@@ -33,7 +33,7 @@ namespace samplify
 		void loadPropertiesFile();
 		void savePropertiesFile();
 
-		static File browseForDirectory();
+		void browseForDirectory(std::function<void(const File&)> callback);
 		void changeListenerCallback(ChangeBroadcaster* source);
 		//=======================================================
 		void setAudioPlayer(std::shared_ptr<AudioPlayer> ap) { mAudioPlayer = ap; }
@@ -48,6 +48,7 @@ namespace samplify
 		std::shared_ptr<SampleLibrary> mSampleLibrary = nullptr;
 
 		std::shared_ptr<AudioPlayer> mAudioPlayer = nullptr;
+		std::unique_ptr<FileChooser> mFileChooser;
 		//========================================================
 		static SamplifyProperties* smAppProperties;
 		bool mIsInit = false;

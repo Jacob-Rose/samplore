@@ -8,11 +8,14 @@ DirectoryExplorer::DirectoryExplorer()
 {
 	setScrollBarsShown(true, true, true, true);
 	addAndMakeVisible(mDirectoryTree);
+	SamplifyProperties::getInstance()->getSampleLibrary()->addChangeListener(this);
 	refresh();
 }
 
 DirectoryExplorer::~DirectoryExplorer()
 {
+	if (auto* lib = SamplifyProperties::getInstance()->getSampleLibrary().get())
+		lib->removeChangeListener(this);
 	mDirectoryTree.deleteRootItem();
 }
 

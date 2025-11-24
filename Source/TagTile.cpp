@@ -76,44 +76,24 @@ void TagTile::mouseUp(const MouseEvent& e)
 				//if on a sample tile
 				menu.addItem(1, "Edit Tag", false, false);
 				menu.addItem(2, "Untag", true, false);
-				int selection = menu.show();
-				if (selection == 1)
+				String tagCopy = mTag;
+				menu.showMenuAsync(PopupMenu::Options(), [parent, tagCopy](int selection)
 				{
-
-				}
-				else if (selection == 2)
-				{
-					parent->getSample().removeTag(mTag);
-					parent->repaint();
-				}
+					if (selection == 2)
+					{
+						parent->getSample().removeTag(tagCopy);
+						parent->repaint();
+					}
+				});
 			}
 			else
 			{
 				menu.addItem(1, "Edit Tag", false, false);
 				menu.addItem(2, "Delete Tag (+ References)", true, false);
-				int selection = menu.show();
-				if (selection == 1)
+				menu.showMenuAsync(PopupMenu::Options(), [](int selection)
 				{
-
-				}
-				else if (selection == 2)
-				{
-					//todo confirm working
-					/*
-					int selection = NativeMessageBox::showYesNoBox(AlertWindow::QuestionIcon, "Confirm action", "Are you sure you want to remove the existance of this tag, it will be removed off all samples that contain it.");
-					if (selection == 1) //yes selected
-					{
-						
-						SamplifyProperties::getInstance()->getTagLibrary().deleteTag(mTag);
-						if (SamplifyMainComponent::getInstance() != nullptr)
-						{
-							SamplifyMainComponent::getInstance()->getFilterExplorer().getTagExplorer().getTagContainer().removeNewTag(mTag);
-							SamplifyMainComponent::getInstance()->getFilterExplorer().getTagExplorer().getTagContainer().resetTags();
-						}
-
-					}
-					*/
-				}
+					// Currently not implemented
+				});
 			}
 
 		}

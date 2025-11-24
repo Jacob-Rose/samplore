@@ -44,12 +44,24 @@ void TagExplorer_V2::paint(Graphics&)
 
 void TagExplorer_V2::addNewTag()
 {
-	TextEditor te = TextEditor();
-	te.setBounds(0, 0, 200, 30);
-	//change from nullptr to the maincompoent to make it overlay?
-	DialogWindow::showModalDialog("New Tag Name", &te, nullptr, getLookAndFeel().findColour(ResizableWindow::backgroundColourId), true, false);
-	SamplifyProperties::getInstance()->getSampleLibrary()->addTag(te.getText());
-	mTagsContainer.setTags(SamplifyProperties::getInstance()->getSampleLibrary()->getTagsStringArray());
+	mAlertWindow = std::make_unique<AlertWindow>("New Tag Name", "", MessageBoxIconType::NoIcon);
+	mAlertWindow->addTextEditor("tagName", "", "Tag Name:");
+	mAlertWindow->addButton("OK", 1, KeyPress(KeyPress::returnKey));
+	mAlertWindow->addButton("Cancel", 0, KeyPress(KeyPress::escapeKey));
+
+	mAlertWindow->enterModalState(true, ModalCallbackFunction::create([this](int result)
+	{
+		if (result == 1 && mAlertWindow)
+		{
+			String tagName = mAlertWindow->getTextEditorContents("tagName");
+			if (tagName.isNotEmpty())
+			{
+				SamplifyProperties::getInstance()->getSampleLibrary()->addTag(tagName);
+				mTagsContainer.setTags(SamplifyProperties::getInstance()->getSampleLibrary()->getTagsStringArray());
+			}
+		}
+		mAlertWindow.reset();
+	}), true);
 }
 
 void samplify::TagExplorer_V2::updateTags(juce::String query)
