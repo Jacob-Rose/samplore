@@ -1,9 +1,36 @@
 # SamplifyPlus JUCE - Todo List
 
-[ ] Rename Project and github to Taste : That Audio Sample Test Enviornment
 
-## Known Warnings (non-blocking)
-- Font constructor deprecation warnings in SamplifyLookAndFeel.h
-- DirectoryIterator deprecation in SampleDirectory.cpp
-- setContentComponent deprecation in PreferenceWindow.cpp
-- startDragging deprecation in TagTile.cpp
+Major Blockers:
+[ ] (P0) Rename Project and github to Taste : That Audio Sample Test Enviornment
+[ ] (P0) Make tag for mobirise site in git history, then migrate to a github site with feature. use new name before doing this.
+[ ] (P0) Cross platform python build script
+
+Bugs:
+[ ] (P1) Address Leetal Issues
+
+Fixins:
+[ ] Add + Remove directories should be done from preferences.
+
+Features:
+
+In no real order from there, but with prio:
+[ ] (P1) Generalized Keybind + Remapping System (also breadcrumbs controls)
+[ ] (P3) Add MIDI Cue Point System (maybe VST support makes sense here too as alternative)
+    [ ] (P3) hold 1 second to set at the current point, 3 seconds to remove cue for any key, handle key event. Save, Load, and Reset the cue points bound to buttons, but the actual cue points are saved to the sample
+    [ ] (P3) Add Exit Warning Generalized System
+        - We might have various modules that all have different closing logic and messages they want to send to the user on close.
+        ◦ All Cue Points will be unbound, are you sure you want to quit? For V1
+[ ] (P2) Some form of tag extraction
+    [ ] (P2) BPM Extraction if relevant
+    [ ] (P2) Key Extraction (are we gonna fft ourselves?)
+[ ] (P2) Add sample experiment zoone. Ability to quick try and modify.
+        [ ] (P3) Audio Playback Speed (With Key preserve and raw resample)
+        [ ] (P3) Filters (a few stock ones)
+            [ ] If we use vsts, we can use the stock preset open source ones for eq and all the common core ones.
+        [ ] (P4) VST Support for Sample Processing (can a vst use other vsts? / maybe only do in non-vst mode.)
+[ ] (P3) Add Extended Sample Editor, with advanced editing of cue points, view all tags, ect. 
+    [ ] (P3) Possibly take up space with the audioplayer, take over the main sample selection menu, but the selected sample in the extended editor does not need to be the one that was just playing
+[ ] (P1) Add Active Audio Player Box with controls like stop, time bar. make it optional
+[ ] (P3) Add tutorial / intro overlay guided experience.
+
