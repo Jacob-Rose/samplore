@@ -19,6 +19,8 @@
 #include "SamplifyProperties.h"
 #include "SamplifyLookAndFeel.h"
 #include "Sample.h"
+#include "ThemeManager.h"
+#include "UI/IconLibrary.h"
 
 namespace samplify
 {
@@ -49,6 +51,8 @@ namespace samplify
 			std::shared_ptr<AudioPlayer> audioPlayer = std::make_shared<AudioPlayer>();
 			SampleDirectory::mWildcard = audioPlayer->getFormatManager()->getWildcardForAllFormats();
 			AppValues::initInstance();
+			ThemeManager::initInstance();  // Initialize ThemeManager before SamplifyProperties
+			IconLibrary::initInstance();    // Initialize IconLibrary
 			SamplifyProperties::initInstance();
 			mainWindow.reset(new MainWindow(getApplicationName()));
 			//}
@@ -58,6 +62,8 @@ namespace samplify
 		{
 			mainWindow.reset(nullptr); //(deletes our window)
 			SamplifyProperties::cleanupInstance();
+			IconLibrary::cleanupInstance();
+			ThemeManager::cleanupInstance();
 			AppValues::cleanupInstance();
 		}
 

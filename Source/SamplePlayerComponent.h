@@ -42,6 +42,8 @@ namespace samplify
 
         Sample::Reference getCurrentSample();
 
+        void updateThemeColors();
+
     private:
         TextEditor mSampleInfoEditor;
         TextButton mSampleColorSelectorButton;

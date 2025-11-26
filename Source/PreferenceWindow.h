@@ -21,8 +21,9 @@ namespace samplify
 
         PreferenceWindow();
         void closeButtonPressed() override { exitModalState(0); }
+        bool keyPressed(const KeyPress& key) override;
 
-        class View : public Component, public Button::Listener, public TextEditor::Listener, public ChangeListener
+        class View : public Component, public Button::Listener, public TextEditor::Listener, public ChangeListener, public ComboBox::Listener
         {
         public:
             View();
@@ -30,17 +31,45 @@ namespace samplify
             void buttonClicked(Button*) override;
             void textEditorTextChanged(TextEditor&) override;
             void changeListenerCallback(ChangeBroadcaster* source) override;
+            void comboBoxChanged(ComboBox* comboBoxThatHasChanged) override;
 
             void paint(Graphics& g) override;
-
             void resized() override;
+
+            // Theme section
+            Label mThemeLabel;
+            ComboBox mThemeSelector;
+
+            // Color customization section
+            Label mColorCustomizationLabel;
+            Label mPrimaryColorLabel;
             TextButton mPrimaryColorButton;
+            Label mAccentColorLabel;
             TextButton mAccentColorButton;
+            TextButton mResetColorsButton;
+
+            // Color presets section
+            Label mColorPresetsLabel;
+            TextButton mPresetStudioDark;
+            TextButton mPresetStudioLight;
+            TextButton mPresetAbleton;
+            TextButton mPresetProTools;
+            TextButton mPresetHighContrast;
+
+            // Appearance section
+            Label mAppearanceLabel;
+            Label mTileSizeLabel;
             TextEditor mSampleMinSizeValue;
+            Label mThumbnailLinesLabel;
             TextEditor mThumbnailLineCount;
+
         private:
+            void updateColorButtons();
+            void applyColorPreset(const String& presetName);
+
             std::unique_ptr<ColourSelector> mColourSelector;
-            bool mEditingPrimaryColor = false;
+            enum class ColorEditMode { Primary, Accent };
+            ColorEditMode mColorEditMode = ColorEditMode::Primary;
         };
     private:
         View mView;

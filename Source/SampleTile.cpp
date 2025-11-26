@@ -3,6 +3,8 @@
 #include "SamplifyLookAndFeel.h"
 #include "TagTile.h"
 #include "SamplifyMainComponent.h"
+#include "ThemeManager.h"
+#include "UI/IconLibrary.h"
 
 #include <iomanip>
 #include <sstream>
@@ -26,108 +28,123 @@ void SampleTile::paint (Graphics& g)
 {
 	if (!mSample.isNull())
 	{
-		//setup colors to use
+		auto& theme = ThemeManager::getInstance();
+		const float cornerRadius = 12.0f;
+		const int padding = 12;
+
+		// Setup colors
 		Colour backgroundColor;
 		Colour foregroundColor;
-		Colour outlineColor;
 		Colour titleColor;
-		if (isMouseOver(true))
+		bool isHovered = isMouseOver(true);
+
+		if (isHovered)
 		{
-			backgroundColor = getLookAndFeel().findColour(backgroundHoverColorID);
-			foregroundColor = getLookAndFeel().findColour(foregroundHoverColorID);
-			outlineColor = getLookAndFeel().findColour(foregroundHoverColorID);
+			backgroundColor = theme.get(ThemeManager::ColorRole::SurfaceHover);
+			foregroundColor = theme.get(ThemeManager::ColorRole::AccentPrimary);
 		}
 		else
 		{
-			backgroundColor = getLookAndFeel().findColour(backgroundDefaultColorID);
-			foregroundColor = getLookAndFeel().findColour(foregroundDefaultColorID);
-			outlineColor = getLookAndFeel().findColour(foregroundDefaultColorID);
+			backgroundColor = theme.get(ThemeManager::ColorRole::Surface);
+			foregroundColor = theme.get(ThemeManager::ColorRole::WaveformPrimary);
 		}
 
-		if (backgroundColor.getPerceivedBrightness() > 0.5f)
+		titleColor = theme.get(ThemeManager::ColorRole::TextPrimary);
+
+		// Draw shadow (elevation level 1)
+		if (!isHovered)
 		{
-			titleColor = Colours::slategrey;
+			DropShadow shadow(theme.get(ThemeManager::ColorRole::Background).withAlpha(0.5f),
+			                  8, Point<int>(0, 2));
+			shadow.drawForRectangle(g, getLocalBounds().toNearestInt());
 		}
 		else
 		{
-			titleColor = Colours::whitesmoke;
+			// Larger shadow on hover (elevation level 2)
+			DropShadow shadow(theme.get(ThemeManager::ColorRole::Background).withAlpha(0.6f),
+			                  12, Point<int>(0, 4));
+			shadow.drawForRectangle(g, getLocalBounds().toNearestInt());
 		}
 
-		//Draw BG
+		// Draw background
 		g.setColour(backgroundColor);
-		g.fillRoundedRectangle(getLocalBounds().toFloat(), AppValues::getInstance().SAMPLE_TILE_CORNER_RADIUS);
+		g.fillRoundedRectangle(getLocalBounds().toFloat(), cornerRadius);
 
-		Rectangle<int> titleRect;
+		// Draw info icon with padding
+		Rectangle<int> titleRect = m_TitleRect.reduced(padding, padding / 2);
 		if (mSample.getInfoText() != "" || mSample.getColor().getAlpha() != 0.0f)
 		{
-			//Draw info icon
 			if (mSample.getColor().getFloatAlpha() > 0.0f)
 			{
+				auto iconBounds = m_InfoIcon.getBounds().reduced(INFO_ICON_PADDING + 2).toFloat();
 				g.setColour(mSample.getColor());
-				g.fillEllipse(m_InfoIcon.getBounds().reduced(INFO_ICON_PADDING).toFloat());
-				g.setColour(mSample.getColor().darker());
-				g.drawEllipse(m_InfoIcon.getBounds().reduced(INFO_ICON_PADDING).toFloat(), AppValues::getInstance().SAMPLE_TILE_OUTLINE_THICKNESS);
+				g.fillEllipse(iconBounds);
+				g.setColour(mSample.getColor().darker(0.3f));
+				g.drawEllipse(iconBounds, 1.5f);
 			}
 
-			titleRect = m_TitleRect.withTrimmedLeft(m_InfoIcon.getWidth());
+			titleRect = titleRect.withTrimmedLeft(m_InfoIcon.getWidth());
 		}
-		else 
-		{
-			titleRect = m_TitleRect.withTrimmedLeft(2.0f);
-		}
-		g.setFont(SAMPLE_TILE_TITLE_FONT);
-		g.setColour(titleColor);
-		g.drawText(mSample.getFile().getFileName(), titleRect, Justification::centredLeft);
 
-		//Draw Time
+		// Draw title with modern typography (20px)
+		g.setFont(Font(20.0f, Font::bold));
 		g.setColour(titleColor);
-		g.setFont(16.0f);
+		g.drawText(mSample.getFile().getFileName(), titleRect, Justification::centredLeft, true);
+
+		// Draw time with secondary text color
+		g.setColour(theme.get(ThemeManager::ColorRole::TextSecondary));
+		g.setFont(Font(14.0f));
 		std::stringstream secondsStr;
 		std::stringstream minutesStr;
 		int minutes = ((int)mSample.getLength()) / 60;
 		secondsStr << std::fixed << std::setprecision(1) << (mSample.getLength() - (60.0*minutes));
 		minutesStr << std::fixed << minutes;
-		g.drawText(String(secondsStr.str()) + " sec", m_TimeRect, Justification::bottom);
-		g.drawText(String(minutesStr.str()) + " min", m_TimeRect, Justification::top);
-		
 
-		//Draw Thumbnail
-		g.setColour(foregroundColor);
+		auto timeRect = m_TimeRect.reduced(padding / 2, padding / 2);
+		g.drawText(String(secondsStr.str()) + " sec", timeRect, Justification::bottom);
+		g.drawText(String(minutesStr.str()) + " min", timeRect, Justification::top);
+
+		// Draw waveform thumbnail with modern styling
 		std::shared_ptr<SampleAudioThumbnail> thumbnail = mSample.getThumbnail();
 		if (thumbnail->isFullyLoaded())
 		{
 			if (thumbnail->getNumChannels() != 0)
 			{
-				thumbnail->drawChannel(g, m_ThumbnailRect.toNearestInt(), 0.0, thumbnail->getTotalLength(), 0, 1.0f);
+				// Use waveform color from theme with opacity based on amplitude
+				g.setColour(foregroundColor.withAlpha(0.9f));
+				auto waveformRect = m_ThumbnailRect.reduced(padding / 2, 0);
+				thumbnail->drawChannel(g, waveformRect.toNearestInt(),
+				                       0.0, thumbnail->getTotalLength(), 0, 1.0f);
 			}
 		}
 
-		//Draw Audio Line if playing
+		// Draw playback position indicators
 		std::shared_ptr<AudioPlayer> auxPlayer = SamplifyProperties::getInstance()->getAudioPlayer();
 		if (auxPlayer->getSampleReference() == mSample)
 		{
+			auto waveformRect = m_ThumbnailRect.reduced(padding / 2, 0);
 			float startT = auxPlayer->getStartCueRelative();
 			float currentT = auxPlayer->getRelativeTime();
-			float startX = m_ThumbnailRect.getTopLeft().x + ((m_ThumbnailRect.getTopRight().x - m_ThumbnailRect.getTopLeft().x) * startT);
-			float currentX = m_ThumbnailRect.getTopLeft().x + ((m_ThumbnailRect.getTopRight().x - m_ThumbnailRect.getTopLeft().x) * currentT);
-			float y1 = m_ThumbnailRect.getTopLeft().y;
-			float y2 = m_ThumbnailRect.getBottomLeft().y;
-			g.setColour(Colours::black);
-			g.drawLine(startX, y1, startX, y2, 1.0f);
+			float startX = waveformRect.getX() + (waveformRect.getWidth() * startT);
+			float currentX = waveformRect.getX() + (waveformRect.getWidth() * currentT);
+			float y1 = waveformRect.getY();
+			float y2 = waveformRect.getBottom();
+
+			// Draw start position with subtle color
+			g.setColour(theme.get(ThemeManager::ColorRole::TextSecondary).withAlpha(0.5f));
+			g.drawLine(startX, y1, startX, y2, 1.5f);
+
+			// Draw current position with accent color
 			if (auxPlayer->getState() == AudioPlayer::TransportState::Playing)
 			{
-				g.setColour(Colours::red);
-				g.drawLine(currentX, y1, currentX, y2, 1.0f);
+				g.setColour(theme.get(ThemeManager::ColorRole::AccentSecondary));
+				g.drawLine(currentX, y1, currentX, y2, 2.0f);
 				repaint();
 			}
 		}
-		//set tags
+
+		// Update tags
 		mTagContainer.setTags(mSample.getTags());
-
-
-
-		g.setColour(outlineColor);
-		g.drawRoundedRectangle(getLocalBounds().reduced(1).toFloat(), AppValues::getInstance().SAMPLE_TILE_CORNER_RADIUS, AppValues::getInstance().SAMPLE_TILE_OUTLINE_THICKNESS);
 	}
 	else
 	{
@@ -138,20 +155,24 @@ void SampleTile::paint (Graphics& g)
 
 void SampleTile::resized()
 {
-	//Core Rects
-	m_TitleRect = Rectangle<int>(0, 0, getWidth(), SAMPLE_TILE_TITLE_FONT.getHeight() + 4.0f);
+	const int padding = 12;
+	const int titleHeight = 32; // Height for 20px font + spacing
+
+	// Core Rects with modern spacing
+	m_TitleRect = Rectangle<int>(0, 0, getWidth(), titleHeight);
 	m_TypeRect = Rectangle<int>(0, getHeight() - (getWidth() / 5), getWidth() / 5, getWidth() / 5);
 	m_TimeRect = Rectangle<int>(getWidth() / 5, getHeight() - (getWidth() / 5), getWidth() / 5, getWidth() / 5);
 
-	//Derivative Rects
+	// Derivative Rects
 	int startY = m_TitleRect.getHeight();
 	m_ThumbnailRect = Rectangle<int>(0, startY, getWidth(), getHeight() - (startY + (getWidth() / 5)));
 
 	int offset = (m_TitleRect.getHeight() + m_ThumbnailRect.getHeight());
 	m_TagRect = Rectangle<int>(getWidth() / 2, offset, getWidth() / 2, getHeight() - offset);
-	mTagContainer.setBounds(m_TagRect.toNearestInt());
+	mTagContainer.setBounds(m_TagRect.reduced(padding / 2));
 
-	m_InfoIcon.setBounds(0, 0, m_TitleRect.getHeight(), m_TitleRect.getHeight()); //square in top right
+	// Info icon in top left corner
+	m_InfoIcon.setBounds(padding / 2, padding / 2, titleHeight - padding, titleHeight - padding);
 }
 
 bool SampleTile::isInterestedInDragSource(const SourceDetails& dragSourceDetails)
@@ -368,6 +389,9 @@ void SampleTile::InfoIcon::paint(Graphics& g)
 {
 	if (mTooltip != "")
 	{
-		AppValues::getInstance().getDrawable("info")->drawWithin(g, getBounds().reduced(4.0f).toFloat(), RectanglePlacement::centred, 1.0f);
+		auto& theme = ThemeManager::getInstance();
+		IconLibrary::getInstance().drawIcon(g, IconLibrary::Icon::Info,
+		                                     getBounds().reduced(2.0f).toFloat(),
+		                                     theme.get(ThemeManager::ColorRole::TextSecondary));
 	}
 }

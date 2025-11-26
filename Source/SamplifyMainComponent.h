@@ -50,6 +50,7 @@ namespace samplify
 		DirectoryExplorer& getDirectoryExplorer() { return mDirectoryExplorer; }
 		SampleExplorer& getSampleExplorer() { return mSampleExplorer; }
 		FilterExplorer& getFilterExplorer() { return mFilterExplorer; }
+		SamplePlayerComponent& getSamplePlayerComponent() { return mSamplePlayerComponent; }
 		std::shared_ptr<AudioPlayer> getAudioPlayer() { return mAudioPlayer; }
 
 		

@@ -3,12 +3,14 @@
 #include "SampleTile.h"
 #include "SamplifyLookAndFeel.h"
 #include "SamplifyMainComponent.h"
+#include "ThemeManager.h"
 
 using namespace samplify;
 TagTile::TagTile(juce::String tag, Font& font)
 {
 	mTag = tag;
 	mFont = &font;
+	setRepaintsOnMouseActivity(true);
 }
 
 TagTile::~TagTile()
@@ -25,24 +27,37 @@ void TagTile::paint (Graphics& g)
 {
 	if (mTag != "")
 	{
-		float cornerSize = 4.0f;
+		auto& theme = ThemeManager::getInstance();
+		const float cornerSize = 6.0f;
+		const int padding = 6;
+		bool isHovered = isMouseOver(true);
+
 		Colour mainColor = SamplifyProperties::getInstance()->getSampleLibrary()->getTagColor(mTag);
-		g.setColour(mainColor);
-		g.fillRoundedRectangle(getLocalBounds().toFloat(), cornerSize);   // draw an outline around the component
-		g.setColour(mainColor.darker());
+
+		// Use semi-transparent background with higher opacity on hover
+		float alpha = isHovered ? 0.95f : 0.85f;
+		g.setColour(mainColor.withAlpha(alpha));
+		g.fillRoundedRectangle(getLocalBounds().toFloat(), cornerSize);
+
+		// Subtle border
+		g.setColour(mainColor.darker(0.2f).withAlpha(0.6f));
 		g.drawRoundedRectangle(getLocalBounds().toFloat(), cornerSize, 1.0f);
-		float oldFontSize = g.getCurrentFont().getHeight();
+
+		// Text color based on background brightness
+		Colour textColor;
 		if (mainColor.getPerceivedBrightness() > 0.5f)
 		{
-			g.setColour(Colours::black);
+			textColor = theme.get(ThemeManager::ColorRole::TextPrimary).darker(0.3f);
 		}
 		else
 		{
-			g.setColour(Colours::white);
+			textColor = Colours::white;
 		}
+
+		g.setColour(textColor);
 		g.setFont(*mFont);
-		g.drawText(mTag, getLocalBounds(), Justification::centred, true);
-		g.setFont(oldFontSize);
+		auto textBounds = getLocalBounds().reduced(padding, 2);
+		g.drawText(mTag, textBounds, Justification::centred, true);
 	}
 }
 
@@ -103,4 +118,14 @@ void TagTile::mouseUp(const MouseEvent& e)
 void TagTile::mouseDrag(const MouseEvent& e)
 {
 	startDragging("Tags", this, juce::Image(), true);
+}
+
+void TagTile::mouseEnter(const MouseEvent& e)
+{
+	repaint();
+}
+
+void TagTile::mouseExit(const MouseEvent& e)
+{
+	repaint();
 }

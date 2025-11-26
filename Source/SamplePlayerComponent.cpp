@@ -12,34 +12,43 @@
 #include "SamplePlayerComponent.h"
 #include "SamplifyProperties.h"
 #include "SamplifyLookAndFeel.h"
+#include "ThemeManager.h"
 
 using namespace samplify;
 
 //==============================================================================
 SamplePlayerComponent::SamplePlayerComponent() : mSampleTagContainer(false)
 {
+    auto& theme = ThemeManager::getInstance();
 
     addAndMakeVisible(mSampleInfoEditor);
     addAndMakeVisible(mSampleColorSelectorButton);
     addAndMakeVisible(mSampleRemoveColorButton);
-    addAndMakeVisible(mSampleDirectoryChainButton); //shows the parent folders of sample
+    addAndMakeVisible(mSampleDirectoryChainButton);
     addAndMakeVisible(mSampleTagContainer);
 
+    // Color selector button
     mSampleColorSelectorButton.setName("SetSampleColor");
     mSampleColorSelectorButton.addListener(this);
 
+    // Remove color button
     mSampleRemoveColorButton.setName("RemoveSampleColor");
-    mSampleColorSelectorButton.setColour(TextButton::textColourOffId, getLookAndFeel().findColour(TextEditor::backgroundColourId).getPerceivedBrightness() > 0.5f ? Colours::black : Colours::white);
+    mSampleRemoveColorButton.setButtonText("Remove Color");
     mSampleRemoveColorButton.addListener(this);
 
+    // Parent folders button
     mSampleDirectoryChainButton.setName("ParentFolders");
     mSampleDirectoryChainButton.setButtonText("Parent Folders");
     mSampleDirectoryChainButton.addListener(this);
 
+    // Info editor
     mSampleInfoEditor.addListener(this);
-    mSampleInfoEditor.setTextToShowWhenEmpty("Add Comment about Sample", getLookAndFeel().findColour(TextEditor::textColourId).darker(0.4f));
+    mSampleInfoEditor.setTextToShowWhenEmpty("Add notes about this sample...",
+        theme.get(ThemeManager::ColorRole::TextSecondary));
     mSampleInfoEditor.setMultiLine(true, true);
-    //addMouseListener(this, false);
+    mSampleInfoEditor.setReturnKeyStartsNewLine(true);
+
+    updateThemeColors();
 }
 
 SamplePlayerComponent::~SamplePlayerComponent()
@@ -124,16 +133,30 @@ void SamplePlayerComponent::buttonClicked(Button* b)
 
 void SamplePlayerComponent::paint (Graphics& g)
 {
+    auto& theme = ThemeManager::getInstance();
     Sample::Reference samp = getCurrentSample();
+
+    // Draw background
+    g.fillAll(theme.get(ThemeManager::ColorRole::BackgroundSecondary));
+
     if (!samp.isNull())
     {
         mSampleInfoEditor.setText(samp.getInfoText());
+
+        // Draw title with modern typography
+        g.setColour(theme.get(ThemeManager::ColorRole::TextPrimary));
+        g.setFont(Font(20.0f, Font::bold));
         g.drawText(samp.getFile().getFileName(), m_TitleRect, Justification::left, true);
 
-        //draw thumbnail
+        // Draw waveform with modern styling
         if (samp.getThumbnail() != nullptr)
         {
-            g.setColour(getLookAndFeel().findColour(waveformColourId));
+            // Draw waveform background
+            g.setColour(theme.get(ThemeManager::ColorRole::BackgroundTertiary));
+            g.fillRoundedRectangle(m_ThumbnailRect.toFloat(), 8.0f);
+
+            // Draw waveform
+            g.setColour(theme.get(ThemeManager::ColorRole::WaveformPrimary));
             if (SampleAudioThumbnail* thumbnail = dynamic_cast<SampleAudioThumbnail*>(samp.getThumbnail().get()))
             {
                 samp.getThumbnail()->drawChannels(g, m_ThumbnailRect, 0, samp.getLength(), 1.0f, 160);
@@ -142,56 +165,84 @@ void SamplePlayerComponent::paint (Graphics& g)
             {
                 samp.getThumbnail()->drawChannels(g, m_ThumbnailRect, 0, samp.getLength(), 1.0f);
             }
+
+            // Draw subtle border around waveform
+            g.setColour(theme.get(ThemeManager::ColorRole::Border));
+            g.drawRoundedRectangle(m_ThumbnailRect.toFloat(), 8.0f, 1.0f);
         }
-        //Draw Audio Line if playing
+
+        // Draw playback position indicators
         std::shared_ptr<AudioPlayer> auxPlayer = SamplifyProperties::getInstance()->getAudioPlayer();
         if (auxPlayer->getSampleReference() == samp)
         {
             float startT = auxPlayer->getStartCueRelative();
             float currentT = auxPlayer->getRelativeTime();
-            float startX = m_ThumbnailRect.getTopLeft().x + ((m_ThumbnailRect.getTopRight().x - m_ThumbnailRect.getTopLeft().x) * startT);
-            float currentX = m_ThumbnailRect.getTopLeft().x + ((m_ThumbnailRect.getTopRight().x - m_ThumbnailRect.getTopLeft().x) * currentT);
-            float y1 = m_ThumbnailRect.getTopLeft().y;
-            float y2 = m_ThumbnailRect.getBottomLeft().y;
-            g.setColour(Colours::black);
-            g.drawLine(startX, y1, startX, y2, 1.0f);
+            float startX = m_ThumbnailRect.getX() + (m_ThumbnailRect.getWidth() * startT);
+            float currentX = m_ThumbnailRect.getX() + (m_ThumbnailRect.getWidth() * currentT);
+            float y1 = m_ThumbnailRect.getY();
+            float y2 = m_ThumbnailRect.getBottom();
+
+            // Draw start position with subtle color
+            g.setColour(theme.get(ThemeManager::ColorRole::TextSecondary).withAlpha(0.5f));
+            g.drawLine(startX, y1, startX, y2, 1.5f);
+
+            // Draw current position with accent color
             if (auxPlayer->getState() == AudioPlayer::TransportState::Playing)
             {
-                g.setColour(Colours::red);
-                g.drawLine(currentX, y1, currentX, y2, 1.0f);
+                g.setColour(theme.get(ThemeManager::ColorRole::AccentSecondary));
+                g.drawLine(currentX, y1, currentX, y2, 2.0f);
                 repaint();
             }
         }
     }
 }
-const int padding = 10;
 void SamplePlayerComponent::resized()
 {
+    const int padding = 16;
+    const int itemSpacing = 8;
+    const int buttonWidth = 120;
+    const int titleHeight = 32;
+
     Sample::Reference samp = getCurrentSample();
     if (!samp.isNull())
     {
-        m_ThumbnailRect = Rectangle<int>(padding, 0, getWidth() - (padding * 2), getHeight() / 2);
-        float cHeight = m_ThumbnailRect.getHeight();
-        m_TitleRect = Rectangle<int>(0, m_ThumbnailRect.getHeight(), (getWidth()/3)*2, SAMPLE_TILE_TITLE_FONT.getHeight() + 2);
-        mSampleDirectoryChainButton.setBounds(m_TitleRect.getWidth(), cHeight, (getWidth() / 3), m_TitleRect.getHeight());
-        cHeight += m_TitleRect.getHeight();
-        mSampleInfoEditor.setBounds(0, cHeight, getWidth() / 4, getHeight()- cHeight);
-        float cWidth = mSampleInfoEditor.getWidth();
+        int y = padding;
+
+        // Waveform area (top half with padding)
+        m_ThumbnailRect = Rectangle<int>(padding, y, getWidth() - (padding * 2),
+                                         (getHeight() / 2) - padding);
+        y = m_ThumbnailRect.getBottom() + padding;
+
+        // Title and parent folders button row
+        m_TitleRect = Rectangle<int>(padding, y, getWidth() - buttonWidth - (padding * 3),
+                                      titleHeight);
+        mSampleDirectoryChainButton.setBounds(getWidth() - buttonWidth - padding, y,
+                                               buttonWidth, titleHeight);
+        y += titleHeight + itemSpacing;
+
+        // Bottom section: info editor, color buttons, and tags
+        int remainingHeight = getHeight() - y - padding;
+        int infoWidth = getWidth() / 3;
+
+        mSampleInfoEditor.setBounds(padding, y, infoWidth, remainingHeight);
+
+        int colorButtonX = padding + infoWidth + itemSpacing;
         if (samp.getColor().getFloatAlpha() > 0.0f)
         {
-            float regionHeight = (getHeight() - cHeight);
-            mSampleColorSelectorButton.setBounds(cWidth, cHeight, 100, regionHeight /2);
-            mSampleRemoveColorButton.setBounds(cWidth, cHeight + (regionHeight / 2), 100, regionHeight / 2);
+            int buttonHeight = remainingHeight / 2 - (itemSpacing / 2);
+            mSampleColorSelectorButton.setBounds(colorButtonX, y, buttonWidth, buttonHeight);
+            mSampleRemoveColorButton.setBounds(colorButtonX, y + buttonHeight + itemSpacing,
+                                                buttonWidth, buttonHeight);
         }
         else
         {
-            float regionHeight = (getHeight() - cHeight);
-            mSampleColorSelectorButton.setBounds(cWidth, cHeight, 100, regionHeight);
-            mSampleRemoveColorButton.setBounds(cWidth, cHeight, 100, 0);
+            mSampleColorSelectorButton.setBounds(colorButtonX, y, buttonWidth, remainingHeight);
+            mSampleRemoveColorButton.setBounds(colorButtonX, y, buttonWidth, 0);
         }
-        
-        cWidth += 100;
-        mSampleTagContainer.setBounds(cWidth, cHeight, getWidth() - cWidth, getHeight() - cHeight);
+
+        // Tags area
+        int tagsX = colorButtonX + buttonWidth + itemSpacing;
+        mSampleTagContainer.setBounds(tagsX, y, getWidth() - tagsX - padding, remainingHeight);
     }
     else
     {
@@ -199,10 +250,9 @@ void SamplePlayerComponent::resized()
         mSampleInfoEditor.setBounds(0, 0, 0, 0);
         mSampleColorSelectorButton.setBounds(0, 0, 0, 0);
         mSampleRemoveColorButton.setBounds(0, 0, 0, 0);
-        mSampleDirectoryChainButton.setBounds(0, 0, 0, 0); 
+        mSampleDirectoryChainButton.setBounds(0, 0, 0, 0);
         mSampleTagContainer.setBounds(0, 0, 0, 0);
     }
-    
 }
 
 void SamplePlayerComponent::mouseDown(const MouseEvent& e)
@@ -223,4 +273,32 @@ void SamplePlayerComponent::mouseDown(const MouseEvent& e)
 Sample::Reference SamplePlayerComponent::getCurrentSample()
 {
     return SamplifyProperties::getInstance()->getAudioPlayer()->getSampleReference();
+}
+
+void SamplePlayerComponent::updateThemeColors()
+{
+    auto& theme = ThemeManager::getInstance();
+
+    // Update text editor colors
+    mSampleInfoEditor.setColour(TextEditor::backgroundColourId,
+        theme.get(ThemeManager::ColorRole::Surface));
+    mSampleInfoEditor.setColour(TextEditor::textColourId,
+        theme.get(ThemeManager::ColorRole::TextPrimary));
+    mSampleInfoEditor.setColour(TextEditor::outlineColourId,
+        theme.get(ThemeManager::ColorRole::Border));
+    mSampleInfoEditor.setColour(TextEditor::focusedOutlineColourId,
+        theme.get(ThemeManager::ColorRole::BorderFocus));
+
+    // Update button colors
+    mSampleDirectoryChainButton.setColour(TextButton::buttonColourId,
+        theme.get(ThemeManager::ColorRole::Surface));
+    mSampleDirectoryChainButton.setColour(TextButton::textColourOffId,
+        theme.get(ThemeManager::ColorRole::TextPrimary));
+
+    mSampleRemoveColorButton.setColour(TextButton::buttonColourId,
+        theme.get(ThemeManager::ColorRole::Surface));
+    mSampleRemoveColorButton.setColour(TextButton::textColourOffId,
+        theme.get(ThemeManager::ColorRole::TextPrimary));
+
+    repaint();
 }

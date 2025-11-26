@@ -16,13 +16,15 @@
 #include "Sample.h"
 #include "TagContainer.h"
 #include "SamplifyProperties.h"
+#include "Animation/AnimationManager.h"
 
 namespace samplify
 {
 
-	class SampleTile : public Component, 
-		public DragAndDropTarget,  
-		public ChangeListener 
+	class SampleTile : public Component,
+		public DragAndDropTarget,
+		public ChangeListener,
+		private AnimatedComponent
 	{
 	public:
 
@@ -42,7 +44,7 @@ namespace samplify
 			addTriggerKeyAtStart,
 			addTriggerKeyAtCue
 		};
-		
+
 		//===========================================================================
 		SampleTile(Sample::Reference);
 		~SampleTile();
@@ -72,6 +74,11 @@ namespace samplify
 		private:
 			String mTooltip;
 		};
+
+	protected:
+		// AnimatedComponent interface
+		void onAnimationUpdate() override { repaint(); }
+
 	private:
 		Sample::Reference mSample = nullptr;
 		TagContainer mTagContainer;

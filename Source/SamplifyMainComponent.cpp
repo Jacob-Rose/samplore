@@ -1,5 +1,6 @@
 #include "SamplifyMainComponent.h"
 #include "SamplifyLookAndFeel.h"
+#include "ThemeManager.h"
 
 using namespace samplify;
 
@@ -113,52 +114,68 @@ void SamplifyMainComponent::releaseResources()
 
 void samplify::SamplifyMainComponent::setupLookAndFeel(LookAndFeel& laf)
 {
-	laf.setColour(ResizableWindow::backgroundColourId, AppValues::getInstance().MAIN_BACKGROUND_COLOR);
+	auto& theme = ThemeManager::getInstance();
+	using CR = ThemeManager::ColorRole;
 
-	laf.setColour(SampleTile::backgroundDefaultColorID, AppValues::getInstance().MAIN_BACKGROUND_COLOR);
-	laf.setColour(SampleTile::backgroundHoverColorID, AppValues::getInstance().MAIN_BACKGROUND_COLOR.darker(0.2f));
-	laf.setColour(SampleTile::foregroundDefaultColorID, AppValues::getInstance().MAIN_FOREGROUND_COLOR);
-	laf.setColour(SampleTile::foregroundHoverColorID, AppValues::getInstance().MAIN_FOREGROUND_COLOR.darker(0.2f));
+	// Window background
+	laf.setColour(ResizableWindow::backgroundColourId, theme.get(CR::Background));
 
-	laf.setColour(SampleExplorer::loadingWheelColorId, AppValues::getInstance().MAIN_FOREGROUND_COLOR);
+	// SampleTile colors
+	laf.setColour(SampleTile::backgroundDefaultColorID, theme.get(CR::BackgroundTertiary));
+	laf.setColour(SampleTile::backgroundHoverColorID, theme.get(CR::SurfaceHover));
+	laf.setColour(SampleTile::foregroundDefaultColorID, theme.get(CR::AccentPrimary));
+	laf.setColour(SampleTile::foregroundHoverColorID, theme.get(CR::AccentPrimary).brighter(0.1f));
 
-	laf.setColour(DirectoryExplorerTreeViewItem::defaultBackgroundId, AppValues::getInstance().MAIN_BACKGROUND_COLOR.withAlpha(0.0f));
-	laf.setColour(DirectoryExplorerTreeViewItem::selectedBackgroundId, AppValues::getInstance().MAIN_FOREGROUND_COLOR);
-	laf.setColour(DirectoryExplorerTreeViewItem::checkboxActiveBackgroundId, AppValues::getInstance().MAIN_FOREGROUND_COLOR);
-	laf.setColour(DirectoryExplorerTreeViewItem::checkboxMixedBackgroundId, AppValues::getInstance().MAIN_FOREGROUND_COLOR.withSaturation(0.2f));
-	laf.setColour(DirectoryExplorerTreeViewItem::checkboxDisabledBackgroundId, Colours::grey);
-	laf.setColour(DirectoryExplorerTreeViewItem::checkboxNotLoadedBackgroundId, Colours::lightpink);
+	// SampleExplorer
+	laf.setColour(SampleExplorer::loadingWheelColorId, theme.get(CR::AccentPrimary));
 
-	laf.setColour(TextEditor::backgroundColourId, AppValues::getInstance().MAIN_BACKGROUND_COLOR);
-	laf.setColour(TextEditor::textColourId, AppValues::getInstance().MAIN_FOREGROUND_COLOR);
-	laf.setColour(TextEditor::outlineColourId, AppValues::getInstance().MAIN_FOREGROUND_COLOR);
+	// DirectoryExplorerTreeViewItem
+	laf.setColour(DirectoryExplorerTreeViewItem::defaultBackgroundId, Colours::transparentBlack);
+	laf.setColour(DirectoryExplorerTreeViewItem::selectedBackgroundId, theme.get(CR::AccentPrimary).withAlpha(0.15f));
+	laf.setColour(DirectoryExplorerTreeViewItem::checkboxActiveBackgroundId, theme.get(CR::AccentPrimary));
+	laf.setColour(DirectoryExplorerTreeViewItem::checkboxMixedBackgroundId, theme.get(CR::AccentPrimary).withSaturation(0.3f));
+	laf.setColour(DirectoryExplorerTreeViewItem::checkboxDisabledBackgroundId, theme.get(CR::TextDisabled));
+	laf.setColour(DirectoryExplorerTreeViewItem::checkboxNotLoadedBackgroundId, theme.get(CR::Warning));
 
-	laf.setColour(TextButton::textColourOnId, AppValues::getInstance().MAIN_FOREGROUND_COLOR);
-	laf.setColour(TextButton::buttonOnColourId, AppValues::getInstance().MAIN_BACKGROUND_COLOR.darker(0.2f));
-	laf.setColour(TextButton::buttonColourId, AppValues::getInstance().MAIN_BACKGROUND_COLOR);
-	laf.setColour(TextButton::textColourOffId, AppValues::getInstance().MAIN_FOREGROUND_COLOR);
+	// TextEditor
+	laf.setColour(TextEditor::backgroundColourId, theme.get(CR::BackgroundTertiary));
+	laf.setColour(TextEditor::textColourId, theme.get(CR::TextPrimary));
+	laf.setColour(TextEditor::outlineColourId, theme.get(CR::Border));
+	laf.setColour(TextEditor::focusedOutlineColourId, theme.get(CR::BorderFocus));
 
-	laf.setColour(ScrollBar::thumbColourId, AppValues::getInstance().MAIN_FOREGROUND_COLOR);
+	// TextButton
+	laf.setColour(TextButton::textColourOnId, Colours::white);
+	laf.setColour(TextButton::buttonOnColourId, theme.get(CR::AccentPrimary));
+	laf.setColour(TextButton::buttonColourId, theme.get(CR::Surface));
+	laf.setColour(TextButton::textColourOffId, theme.get(CR::TextPrimary));
 
-	laf.setColour(ComboBox::backgroundColourId, AppValues::getInstance().MAIN_BACKGROUND_COLOR);
-	laf.setColour(ComboBox::textColourId, AppValues::getInstance().MAIN_FOREGROUND_COLOR);
-	laf.setColour(ComboBox::arrowColourId, AppValues::getInstance().MAIN_FOREGROUND_COLOR);
-	laf.setColour(ComboBox::outlineColourId, AppValues::getInstance().MAIN_FOREGROUND_COLOR);
-	laf.setColour(ComboBox::buttonColourId, AppValues::getInstance().MAIN_FOREGROUND_COLOR);
+	// ScrollBar
+	laf.setColour(ScrollBar::thumbColourId, theme.get(CR::TextSecondary).withAlpha(0.4f));
+	laf.setColour(ScrollBar::trackColourId, Colours::transparentBlack);
 
+	// ComboBox
+	laf.setColour(ComboBox::backgroundColourId, theme.get(CR::Surface));
+	laf.setColour(ComboBox::textColourId, theme.get(CR::TextPrimary));
+	laf.setColour(ComboBox::arrowColourId, theme.get(CR::TextSecondary));
+	laf.setColour(ComboBox::outlineColourId, theme.get(CR::Border));
+	laf.setColour(ComboBox::buttonColourId, theme.get(CR::AccentPrimary));
+	laf.setColour(ComboBox::focusedOutlineColourId, theme.get(CR::BorderFocus));
 
-	laf.setColour(SamplePlayerComponent::waveformColourId, AppValues::getInstance().MAIN_FOREGROUND_COLOR);
+	// SamplePlayerComponent
+	laf.setColour(SamplePlayerComponent::waveformColourId, theme.get(CR::WaveformPrimary));
 
-	laf.setColour(LookAndFeel_V4::ColourScheme::UIColour::defaultFill, AppValues::getInstance().MAIN_BACKGROUND_COLOR);
-	laf.setColour(LookAndFeel_V4::ColourScheme::UIColour::defaultText, AppValues::getInstance().MAIN_FOREGROUND_COLOR);
-	laf.setColour(LookAndFeel_V4::ColourScheme::UIColour::highlightedFill, AppValues::getInstance().MAIN_FOREGROUND_COLOR);
-	laf.setColour(LookAndFeel_V4::ColourScheme::UIColour::highlightedText, AppValues::getInstance().MAIN_BACKGROUND_COLOR);
+	// LookAndFeel_V4 default colors
+	laf.setColour(LookAndFeel_V4::ColourScheme::UIColour::defaultFill, theme.get(CR::Surface));
+	laf.setColour(LookAndFeel_V4::ColourScheme::UIColour::defaultText, theme.get(CR::TextPrimary));
+	laf.setColour(LookAndFeel_V4::ColourScheme::UIColour::highlightedFill, theme.get(CR::AccentPrimary));
+	laf.setColour(LookAndFeel_V4::ColourScheme::UIColour::highlightedText, Colours::white);
 
-	laf.setColour(PopupMenu::backgroundColourId, AppValues::getInstance().MAIN_BACKGROUND_COLOR);
-	laf.setColour(PopupMenu::headerTextColourId, AppValues::getInstance().MAIN_FOREGROUND_COLOR);
-	laf.setColour(PopupMenu::highlightedBackgroundColourId, AppValues::getInstance().MAIN_FOREGROUND_COLOR.brighter(0.3f));
-	laf.setColour(PopupMenu::highlightedTextColourId, AppValues::getInstance().MAIN_BACKGROUND_COLOR);
-	laf.setColour(PopupMenu::textColourId, AppValues::getInstance().MAIN_FOREGROUND_COLOR);
+	// PopupMenu
+	laf.setColour(PopupMenu::backgroundColourId, theme.get(CR::BackgroundSecondary));
+	laf.setColour(PopupMenu::headerTextColourId, theme.get(CR::TextPrimary));
+	laf.setColour(PopupMenu::highlightedBackgroundColourId, theme.get(CR::AccentPrimary));
+	laf.setColour(PopupMenu::highlightedTextColourId, Colours::white);
+	laf.setColour(PopupMenu::textColourId, theme.get(CR::TextPrimary));
 }
 
 //==============================================================================

@@ -12,10 +12,11 @@
 #define TAGTILE_H
 
 #include "JuceHeader.h"
+#include "Animation/AnimationManager.h"
 
 namespace samplify
 {
-	class TagTile : public Component, public DragAndDropContainer
+	class TagTile : public Component, public DragAndDropContainer, private AnimatedComponent
 	{
 	public:
 		//==================================================
@@ -28,9 +29,15 @@ namespace samplify
 		void mouseDown(const MouseEvent& e) override;
 		void mouseUp(const MouseEvent& e) override;
 		void mouseDrag(const MouseEvent& e) override;
+		void mouseEnter(const MouseEvent& e) override;
+		void mouseExit(const MouseEvent& e) override;
 		//==================================================
 		void setTag(juce::String tag);
 		juce::String getTag() { return mTag; }
+
+	protected:
+		// AnimatedComponent interface
+		void onAnimationUpdate() override { repaint(); }
 
 	private:
 		//==================================================

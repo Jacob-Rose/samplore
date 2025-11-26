@@ -90,3 +90,64 @@ static const unsigned char temp4[] = {60,63,120,109,108,32,118,101,114,115,105,1
   13,10,60,103,62,13,10,60,47,103,62,13,10,60,47,115,118,103,62,13,10,0,0};
 const char* Icons::minus_svg = (const char*) temp4;
 
+// New Feather-style icons
+static const unsigned char temp_play[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polygon points='5 3 19 12 5 21 5 3'></polygon></svg>";
+const char* Icons::play_svg = (const char*) temp_play;
+
+static const unsigned char temp_pause[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='6' y='4' width='4' height='16'></rect><rect x='14' y='4' width='4' height='16'></rect></svg>";
+const char* Icons::pause_svg = (const char*) temp_pause;
+
+static const unsigned char temp_stop[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='5' y='5' width='14' height='14'></rect></svg>";
+const char* Icons::stop_svg = (const char*) temp_stop;
+
+static const unsigned char temp_loop[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='17 1 21 5 17 9'></polyline><path d='M3 11V9a4 4 0 0 1 4-4h14'></path><polyline points='7 23 3 19 7 15'></polyline><path d='M21 13v2a4 4 0 0 1-4 4H3'></path></svg>";
+const char* Icons::loop_svg = (const char*) temp_loop;
+
+static const unsigned char temp_shuffle[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='16 3 21 3 21 8'></polyline><line x1='4' y1='20' x2='21' y2='3'></line><polyline points='21 16 21 21 16 21'></polyline><line x1='15' y1='15' x2='21' y2='21'></line><line x1='4' y1='4' x2='9' y2='9'></line></svg>";
+const char* Icons::shuffle_svg = (const char*) temp_shuffle;
+
+static const unsigned char temp_folder[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z'></path></svg>";
+const char* Icons::folder_svg = (const char*) temp_folder;
+
+static const unsigned char temp_folder_open[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z'></path><polyline points='2 8 12 8 22 8'></polyline></svg>";
+const char* Icons::folder_open_svg = (const char*) temp_folder_open;
+
+static const unsigned char temp_file[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z'></path><polyline points='13 2 13 9 20 9'></polyline></svg>";
+const char* Icons::file_svg = (const char*) temp_file;
+
+static const unsigned char temp_search[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'></circle><path d='m21 21-4.35-4.35'></path></svg>";
+const char* Icons::search_svg = (const char*) temp_search;
+
+static const unsigned char temp_filter[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polygon points='22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3'></polygon></svg>";
+const char* Icons::filter_svg = (const char*) temp_filter;
+
+static const unsigned char temp_tag[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'></path><line x1='7' y1='7' x2='7.01' y2='7'></line></svg>";
+const char* Icons::tag_svg = (const char*) temp_tag;
+
+static const unsigned char temp_edit[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'></path><path d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'></path></svg>";
+const char* Icons::edit_svg = (const char*) temp_edit;
+
+static const unsigned char temp_delete[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='3 6 5 6 21 6'></polyline><path d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'></path></svg>";
+const char* Icons::delete_svg = (const char*) temp_delete;
+
+static const unsigned char temp_color_picker[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z'></path></svg>";
+const char* Icons::color_picker_svg = (const char*) temp_color_picker;
+
+static const unsigned char temp_settings[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='3'></circle><path d='M12 1v6m0 6v6m-7-7h6m6 0h6m-14.142 5.142l4.243-4.243m6 0l4.242 4.243M5.858 5.858l4.243 4.243m6 0l4.242-4.243'></path></svg>";
+const char* Icons::settings_svg = (const char*) temp_settings;
+
+static const unsigned char temp_chevron_left[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='15 18 9 12 15 6'></polyline></svg>";
+const char* Icons::chevron_left_svg = (const char*) temp_chevron_left;
+
+static const unsigned char temp_chevron_right[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='9 18 15 12 9 6'></polyline></svg>";
+const char* Icons::chevron_right_svg = (const char*) temp_chevron_right;
+
+static const unsigned char temp_chevron_up[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='18 15 12 9 6 15'></polyline></svg>";
+const char* Icons::chevron_up_svg = (const char*) temp_chevron_up;
+
+static const unsigned char temp_chevron_down[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>";
+const char* Icons::chevron_down_svg = (const char*) temp_chevron_down;
+
+static const unsigned char temp_loading[] = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='2' x2='12' y2='6'></line><line x1='12' y1='18' x2='12' y2='22'></line><line x1='4.93' y1='4.93' x2='7.76' y2='7.76'></line><line x1='16.24' y1='16.24' x2='19.07' y2='19.07'></line><line x1='2' y1='12' x2='6' y2='12'></line><line x1='18' y1='12' x2='22' y2='12'></line><line x1='4.93' y1='19.07' x2='7.76' y2='16.24'></line><line x1='16.24' y1='7.76' x2='19.07' y2='4.93'></line></svg>";
+const char* Icons::loading_svg = (const char*) temp_loading;
+
