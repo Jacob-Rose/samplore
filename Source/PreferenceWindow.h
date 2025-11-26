@@ -20,7 +20,7 @@ namespace samplify
         //==============================================================================
 
         PreferenceWindow();
-        void closeButtonPressed() override { exitModalState(0); }
+        void closeButtonPressed() override;
         bool keyPressed(const KeyPress& key) override;
 
         class View : public Component, public Button::Listener, public TextEditor::Listener, public ChangeListener, public ComboBox::Listener
@@ -61,7 +61,10 @@ namespace samplify
             Label mTileSizeLabel;
             TextEditor mSampleMinSizeValue;
             Label mThumbnailLinesLabel;
+            Label mThumbnailLinesPlayerLabel;
+            TextEditor mThumbnailLineCountPlayer;
             TextEditor mThumbnailLineCount;
+            TextButton mCloseButton;
 
         private:
             void updateColorButtons();

@@ -159,7 +159,7 @@ void SamplePlayerComponent::paint (Graphics& g)
             g.setColour(theme.get(ThemeManager::ColorRole::WaveformPrimary));
             if (SampleAudioThumbnail* thumbnail = dynamic_cast<SampleAudioThumbnail*>(samp.getThumbnail().get()))
             {
-                samp.getThumbnail()->drawChannels(g, m_ThumbnailRect, 0, samp.getLength(), 1.0f, 160);
+                samp.getThumbnail()->drawChannels(g, m_ThumbnailRect, 0, samp.getLength(), 1.0f, AppValues::getInstance().AUDIO_THUMBNAIL_LINE_COUNT_PLAYER);
             }
             else
             {

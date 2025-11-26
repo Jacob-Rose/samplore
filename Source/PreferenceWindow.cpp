@@ -20,7 +20,16 @@ PreferenceWindow::PreferenceWindow() : DialogWindow("Preferences", AppValues::ge
     setContentComponent(&mView);
     setSize(600, 800);
     setWantsKeyboardFocus(true);
+    setResizable(false, false);
+    setUsingNativeTitleBar(false);
+    setTitleBarButtonsRequired(closeButton, false);
 }
+
+void PreferenceWindow::closeButtonPressed()
+{
+    exitModalState(0);
+}
+
 
 bool PreferenceWindow::keyPressed(const KeyPress& key)
 {
@@ -139,7 +148,7 @@ PreferenceWindow::View::View()
     mSampleMinSizeValue.addListener(this);
     addAndMakeVisible(mSampleMinSizeValue);
 
-    mThumbnailLinesLabel.setText("Waveform Lines:", dontSendNotification);
+    mThumbnailLinesLabel.setText("Tile Waveform Lines:", dontSendNotification);
     mThumbnailLinesLabel.setColour(Label::textColourId, theme.get(ThemeManager::ColorRole::TextSecondary));
     addAndMakeVisible(mThumbnailLinesLabel);
 
@@ -148,6 +157,23 @@ PreferenceWindow::View::View()
     mThumbnailLineCount.setText(String(AppValues::getInstance().AUDIO_THUMBNAIL_LINE_COUNT));
     mThumbnailLineCount.addListener(this);
     addAndMakeVisible(mThumbnailLineCount);
+
+
+    mThumbnailLinesPlayerLabel.setText("Player Waveform Lines:", dontSendNotification);
+    mThumbnailLinesPlayerLabel.setColour(Label::textColourId, theme.get(ThemeManager::ColorRole::TextSecondary));
+    addAndMakeVisible(mThumbnailLinesPlayerLabel);
+
+    mThumbnailLineCountPlayer.setName("Player Waveform Lines");
+    mThumbnailLineCountPlayer.setInputRestrictions(3, "0123456789");
+    mThumbnailLineCountPlayer.setText(String(AppValues::getInstance().AUDIO_THUMBNAIL_LINE_COUNT_PLAYER));
+    mThumbnailLineCountPlayer.addListener(this);
+    addAndMakeVisible(mThumbnailLineCountPlayer);
+    // ===== CLOSE BUTTON =====
+    mCloseButton.setName("Close");
+    mCloseButton.setButtonText("Close");
+    mCloseButton.addListener(this);
+    addAndMakeVisible(mCloseButton);
+
 
     updateColorButtons();
 }
@@ -208,6 +234,14 @@ void PreferenceWindow::View::buttonClicked(Button* button)
     else if (buttonName == "Preset High Contrast")
     {
         applyColorPreset("High Contrast");
+    }
+    else if (buttonName == "Close")
+    {
+        // Find parent PreferenceWindow and close it
+        if (auto* parentWindow = findParentComponentOfClass<PreferenceWindow>())
+        {
+            parentWindow->exitModalState(0);
+        }
     }
 }
 
@@ -278,8 +312,14 @@ void PreferenceWindow::View::textEditorTextChanged(TextEditor& editor)
             AppValues::getInstance().AUDIO_THUMBNAIL_LINE_COUNT = std::stoi(editor.getText().toStdString());
         }
     }
+    else if (editor.getName() == "Player Waveform Lines")
+    {
+        if (editor.getText().length() > 0)
+        {
+            AppValues::getInstance().AUDIO_THUMBNAIL_LINE_COUNT_PLAYER = std::stoi(editor.getText().toStdString());
+        }
+    }
 }
-
 void PreferenceWindow::View::updateColorButtons()
 {
     auto& theme = ThemeManager::getInstance();
@@ -427,8 +467,17 @@ void PreferenceWindow::View::resized()
     mSampleMinSizeValue.setBounds(margin + 150, y, 100, controlHeight);
     y += controlHeight + itemSpacing;
 
-    // Waveform lines row
-    mThumbnailLinesLabel.setBounds(margin, y, 140, controlHeight);
-    mThumbnailLineCount.setBounds(margin + 150, y, 100, controlHeight);
+    // Waveform lines row (Tile)
+    mThumbnailLinesLabel.setBounds(margin, y, 180, controlHeight);
+    mThumbnailLineCount.setBounds(margin + 190, y, 100, controlHeight);
+    y += controlHeight + itemSpacing;
+
+    // Player waveform lines row
+    mThumbnailLinesPlayerLabel.setBounds(margin, y, 180, controlHeight);
+    mThumbnailLineCountPlayer.setBounds(margin + 190, y, 100, controlHeight);
     y += controlHeight + margin;
+
+    // ===== CLOSE BUTTON =====
+    y += sectionSpacing;
+    mCloseButton.setBounds(getWidth() - margin - 120, y, 120, controlHeight);
 }

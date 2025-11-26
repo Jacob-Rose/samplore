@@ -53,7 +53,6 @@ void SamplifyMainMenu::menuItemSelected(int menuItemID, int topLevelMenuIndex)
 		window->enterModalState(true, ModalCallbackFunction::create([window](int)
 		{
 			delete window;
-			JUCEApplication::getInstance()->systemRequestedQuit();
 		}), true);
 	}
 	else if (menuItemID == exitApplication)

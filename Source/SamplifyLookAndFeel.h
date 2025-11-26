@@ -41,6 +41,7 @@ namespace samplify
 		float AUDIO_THUMBNAIL_LINE_GAP_WIDTH = 0.5f; //ratio based, not pixels
 		float AUDIO_THUMBNAIL_LINE_FILL_WIDTH = 2.0f;
 		int AUDIO_THUMBNAIL_LINE_COUNT = 60;
+	int AUDIO_THUMBNAIL_LINE_COUNT_PLAYER = 120;
 
 		bool FILTERWINDOWOPEN = true;
 		bool DIRECTORYWINDOWOPEN = true;

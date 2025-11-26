@@ -66,4 +66,5 @@ extras/Projucer/JUCECompileEngine.dylib
 
 # OpenCode temporary files
 .opencodetmp
-opencodetmp
+opencodetmp*.orig
+*.rej

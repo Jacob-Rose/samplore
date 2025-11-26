@@ -121,6 +121,7 @@ void SamplifyProperties::loadPropertiesFile()
 		AppValues::getInstance().SAMPLE_TILE_ASPECT_RATIO = (float)propFile->getDoubleValue("SAMPLE_TILE_ASPECT_RATIO", 0.666);
 		AppValues::getInstance().SAMPLE_TILE_MIN_WIDTH = (float)propFile->getDoubleValue("SAMPLE_TILE_MIN_WIDTH", 120);
 		AppValues::getInstance().AUDIO_THUMBNAIL_LINE_COUNT = (float)propFile->getDoubleValue("AUDIO_THUMBNAIL_LINE_COUNT", 50);
+		AppValues::getInstance().AUDIO_THUMBNAIL_LINE_COUNT_PLAYER = (float)propFile->getDoubleValue("AUDIO_THUMBNAIL_LINE_COUNT_PLAYER", 120);
 		AppValues::getInstance().updateDrawablesColors();
 	}
 	else
@@ -168,6 +169,7 @@ void SamplifyProperties::savePropertiesFile()
 		propFile->setValue("START_HEIGHT", AppValues::getInstance().WINDOW_HEIGHT);
 		propFile->setValue("SAMPLE_TILE_ASPECT_RATIO", AppValues::getInstance().SAMPLE_TILE_ASPECT_RATIO);
 		propFile->setValue("SAMPLE_TILE_MIN_WIDTH", AppValues::getInstance().SAMPLE_TILE_MIN_WIDTH);
+		propFile->setValue("AUDIO_THUMBNAIL_LINE_COUNT_PLAYER", AppValues::getInstance().AUDIO_THUMBNAIL_LINE_COUNT_PLAYER);
 		propFile->setValue("AUDIO_THUMBNAIL_LINE_COUNT", AppValues::getInstance().AUDIO_THUMBNAIL_LINE_COUNT);
 	}
 	else

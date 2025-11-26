@@ -2,6 +2,7 @@
 #include "SamplifyMainComponent.h"
 #include "SamplifyProperties.h"
 #include "SamplifyLookAndFeel.h"
+#include "ThemeManager.h"
 
 
 using namespace samplify;
@@ -94,14 +95,8 @@ void DirectoryExplorerTreeViewItem::paintItem(Graphics & g, int width, int heigh
 		g.setColour(itemBackgroundColor.darker(0.2f));
 		g.drawRoundedRectangle(0, 0, width, height, 4.0f, 1.0f);
 
-		if (itemBackgroundColor.getPerceivedBrightness() > 0.5f)
-		{
-			textColor = Colours::black;
-		}
-		else
-		{
-			textColor = Colours::white;
-		}
+		// Use theme text color instead of calculating from background
+		textColor = ThemeManager::getInstance().get(ThemeManager::ColorRole::TextPrimary);
 
 		if (mShouldUseFile)
 		{
