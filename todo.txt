@@ -3,7 +3,7 @@
 
 Major Blockers:
 [ ] (P0) Rename Project and github to Taste : That Audio Sample Test Enviornment
-[ ] (P0) Make tag for mobirise site in git history, then migrate to a github site with feature. use new name before doing this.
+[ ] (P0) Make tag for mobirise site in git history, then migrate to a github site with feature breakdown. use new name before doing this.
 [ ] (P0) Cross platform python build script
 
 Bugs:
