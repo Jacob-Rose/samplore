@@ -63,3 +63,7 @@ extras/Projucer/JUCECompileEngine.dylib
 
 # Environment configuration (local paths)
 .env
+
+# OpenCode temporary files
+.opencodetmp
+opencodetmp

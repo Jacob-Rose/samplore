@@ -1,27 +1,6 @@
-# SamplifyPlus JUCE Migration - Todo List
-# Last updated: 2025-11-23
+# SamplifyPlus JUCE - Todo List
 
-## Completed Tasks
-[x] Add Linux Makefile exporter to .jucer file
-[x] Fix module paths for all exporters
-[x] Fix SortingMethod.h - remove invalid 'const' from enum class
-[x] Fix FileChooser::browseForDirectory() deprecated API (SamplifyProperties)
-[x] Fix CallOutBox::runModalLoop() in PreferenceWindow
-[x] Fix CallOutBox/PopupMenu in SamplePlayerComponent
-[x] Fix DialogWindow::showModalDialog in TagExplorer files
-[x] Fix PopupMenu::show() in TagTile.cpp
-[x] Fix PopupMenu::show() in DirectoryExplorerTreeViewItem.cpp
-[x] Fix deprecated APIs in SampleTile.cpp (PopupMenu, FileChooser, NativeMessageBox)
-[x] Fix deprecated APIs in SamplifyMenuBar.cpp (dialogs, modal windows)
-
-## Pending Tasks
-[ ] Install missing development libraries:
-    - libfreetype6-dev
-    - libwebkit2gtk-4.1-dev (or 4.0)
-    - libgtk-3-dev
-    - libasound2-dev
-[ ] Complete final build
-[ ] Test application functionality
+[ ] Rename Project and github to Taste : That Audio Sample Test Enviornment
 
 ## Known Warnings (non-blocking)
 - Font constructor deprecation warnings in SamplifyLookAndFeel.h
