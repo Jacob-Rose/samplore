@@ -85,9 +85,43 @@ The project includes a comprehensive cross-platform build toolchain with **Pytho
 
 **Why Python?** Python scripts work identically across all platforms (Linux, macOS, Windows) without requiring Git Bash or MSYS2 on Windows.
 
-**Note**: The `.jucer` file uses placeholder paths that are configured per-machine. See [JUCER_PATHS_README.md](JUCER_PATHS_README.md) for details.
+**Note**: The `.jucer` file uses placeholder paths that are configured per-machine. The `configure.py` script handles this automatically.
+
+### Windows Cross-Compilation
+
+You can cross-compile for Windows from Linux using MinGW-w64:
+
+```bash
+# Install cross-compiler dependencies
+sudo apt-get install mingw-w64
+
+# Cross-compile for Windows
+python3 scripts/cross-compile-windows.py
+
+# Build Debug version
+python3 scripts/cross-compile-windows.py --config Debug
+```
+
+The cross-compiled Windows executable will be created in `Builds/VisualStudio2022/build/Release/App/Samplore.exe`.
 
 See [CLAUDE.md](CLAUDE.md) for detailed build instructions and architecture documentation.
+
+### Windows Cross-Compilation
+
+You can cross-compile for Windows from Linux using MinGW-w64:
+
+```bash
+# Install cross-compiler dependencies
+sudo apt-get install mingw-w64
+
+# Cross-compile for Windows
+python3 scripts/cross-compile-windows.py
+
+# Build Debug version
+python3 scripts/cross-compile-windows.py --config Debug
+```
+
+The cross-compiled Windows executable will be created in `Builds/VisualStudio2022/build/Release/App/Samplore.exe`.
 
 ## Technology
 
