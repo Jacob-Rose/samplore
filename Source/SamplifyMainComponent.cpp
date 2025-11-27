@@ -2,7 +2,7 @@
 #include "SamplifyLookAndFeel.h"
 #include "ThemeManager.h"
 
-using namespace samplify;
+using namespace samplore;
 
 SamplifyMainComponent* SamplifyMainComponent::mInstance = nullptr;
 
@@ -112,7 +112,7 @@ void SamplifyMainComponent::releaseResources()
 }
 
 
-void samplify::SamplifyMainComponent::setupLookAndFeel(LookAndFeel& laf)
+void samplore::SamplifyMainComponent::setupLookAndFeel(LookAndFeel& laf)
 {
 	auto& theme = ThemeManager::getInstance();
 	using CR = ThemeManager::ColorRole;

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-SamplifyPlus Cross-Platform Build Script
+Samplore Cross-Platform Build Script
 Supports: Windows, macOS, Linux
 """
 
@@ -17,6 +17,25 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).parent.resolve()
 PROJECT_ROOT = SCRIPT_DIR.parent
 BUILDS_DIR = PROJECT_ROOT / "Builds"
+ENV_FILE = PROJECT_ROOT / ".env"
+
+
+def load_env_file():
+    """Load environment variables from .env file."""
+    if not ENV_FILE.exists():
+        return {}
+    
+    env_vars = {}
+    with open(ENV_FILE, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            if '=' in line:
+                key, value = line.split('=', 1)
+                env_vars[key.strip()] = value.strip()
+    
+    return env_vars
 
 
 def get_platform():
@@ -50,6 +69,8 @@ def get_build_dir(plat):
 def get_output_binary(plat, config):
     """Get the expected output binary path."""
     build_dir = get_build_dir(plat)
+    if not build_dir:
+        return None
     if plat == "linux":
         return build_dir / "build" / "SamplifyPlus"
     elif plat == "macos":
@@ -75,8 +96,9 @@ def run_command(cmd, cwd=None, env=None):
         bufsize=1,
     )
 
-    for line in process.stdout:
-        print(line, end="")
+    if process.stdout:
+        for line in process.stdout:
+            print(line, end="")
 
     process.wait()
     return process.returncode
@@ -108,9 +130,9 @@ def clean_build(plat):
 def build_linux(config, jobs):
     """Build on Linux using make."""
     build_dir = get_build_dir("linux")
-    if not build_dir.exists():
+    if not build_dir or not build_dir.exists():
         print(f"Error: Linux build directory not found: {build_dir}")
-        print("Run Projucer to generate the Linux Makefile first.")
+        print("Run: python3 scripts/configure.py")
         return 1
 
     cmd = ["make", f"CONFIG={config}", f"-j{jobs}"]
@@ -120,9 +142,9 @@ def build_linux(config, jobs):
 def build_macos(config):
     """Build on macOS using xcodebuild."""
     build_dir = get_build_dir("macos")
-    if not build_dir.exists():
+    if not build_dir or not build_dir.exists():
         print(f"Error: macOS build directory not found: {build_dir}")
-        print("Run Projucer to generate the Xcode project first.")
+        print("Run: python3 scripts/configure.py")
         return 1
 
     # Find the xcodeproj
@@ -149,9 +171,9 @@ def build_macos(config):
 def build_windows(config):
     """Build on Windows using MSBuild."""
     build_dir = get_build_dir("windows")
-    if not build_dir.exists():
+    if not build_dir or not build_dir.exists():
         print(f"Error: Windows build directory not found: {build_dir}")
-        print("Run Projucer to generate the Visual Studio project first.")
+        print("Run: python3 scripts/configure.py")
         return 1
 
     # Find the solution file

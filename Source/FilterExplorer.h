@@ -18,7 +18,7 @@
 #include "SamplifyProperties.h"
 #include "TagExplorer_V2.h"
 
-namespace samplify
+namespace samplore
 {
 	class FilterExplorer : public Component, public TextEditor::Listener
 	{

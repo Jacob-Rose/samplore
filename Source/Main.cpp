@@ -22,13 +22,13 @@
 #include "ThemeManager.h"
 #include "UI/IconLibrary.h"
 
-namespace samplify
+namespace samplore
 {
-	class SamplifyPlusApplication : public JUCEApplication
+	class SamploreApplication : public JUCEApplication
 	{
 	public:
 		//==============================================================================
-		SamplifyPlusApplication() {	}
+		SamploreApplication() {	}
 
 		const String getApplicationName() override { return ProjectInfo::projectName; }
 		const String getApplicationVersion() override { return ProjectInfo::versionString; }
@@ -145,4 +145,4 @@ namespace samplify
 
 //==============================================================================
 // This macro generates the main() routine that launches the app.
-START_JUCE_APPLICATION (samplify::SamplifyPlusApplication)
+START_JUCE_APPLICATION (samplore::SamploreApplication)

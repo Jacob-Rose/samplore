@@ -27,6 +27,22 @@ sudo apt-get install libfreetype6-dev libwebkit2gtk-4.1-dev libgtk-3-dev libasou
 
 ### Environment Setup
 
+**IMPORTANT**: This project uses `.env` for machine-specific configuration to ensure the codebase is portable across different development environments.
+
+**Quick Setup (Recommended)**:
+```bash
+./scripts/setup.sh
+```
+
+This interactive script will:
+- Create `.env` from template
+- Prompt for JUCE installation path
+- Validate JUCE installation
+- Check platform-specific dependencies (Linux)
+- Generate build files automatically
+
+**Manual Setup**:
+
 1. Copy `.env.example` to `.env`:
    ```bash
    cp .env.example .env
@@ -39,16 +55,37 @@ sudo apt-get install libfreetype6-dev libwebkit2gtk-4.1-dev libgtk-3-dev libasou
    BUILD_JOBS=4
    ```
 
+3. Run the configuration script to update the `.jucer` file and generate build files:
+   ```bash
+   python3 scripts/configure.py
+   ```
+   
+   This script:
+   - Updates the `.jucer` file's MODULEPATH entries with your JUCE installation path
+   - Automatically finds and runs Projucer to generate platform-specific build files
+   - Works across Linux, macOS, and Windows
+
 ### Building
 
-**Using Build Script (Recommended)**:
+**Using Build Scripts (Recommended)**:
 ```bash
-# Build for current platform
+# Universal build script (auto-detects platform)
 ./scripts/build.sh
+
+# Python build script (more options)
+python3 scripts/build.py
+python3 scripts/build.py --clean --build
+python3 scripts/build.py --run
 
 # Clean build artifacts
 ./scripts/clean.sh
 ```
+
+The build scripts:
+- Auto-detect your platform (Linux, macOS, Windows)
+- Load configuration from `.env`
+- Auto-generate build files if missing (calls `configure.py`)
+- Support parallel builds
 
 **Manual Build Commands**:
 
@@ -75,10 +112,11 @@ xcodebuild -project Builds/MacOSX/Samplore.xcodeproj -configuration Release
 
 ### Projucer
 
-The project uses a `.jucer` file (`Samplore.jucer`) for build configuration. After modifying the `.jucer` file in Projucer:
-1. Save the project in Projucer to regenerate platform-specific build files
-2. JUCE module path is set to `/home/jakee/Documents/juce/modules` (Linux)
+The project uses a `.jucer` file (`Samplore.jucer`) for build configuration:
+1. The `.jucer` file contains JUCE module paths that are updated via `scripts/configure.py`
+2. After modifying the `.jucer` file in Projucer, save to regenerate platform-specific build files
 3. C++17 standard is required
+4. **Note**: JUCE module paths in the `.jucer` file should be managed via the `.env` file and `configure.py` script to maintain portability
 
 ## Architecture
 
@@ -288,9 +326,9 @@ Source/
 
 1. Open `Samplore.jucer` in Projucer
 2. Add module in Modules section
-3. Configure module path: `/home/jakee/Documents/juce/modules`
-4. Disable "Use global path"
-5. Save project to regenerate build files
+3. Module paths are automatically configured via `scripts/configure.py`
+4. Save project to regenerate build files
+5. Run `scripts/configure.py` again to ensure paths are updated correctly
 
 ### Modifying Sample Properties
 

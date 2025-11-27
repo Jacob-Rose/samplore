@@ -3,7 +3,7 @@
 
     ThemeManager.h
     Created: 2025
-    Author:  SamplifyPlus Team
+    Author:  Samplore Team
 
   ==============================================================================
 */
@@ -14,7 +14,7 @@
 #include "JuceHeader.h"
 #include <map>
 
-namespace samplify
+namespace samplore
 {
     class ThemeManager
     {

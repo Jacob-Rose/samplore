@@ -17,7 +17,7 @@
 
 #include "SamplifyProperties.h"
 
-namespace samplify
+namespace samplore
 {
 	class SampleExplorer : public Component, 
 		public TextEditor::Listener, 

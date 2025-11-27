@@ -1,4 +1,4 @@
-# SamplifyPlus JUCE - Todo List
+# Samplore JUCE - Todo List
 
 
 Major Blockers:

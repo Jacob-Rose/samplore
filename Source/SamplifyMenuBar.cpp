@@ -3,7 +3,7 @@
 #include "PreferenceWindow.h"
 #include "InfoWindow.h"
 
-using namespace samplify;
+using namespace samplore;
 
 SamplifyMainMenu::SamplifyMainMenu() {}
 

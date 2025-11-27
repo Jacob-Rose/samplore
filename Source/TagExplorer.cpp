@@ -3,7 +3,7 @@
 #include "SamplifyLookAndFeel.h"
 #include "Sample.h"
 
-using namespace samplify;
+using namespace samplore;
 
 TagExplorer::TagExplorer()
 {
@@ -56,12 +56,12 @@ void TagExplorer::addNewTag()
 	}), true);
 }
 
-void samplify::TagExplorer::changeListenerCallback(ChangeBroadcaster* source)
+void samplore::TagExplorer::changeListenerCallback(ChangeBroadcaster* source)
 {
 	mTagsContainer.updateTags("");
 }
 
-void samplify::TagExplorer::Container::removeNewTag(juce::String tag)
+void samplore::TagExplorer::Container::removeNewTag(juce::String tag)
 {
 	mNewTags.removeTag(tag);
 }

@@ -19,7 +19,7 @@
 #include <future>
 #include <algorithm>
 
-namespace samplify
+namespace samplore
 {
 	class SampleLibrary : public ChangeBroadcaster, public ChangeListener, public Timer
 	{

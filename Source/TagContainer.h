@@ -15,7 +15,7 @@
 
 #include "TagTile.h"
 
-namespace samplify
+namespace samplore
 {
 	class TagContainer : public Component
 	{

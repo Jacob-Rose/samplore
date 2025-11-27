@@ -20,7 +20,7 @@
 #include "SampleExplorer.h"
 #include "ServerAuthUnlockComponent.h"
 
-namespace samplify
+namespace samplore
 {
 	class SamplifyMainComponent : public AudioAppComponent, public KeyListener, public ChangeListener, private Timer
 	{

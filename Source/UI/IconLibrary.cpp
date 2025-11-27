@@ -3,14 +3,14 @@
 
     IconLibrary.cpp
     Created: 2025
-    Author:  SamplifyPlus Team
+    Author:  Samplore Team
 
   ==============================================================================
 */
 
 #include "IconLibrary.h"
 
-using namespace samplify;
+using namespace samplore;
 
 std::unique_ptr<IconLibrary> IconLibrary::instance = nullptr;
 

@@ -14,7 +14,7 @@
 #include "JuceHeader.h"
 #include "Fonts.h"
 
-namespace samplify
+namespace samplore
 {
 	class AppValues
 	{

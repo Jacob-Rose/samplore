@@ -3,7 +3,7 @@
 
     AnimationManager.h
     Created: 2025
-    Author:  SamplifyPlus Team
+    Author:  Samplore Team
 
   ==============================================================================
 */
@@ -15,7 +15,7 @@
 #include <functional>
 #include <vector>
 
-namespace samplify
+namespace samplore
 {
     // ====== Easing Functions ======
     namespace Easing

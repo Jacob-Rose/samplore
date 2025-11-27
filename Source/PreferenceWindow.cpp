@@ -13,7 +13,7 @@
 #include "SamplifyMainComponent.h"
 #include "ThemeManager.h"
 
-using namespace samplify;
+using namespace samplore;
 
 PreferenceWindow::PreferenceWindow() : DialogWindow("Preferences", AppValues::getInstance().MAIN_BACKGROUND_COLOR, true)
 {

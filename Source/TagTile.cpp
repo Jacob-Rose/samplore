@@ -5,7 +5,7 @@
 #include "SamplifyMainComponent.h"
 #include "ThemeManager.h"
 
-using namespace samplify;
+using namespace samplore;
 TagTile::TagTile(juce::String tag, Font& font)
 {
 	mTag = tag;

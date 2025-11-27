@@ -12,7 +12,7 @@
 #include "SamplifyLookAndFeel.h"
 #include "SamplifyProperties.h"
 
-using namespace samplify;
+using namespace samplore;
 
 TagExplorer_V2::TagExplorer_V2() : mTagsContainer(false)
 {
@@ -64,7 +64,7 @@ void TagExplorer_V2::addNewTag()
 	}), true);
 }
 
-void samplify::TagExplorer_V2::updateTags(juce::String query)
+void samplore::TagExplorer_V2::updateTags(juce::String query)
 {
 	StringArray tags = SamplifyProperties::getInstance()->getSampleLibrary()->getTagsStringArray();
 	StringArray cTags = StringArray(); //to fix loop delete issues

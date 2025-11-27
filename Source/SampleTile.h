@@ -18,7 +18,7 @@
 #include "SamplifyProperties.h"
 #include "Animation/AnimationManager.h"
 
-namespace samplify
+namespace samplore
 {
 
 	class SampleTile : public Component,

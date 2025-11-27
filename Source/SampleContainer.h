@@ -16,7 +16,7 @@
 #include "Sample.h"
 #include "SampleTile.h"
 
-namespace samplify
+namespace samplore
 {
 	class SampleContainer : public Component
 	{

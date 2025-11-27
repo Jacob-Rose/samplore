@@ -2,7 +2,7 @@
 #include "SamplifyProperties.h"
 #include "Icons.h"
 
-using namespace samplify;
+using namespace samplore;
 
 DirectoryExplorer::DirectoryExplorer()
 {

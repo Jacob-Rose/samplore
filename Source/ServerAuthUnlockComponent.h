@@ -12,7 +12,7 @@
 #define SERVERAUTHUNLOCKCOMP_H
 #include <JuceHeader.h>
 #include "ServerAuthStatus.h"
-namespace samplify
+namespace samplore
 {
 	class ServerAuthUnlockComponent : public OnlineUnlockForm
 	{

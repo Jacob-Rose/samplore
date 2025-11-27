@@ -14,7 +14,7 @@
 #include "SamplifyLookAndFeel.h"
 #include "ThemeManager.h"
 
-using namespace samplify;
+using namespace samplore;
 
 //==============================================================================
 SamplePlayerComponent::SamplePlayerComponent() : mSampleTagContainer(false)

@@ -14,14 +14,14 @@
 
 #include <JuceHeader.h>
 
-namespace samplify
+namespace samplore
 {
 	class ServerAuthStatus : public OnlineUnlockStatus
 	{
 	public:
 		String getProductID() override
 		{
-			return "Samplify";
+			return "Samplore";
 		}
 		bool doesProductIDMatch(const String& returnedIDFromServer) override
 		{
@@ -29,11 +29,11 @@ namespace samplify
 		}
 		String getWebsiteName() override
 		{
-			return "samplify.app";
+			return "samplore.app";
 		}
 		URL getServerAuthenticationURL() override
 		{
-			return URL("https://www.samplify.app/auth.php");
+			return URL("https://www.samplore.app/auth.php");
 		}
 		RSAKey getPublicKey() override
 		{

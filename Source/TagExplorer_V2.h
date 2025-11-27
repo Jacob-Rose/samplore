@@ -14,7 +14,7 @@
 #include "JuceHeader.h"
 #include "TagContainer.h"
 
-namespace samplify
+namespace samplore
 {
 	class TagExplorer_V2 : public Component, public ChangeListener
 	{

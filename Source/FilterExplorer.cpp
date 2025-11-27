@@ -1,6 +1,6 @@
 #include "FilterExplorer.h"
 
-using namespace samplify;
+using namespace samplore;
 //==============================================================================
 FilterExplorer::FilterExplorer()
 {

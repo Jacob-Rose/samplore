@@ -5,7 +5,7 @@
 #include "ThemeManager.h"
 
 
-using namespace samplify;
+using namespace samplore;
 
 DirectoryExplorerTreeViewItem::DirectoryExplorerTreeViewItem(std::shared_ptr<SampleDirectory> dir)
 {
@@ -56,7 +56,7 @@ void DirectoryExplorerTreeViewItem::filesDropped(const StringArray& files, int x
 	//todo handle adding directories
 }
 
-void samplify::DirectoryExplorerTreeViewItem::changeListenerCallback(ChangeBroadcaster* source)
+void samplore::DirectoryExplorerTreeViewItem::changeListenerCallback(ChangeBroadcaster* source)
 {
 	repaintItem();
 }
@@ -213,7 +213,7 @@ void DirectoryExplorerTreeViewItem::itemClicked(const MouseEvent& e)
 	}
 }
 
-void samplify::DirectoryExplorerTreeViewItem::refreshChildrenPaint()
+void samplore::DirectoryExplorerTreeViewItem::refreshChildrenPaint()
 {
 	repaintItem();
 	for (int i = 0; i < getNumSubItems(); i++)

@@ -17,7 +17,7 @@
 #include "AudioPlayer.h"
 #include "SampleLibrary.h"
 
-namespace samplify
+namespace samplore
 {
 	class SamplifyProperties : public ApplicationProperties, public ChangeListener
 	{

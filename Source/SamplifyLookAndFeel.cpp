@@ -11,7 +11,7 @@
 #include "SamplifyLookAndFeel.h"
 #include "Icons.h"
 
-using namespace samplify;
+using namespace samplore;
 
 std::unique_ptr<AppValues> AppValues::instance = nullptr;
 

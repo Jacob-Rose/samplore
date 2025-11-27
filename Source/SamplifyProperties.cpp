@@ -2,7 +2,7 @@
 #include "SamplifyMainComponent.h"
 #include "SamplifyLookAndFeel.h"
 
-using namespace samplify;
+using namespace samplore;
 
 SamplifyProperties* SamplifyProperties::smAppProperties = nullptr;
 

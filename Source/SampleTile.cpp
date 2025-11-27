@@ -9,7 +9,7 @@
 #include <iomanip>
 #include <sstream>
 
-using namespace samplify;
+using namespace samplore;
 
 SampleTile::SampleTile(Sample::Reference sample) : mTagContainer(false)
 {

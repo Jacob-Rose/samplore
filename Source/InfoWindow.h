@@ -12,7 +12,7 @@
 #define INFOWINDOW_H
 #include "JuceHeader.h"
 
-namespace samplify
+namespace samplore
 {
 	class InfoWindow : public DialogWindow
 	{

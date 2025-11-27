@@ -16,7 +16,7 @@
 #include "SampleAudioThumbnail.h"
 #include "SortingMethod.h"
 
-namespace samplify
+namespace samplore
 {
 	class Sample : public ChangeBroadcaster, public ChangeListener
 	{

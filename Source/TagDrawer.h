@@ -14,7 +14,7 @@
 #include <vector>
 #include <string>
 
-namespace samplify
+namespace samplore
 {
 	class TagDrawer
 	{

@@ -15,7 +15,7 @@
 
 #include "DirectoryExplorerTreeViewItem.h"
 
-namespace samplify
+namespace samplore
 {
 	class DirectoryExplorer : public Viewport, public ChangeListener
 	{

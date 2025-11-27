@@ -13,7 +13,7 @@
 
 #include "Sample.h"
 
-namespace samplify
+namespace samplore
 {
 	class AudioPlayer : public ChangeListener, public AudioSource, public ChangeBroadcaster
 	{

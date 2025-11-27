@@ -11,7 +11,7 @@
 #include "InfoWindow.h"
 #include "SamplifyLookAndFeel.h"
 
-using namespace samplify;
+using namespace samplore;
 
 InfoWindow::InfoWindow() : DialogWindow("Information", AppValues::getInstance().MAIN_BACKGROUND_COLOR, allButtons, true)
 {

@@ -4,7 +4,7 @@
 #include "SamplifyMainComponent.h"
 #include "SamplifyLookAndFeel.h"
 
-using namespace samplify;
+using namespace samplore;
 
 SampleExplorer::SampleExplorer() : mViewport(&mSampleContainer)
 {

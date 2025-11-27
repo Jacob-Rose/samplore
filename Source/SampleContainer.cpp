@@ -8,7 +8,7 @@
 
 #define JUCE_ENABLE_REPAINT_DEBUGGING true
 
-using namespace samplify;
+using namespace samplore;
 
 SampleContainer::SampleContainer()
 {

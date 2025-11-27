@@ -16,7 +16,7 @@
 
 #include "JuceHeader.h"
 
-namespace samplify
+namespace samplore
 {
 	/*
 	class DeleteSamplifyFilesThread : public ThreadWithProgressWindow

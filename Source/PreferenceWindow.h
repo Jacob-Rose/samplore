@@ -12,7 +12,7 @@
 #define PREFERENCEWINDOW_H
 #include "JuceHeader.h"
 
-namespace samplify
+namespace samplore
 {
     class PreferenceWindow : public DialogWindow
     {

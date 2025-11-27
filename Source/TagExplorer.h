@@ -14,7 +14,7 @@
 
 #include "TagContainer.h"
 
-namespace samplify
+namespace samplore
 {
 	class TagExplorer : public Component, public ChangeListener
 	{

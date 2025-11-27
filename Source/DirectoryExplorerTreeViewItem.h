@@ -15,7 +15,7 @@
 
 #include "SampleDirectory.h"
 
-namespace samplify
+namespace samplore
 {
 	class DirectoryExplorerTreeViewItem : public TreeViewItem, public FileDragAndDropTarget, public ChangeListener
 	{

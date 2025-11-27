@@ -3,7 +3,7 @@
 
     IconLibrary.h
     Created: 2025
-    Author:  SamplifyPlus Team
+    Author:  Samplore Team
 
   ==============================================================================
 */
@@ -15,7 +15,7 @@
 #include "../Icons.h"
 #include <map>
 
-namespace samplify
+namespace samplore
 {
     class IconLibrary
     {

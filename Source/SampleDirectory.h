@@ -16,7 +16,7 @@
 
 #include "Sample.h"
 
-namespace samplify
+namespace samplore
 {
 	enum class CheckStatus
 	{
@@ -47,11 +47,11 @@ namespace samplify
 		std::shared_ptr<SampleDirectory> getChildDirectory(int index);
 
 
-		friend class SamplifyPlusApplication; //sets the wildcard really fucking early
+		friend class SamploreApplication; //sets the wildcard really fucking early
 		friend class DirectoryExplorerTreeViewItem;
 	private:
 
-		SampleDirectory(const samplify::SampleDirectory& samplify) {}; //dont call me
+		SampleDirectory(const samplore::SampleDirectory& samplify) {}; //dont call me
 		CheckStatus mCheckStatus = CheckStatus::Enabled;
 		File mDirectory;
 		bool mIncludeChildSamples = true; //if the folder should load its own samples when getsamples is called

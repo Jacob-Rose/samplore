@@ -1,7 +1,7 @@
 #include "SampleLibrary.h"
 #include "SamplifyMainComponent.h"
 
-using namespace samplify;
+using namespace samplore;
 
 SampleLibrary::SampleLibrary()
 {
@@ -95,7 +95,7 @@ Sample::List SampleLibrary::getCurrentSamples()
 	return mCurrentSamples;
 }
 
-StringArray samplify::SampleLibrary::getUsedTags()
+StringArray samplore::SampleLibrary::getUsedTags()
 {
 	StringArray tags;
 	Sample::List allSamps = getAllSamplesInDirectories("", true);

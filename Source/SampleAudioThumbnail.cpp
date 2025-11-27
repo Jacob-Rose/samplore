@@ -1,7 +1,7 @@
 #include "SampleAudioThumbnail.h"
 #include "SamplifyLookAndFeel.h"
 
-using namespace samplify;
+using namespace samplore;
 
 SampleAudioThumbnail::SampleAudioThumbnail(int sourceSamplesPerThumbnailSample,
 	AudioFormatManager& formatManagerToUse,

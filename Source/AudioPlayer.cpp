@@ -1,6 +1,6 @@
 #include "AudioPlayer.h"
 
-using namespace samplify;
+using namespace samplore;
 
 AudioPlayer::AudioPlayer()
 {
@@ -30,7 +30,7 @@ void AudioPlayer::stop()
 	sendChangeMessage();
 }
 
-void samplify::AudioPlayer::toggle()
+void samplore::AudioPlayer::toggle()
 {
 	if (state == TransportState::Playing)
 	{
@@ -56,7 +56,7 @@ void AudioPlayer::playSample()
 	playSample(0.0f);
 }
 
-void samplify::AudioPlayer::playSample(float t)
+void samplore::AudioPlayer::playSample(float t)
 {
 	if (!mCurrentSample.isNull())
 	{

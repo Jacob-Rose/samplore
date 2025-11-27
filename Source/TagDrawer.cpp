@@ -1,7 +1,7 @@
 #include "TagDrawer.h"
 #include "SamplifyProperties.h"
 
-using namespace samplify;
+using namespace samplore;
 
 void TagDrawer::DrawTags(Graphics& g, std::vector<std::string> tags, Rectangle<float> bounds, float padding, float tagSpacerWidth)
 {

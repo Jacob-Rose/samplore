@@ -2,7 +2,7 @@
 #include <string>
 #include "SamplifyProperties.h"
 
-using namespace samplify;
+using namespace samplore;
 
 Sample::Sample(const File& file) : mFile(file)
 {
@@ -79,8 +79,8 @@ PropertiesFile* Sample::getPropertiesFile(const File& sampleFile)
 	options.applicationName = "SampleProperties";
 	options.filenameSuffix = ".sample";
 	options.commonToAllUsers = false;
-	options.folderName = "SamplifyPlus";
-	options.osxLibrarySubFolder = "Application Support/SamplifyPlus";
+	options.folderName = "Samplore";
+	options.osxLibrarySubFolder = "Application Support/Samplore";
 	/*
 	else if (SystemStats::getOperatingSystemType() == SystemStats::OperatingSystemType::Windows)
 	{
@@ -196,7 +196,7 @@ void Sample::Reference::setColor(Colour newColor)
 	mSample.lock()->mColor = newColor;
 }
 
-Colour samplify::Sample::Reference::getColor() const
+Colour samplore::Sample::Reference::getColor() const
 {
 	jassert(!isNull());
 	return mSample.lock()->mColor;
@@ -379,7 +379,7 @@ void Sample::List::clear()
 	mSamples.clear();
 }
 
-void samplify::Sample::List::sort(SortingMethod method)
+void samplore::Sample::List::sort(SortingMethod method)
 {
 	if (method == SortingMethod::Random)
 	{

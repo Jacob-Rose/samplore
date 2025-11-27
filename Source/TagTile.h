@@ -14,7 +14,7 @@
 #include "JuceHeader.h"
 #include "Animation/AnimationManager.h"
 
-namespace samplify
+namespace samplore
 {
 	class TagTile : public Component, public DragAndDropContainer, private AnimatedComponent
 	{

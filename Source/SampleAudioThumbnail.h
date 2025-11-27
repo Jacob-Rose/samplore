@@ -13,7 +13,7 @@
 
 #include "JuceHeader.h"
 
-namespace samplify
+namespace samplore
 {
 	class SampleAudioThumbnail : public AudioThumbnail
 	{

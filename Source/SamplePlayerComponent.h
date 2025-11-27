@@ -14,7 +14,7 @@
 #include "Sample.h"
 #include "TagContainer.h"
 
-namespace samplify
+namespace samplore
 {
     class SamplePlayerComponent : public Component, public ChangeListener, public TextEditor::Listener, public Button::Listener
     {

@@ -3,7 +3,7 @@
 
     ThemeManager.cpp
     Created: 2025
-    Author:  SamplifyPlus Team
+    Author:  Samplore Team
 
   ==============================================================================
 */
@@ -11,7 +11,7 @@
 #include "ThemeManager.h"
 #include "SamplifyProperties.h"
 
-using namespace samplify;
+using namespace samplore;
 
 std::unique_ptr<ThemeManager> ThemeManager::instance = nullptr;
 

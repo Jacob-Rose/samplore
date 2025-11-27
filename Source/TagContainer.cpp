@@ -1,7 +1,7 @@
 #include "TagContainer.h"
 #include "SamplifyLookAndFeel.h"
 
-using namespace samplify;
+using namespace samplore;
 
 TagContainer::TagContainer(bool updateHeight) : tagFont(AppValues::getInstance().SAMPLE_TAG_FONT_SIZE)
 {

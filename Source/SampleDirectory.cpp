@@ -9,7 +9,7 @@
 */
 
 #include "SampleDirectory.h"
-using namespace samplify;
+using namespace samplore;
 
 String SampleDirectory::mWildcard = "";
 
@@ -41,7 +41,7 @@ SampleDirectory::SampleDirectory(File file)
 	mDirectory = file;
 }
 
-Sample::List samplify::SampleDirectory::getChildSamplesRecursive(juce::String query, bool ignoreCheckSystem)
+Sample::List samplore::SampleDirectory::getChildSamplesRecursive(juce::String query, bool ignoreCheckSystem)
 {
 	Sample::List list;
 	if (mCheckStatus == CheckStatus::Disabled || mCheckStatus == CheckStatus::NotLoaded)
@@ -64,7 +64,7 @@ Sample::List samplify::SampleDirectory::getChildSamplesRecursive(juce::String qu
 	return list;
 }
 
-Sample::List samplify::SampleDirectory::getChildSamples()
+Sample::List samplore::SampleDirectory::getChildSamples()
 {
 	Sample::List list;
 	for (int i = 0; i < mChildSamples.size(); i++)
@@ -84,7 +84,7 @@ void SampleDirectory::updateChildrenItems(CheckStatus checkStatus)
 	}
 }
 
-void samplify::SampleDirectory::changeListenerCallback(ChangeBroadcaster* source)
+void samplore::SampleDirectory::changeListenerCallback(ChangeBroadcaster* source)
 {
 	recursiveRefresh();
 	sendChangeMessage();
@@ -105,13 +105,13 @@ void SampleDirectory::cycleCurrentCheck()
 	
 }
 
-void samplify::SampleDirectory::setCheckStatus(CheckStatus newCheckStatus)
+void samplore::SampleDirectory::setCheckStatus(CheckStatus newCheckStatus)
 {
 	updateChildrenItems(newCheckStatus);
 	sendChangeMessage();
 }
 
-void samplify::SampleDirectory::recursiveRefresh()
+void samplore::SampleDirectory::recursiveRefresh()
 {
 	for (int i = 0; i < mChildDirectories.size(); i++)
 	{
@@ -149,7 +149,7 @@ void samplify::SampleDirectory::recursiveRefresh()
 	}
 }
 
-std::shared_ptr<SampleDirectory> samplify::SampleDirectory::getChildDirectory(int index)
+std::shared_ptr<SampleDirectory> samplore::SampleDirectory::getChildDirectory(int index)
 {
 	return mChildDirectories[index];
 }

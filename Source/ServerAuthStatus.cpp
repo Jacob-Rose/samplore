@@ -10,9 +10,9 @@
 
 #include "ServerAuthStatus.h"
 
-using namespace samplify;
+using namespace samplore;
 
-String samplify::ServerAuthStatus::readReplyFromWebserver(const String& email, const String& password)
+String samplore::ServerAuthStatus::readReplyFromWebserver(const String& email, const String& password)
 {
 	URL url(getServerAuthenticationURL()
 		.withParameter("product", getProductID())
@@ -49,18 +49,18 @@ String samplify::ServerAuthStatus::readReplyFromWebserver(const String& email, c
 	return {};
 }
 
-String samplify::ServerAuthStatus::getState()
+String samplore::ServerAuthStatus::getState()
 {
     //TODO: get the key from the save location 
     return "";
 }
 
-void samplify::ServerAuthStatus::saveState(const String&)
+void samplore::ServerAuthStatus::saveState(const String&)
 {
     //TODO: save the key to the save location
 }
 
-void samplify::ServerAuthStatus::userCancelled()
+void samplore::ServerAuthStatus::userCancelled()
 {
     ScopedLock lock(streamCreationLock);
 
