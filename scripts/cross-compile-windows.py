@@ -41,9 +41,10 @@ def check_mingw_dependencies():
     """Check if MinGW cross-compiler is installed."""
     print("Checking MinGW cross-compiler dependencies...")
     
+    # Check for xPack MinGW-w64 (modern JUCE recommendation)
     required_tools = [
-        "x86_64-w64-mingw32-g++",
         "x86_64-w64-mingw32-gcc",
+        "x86_64-w64-mingw32-g++",
         "x86_64-w64-mingw32-windres",
         "x86_64-w64-mingw32-strip"
     ]
@@ -59,11 +60,15 @@ def check_mingw_dependencies():
             print(f"  - {tool}")
         print()
         print("Install with:")
+        print("  # Option 1: Traditional MinGW-w64 (legacy)")
         print("  sudo apt-get install mingw-w64")
-        print()
+        print("  # Option 2: Modern xPack MinGW-w64 (recommended by JUCE)")
+        print("  wget https://github.com/xpack-dev-tools/mingw-w64-gcc-xpack/releases/download/v14.2.0-1/mingw-w64-gcc-14.2.0-1-linux-x64.tar.xz")
+        print("  tar -xf mingw-w64-gcc-14.2.0-1-linux-x64.tar.xz")
+        print("  export PATH=$PWD/mingw-w64-gcc-14.2.0-1-linux-x64/bin:$PATH")
         return False
     
-    print("✓ All MinGW tools found")
+    print("✓ MinGW cross-compiler found")
     return True
 
 
@@ -135,7 +140,7 @@ CONFIG = {config}
 TARGET = Samplore.exe
 BUILD_DIR = build/$(CONFIG)/App
 
-# MinGW cross-compiler
+# MinGW cross-compiler (xPack recommended)
 CC = x86_64-w64-mingw32-gcc
 CXX = x86_64-w64-mingw32-g++
 WINDRES = x86_64-w64-mingw32-windres
