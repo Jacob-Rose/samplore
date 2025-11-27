@@ -414,7 +414,11 @@ int Sample::List::partition(SortingMethod method, int low, int high)
 	for (int j = low; j <= high -1; j++)
 	{
 		float val = mSamples[j].getValueForSortType(method);
-		if (val <= pivotValue)
+		// For Newest, we want descending order (highest timestamp first)
+		// For Oldest, we want ascending order (lowest timestamp first) 
+		bool shouldSwap = (method == SortingMethod::Newest) ? (val >= pivotValue) : (val <= pivotValue);
+		
+		if (shouldSwap)
 		{
 			i++;
 			Sample::Reference tmp = mSamples[i];
@@ -427,7 +431,6 @@ int Sample::List::partition(SortingMethod method, int low, int high)
 	mSamples[pivotIndex] = tmp;
 	return i + 1;
 }
-
 float Sample::getValueForSortType(SortingMethod method) const
 {
 	if (method == SortingMethod::Newest)
