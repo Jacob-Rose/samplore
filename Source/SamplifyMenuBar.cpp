@@ -97,6 +97,16 @@ void SamplifyMainMenu::menuItemSelected(int menuItemID, int topLevelMenuIndex)
 	{
 		URL("www.samplify.app").launchInDefaultBrowser();
 	}
+	else if (menuItemID >= removeDirectory)
+	{
+		// Handle remove directory submenu
+		int dirIndex = menuItemID - removeDirectory;
+		std::vector<std::shared_ptr<SampleDirectory>> dirs = SamplifyProperties::getInstance()->getSampleLibrary()->getDirectories();
+		if (dirIndex >= 0 && dirIndex < dirs.size())
+		{
+			SamplifyProperties::getInstance()->getSampleLibrary()->removeDirectory(dirs[dirIndex]->getFile());
+		}
+	}
 }
 
 PopupMenu SamplifyMainMenu::getMenuForIndex(int menuIndex, const String& menuName)

@@ -34,13 +34,34 @@ void SampleLibrary::sortSamples(SortingMethod method)
 
 void SampleLibrary::addDirectory(const File& dir)
 {
+	// Check if directory already exists
+	for (const auto& existingDir : mDirectories)
+	{
+		if (existingDir->getFile() == dir)
+		{
+			// Directory already added, skip
+			return;
+		}
+	}
+	
 	std::shared_ptr<SampleDirectory> sampDir = std::make_shared<SampleDirectory>(dir);
 	sampDir->addChangeListener(this);
 	mDirectories.push_back(sampDir);
+	sendChangeMessage();
 }
 
 void SampleLibrary::removeDirectory(const File& dir)
 {
+	for (auto it = mDirectories.begin(); it != mDirectories.end(); ++it)
+	{
+		if ((*it)->getFile() == dir)
+		{
+			(*it)->removeChangeListener(this);
+			mDirectories.erase(it);
+			sendChangeMessage();
+			return;
+		}
+	}
 }
 
 File SampleLibrary::getRelativeDirectoryForFile(const File& sampleFile) const
