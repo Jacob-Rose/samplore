@@ -153,3 +153,50 @@ std::shared_ptr<SampleDirectory> samplify::SampleDirectory::getChildDirectory(in
 {
 	return mChildDirectories[index];
 }
+
+void SampleDirectory::rescanFiles()
+{
+	// Rescan child directories - add new ones, keep existing
+	std::vector<File> existingDirs;
+	for (const auto& childDir : mChildDirectories)
+	{
+		existingDirs.push_back(childDir->getFile());
+	}
+	
+	DirectoryIterator dirIter(mDirectory, false, "*", File::findDirectories);
+	while (dirIter.next())
+	{
+		File dirFile = dirIter.getFile();
+		bool exists = false;
+		for (const auto& existing : existingDirs)
+		{
+			if (existing == dirFile)
+			{
+				exists = true;
+				break;
+			}
+		}
+		if (!exists)
+		{
+			auto sampDir = std::make_shared<SampleDirectory>(dirFile);
+			sampDir->addChangeListener(this);
+			mChildDirectories.push_back(sampDir);
+		}
+	}
+	
+	// Rescan sample files - rebuild the list entirely
+	mChildSamples.clear();
+	DirectoryIterator sampleIter(mDirectory, false, mWildcard, File::findFiles);
+	while (sampleIter.next())
+	{
+		mChildSamples.push_back(std::make_shared<Sample>(sampleIter.getFile()));
+	}
+	
+	// Recursively rescan child directories
+	for (auto& childDir : mChildDirectories)
+	{
+		childDir->rescanFiles();
+	}
+	
+	sendChangeMessage();
+}

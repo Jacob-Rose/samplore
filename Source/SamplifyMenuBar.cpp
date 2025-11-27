@@ -25,6 +25,10 @@ void SamplifyMainMenu::menuItemSelected(int menuItemID, int topLevelMenuIndex)
 			}
 		});
 	}
+	else if (menuItemID == refreshDirectories)
+	{
+		SamplifyProperties::getInstance()->getSampleLibrary()->refreshDirectories();
+	}
 	else if (menuItemID == setVolume)
 	{
 		mVolumeWindow = std::make_unique<AlertWindow>("Set Gain", "", MessageBoxIconType::NoIcon);
@@ -115,6 +119,7 @@ PopupMenu SamplifyMainMenu::getMenuForIndex(int menuIndex, const String& menuNam
 	if (menuIndex == 0) //File
 	{
 		menu.addItem(addDirectory, "Add Directory", true, false);
+		menu.addItem(refreshDirectories, "Refresh Directories", true, false);
 		//menu.addItem(removeSampFiles, "Select Directory and Remove Samples");
 		//menu.addItem(removeDirectory, "Remove Directory");
 		PopupMenu removeMenu;

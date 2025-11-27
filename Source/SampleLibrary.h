@@ -67,6 +67,7 @@ namespace samplify
 		void addDirectory(const File& dir);
 		std::vector<std::shared_ptr<SampleDirectory>> getDirectories() { return mDirectories; }
 		void removeDirectory(const File& dir);
+		void refreshDirectories();
 		int getDirectoryCount() { return mDirectories.size(); }
 
 		File getRelativeDirectoryForFile(const File& sampleFile) const;

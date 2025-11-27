@@ -64,6 +64,15 @@ void SampleLibrary::removeDirectory(const File& dir)
 	}
 }
 
+
+void SampleLibrary::refreshDirectories()
+{
+	for (auto& dir : mDirectories)
+	{
+		dir->rescanFiles();
+	}
+	refreshCurrentSamples();
+}
 File SampleLibrary::getRelativeDirectoryForFile(const File& sampleFile) const
 {
 	for (int i = 0; i < mDirectories.size(); i++)

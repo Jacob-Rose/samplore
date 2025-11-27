@@ -43,6 +43,7 @@ namespace samplify
 		int getChildDirectoryCount() { return mChildDirectories.size(); }
 
 		void recursiveRefresh();
+		void rescanFiles();
 		std::shared_ptr<SampleDirectory> getChildDirectory(int index);
 
 
