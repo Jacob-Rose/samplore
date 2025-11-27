@@ -1,10 +1,10 @@
-# CLAUDE.md
+# CLAUDE.md - Samplore
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-SamplifyPlus is a sample management and browsing application for music producers built with JUCE. It provides:
+Samplore is a sample management and browsing application for music producers built with JUCE. It provides:
 - Directory browsing with hierarchical folder views
 - Waveform visualization for audio files
 - Custom tagging system for organizing samples
@@ -61,21 +61,21 @@ make -C Builds/LinuxMakefile CONFIG=Debug -j4
 make -C Builds/LinuxMakefile CONFIG=Release -j4
 
 # Output location
-./Builds/LinuxMakefile/build/SamplifyPlus
+./Builds/LinuxMakefile/build/Samplore
 ```
 
 **Windows (Visual Studio)**:
-Open `Builds/VisualStudio2022/SamplifyPlus.sln` or `Builds/VisualStudio2019/SamplifyPlus.sln`
+Open `Builds/VisualStudio2022/Samplore.sln` or `Builds/VisualStudio2019/Samplore.sln`
 
 **macOS (Xcode)**:
-Open `Builds/MacOSX/SamplifyPlus.xcodeproj` or use:
+Open `Builds/MacOSX/Samplore.xcodeproj` or use:
 ```bash
-xcodebuild -project Builds/MacOSX/SamplifyPlus.xcodeproj -configuration Release
+xcodebuild -project Builds/MacOSX/Samplore.xcodeproj -configuration Release
 ```
 
 ### Projucer
 
-The project uses a `.jucer` file (`SamplifyPlus.jucer`) for build configuration. After modifying the `.jucer` file in Projucer:
+The project uses a `.jucer` file (`Samplore.jucer`) for build configuration. After modifying the `.jucer` file in Projucer:
 1. Save the project in Projucer to regenerate platform-specific build files
 2. JUCE module path is set to `/home/jakee/Documents/juce/modules` (Linux)
 3. C++17 standard is required
@@ -86,26 +86,26 @@ The project uses a `.jucer` file (`SamplifyPlus.jucer`) for build configuration.
 
 The application uses several singleton patterns for global state:
 
-**SamplifyProperties** (`SamplifyProperties.h/cpp`)
+**SamploreProperties** (`SamploreProperties.h/cpp`)
 - Singleton wrapper around JUCE's ApplicationProperties
 - Manages application settings and persistence
 - Owns the `SampleLibrary` and `AudioPlayer` instances
-- Access via `SamplifyProperties::getInstance()`
+- Access via `SamploreProperties::getInstance()`
 - Lifecycle: `initInstance()` in Main.cpp, `cleanupInstance()` on shutdown
 
 **AppValues** (referenced in Main.cpp)
 - Global application values singleton
-- Similar lifecycle pattern to SamplifyProperties
+- Similar lifecycle pattern to SamploreProperties
 
 ### Main Application Structure
 
 **Entry Point**: `Source/Main.cpp`
-- `SamplifyPlusApplication` class inherits from `JUCEApplication`
-- Creates `MainWindow` → `SamplifyMainComponent`
-- Initializes singletons: `AppValues`, `SamplifyProperties`, `AudioPlayer`
+- `SamploreApplication` class inherits from `JUCEApplication`
+- Creates `MainWindow` → `SamploreMainComponent`
+- Initializes singletons: `AppValues`, `SamploreProperties`, `AudioPlayer`
 
-**Main Window**: `SamplifyMainComponent` (`SamplifyMainComponent.h/cpp`)
-- Singleton accessible via `SamplifyMainComponent::getInstance()`
+**Main Window**: `SamploreMainComponent` (`SamploreMainComponent.h/cpp`)
+- Singleton accessible via `SamploreMainComponent::getInstance()`
 - Inherits from `AudioAppComponent` for audio I/O
 - Layout: Three main explorer panels with resizable edges
   - `DirectoryExplorer` (left) - folder tree view
@@ -142,7 +142,7 @@ The application uses several singleton patterns for global state:
 ### Audio System
 
 **AudioPlayer** (`AudioPlayer.h/cpp`)
-- Singleton-like pattern (owned by SamplifyProperties)
+- Singleton-like pattern (owned by SamploreProperties)
 - Wraps JUCE's `AudioFormatManager` and `AudioTransportSource`
 - States: Playing, Stopped, Stopping, Starting
 - Loads and plays `Sample::Reference` objects
@@ -170,9 +170,9 @@ The application uses several singleton patterns for global state:
 
 ### Look and Feel
 
-**SamplifyLookAndFeel** (`SamplifyLookAndFeel.h/cpp`)
+**SamploreLookAndFeel** (`SamploreLookAndFeel.h/cpp`)
 - Custom JUCE LookAndFeel implementation
-- Loaded via `SamplifyMainComponent::setupLookAndFeel()`
+- Loaded via `SamploreMainComponent::setupLookAndFeel()`
 
 **LookAndFeel_VJake** (`LookAndFeel_VJake.h/cpp`)
 - Alternative/base LookAndFeel
@@ -185,9 +185,9 @@ The application uses several singleton patterns for global state:
 ## Data Flow
 
 1. **Startup**:
-   - `Main.cpp` initializes singletons: `AppValues`, `SamplifyProperties`
-   - `SamplifyProperties::init()` creates `SampleLibrary`
-   - `SamplifyProperties::loadPropertiesFile()` restores directories and tags
+   - `Main.cpp` initializes singletons: `AppValues`, `SamploreProperties`
+   - `SamploreProperties::init()` creates `SampleLibrary`
+   - `SamploreProperties::loadPropertiesFile()` restores directories and tags
    - `SampleLibrary` spawns async loading of samples from directories
 
 2. **Sample Loading**:
@@ -248,7 +248,7 @@ The codebase is being migrated from JUCE 5.x/6.x to JUCE 7+/8. Key API changes a
 ```
 Source/
 ├── Main.cpp                          # Application entry point
-├── Samplify*.{h,cpp}                # Main components and global systems
+├── Samplore*.{h,cpp}                # Main components and global systems
 ├── Structures/                       # Core data structures (logical grouping)
 │   ├── AudioPlayer.*
 │   ├── Sample.*
@@ -260,7 +260,7 @@ Source/
 │   ├── SortingMethod.h
 │   ├── Icons.*
 │   ├── Fonts.*
-│   └── SamplifyProperties.*
+│   └── SamploreProperties.*
 ├── Components/                       # UI components (logical grouping)
 │   ├── SamplePlayerComponent.*
 │   ├── DirectoryExplorer/
@@ -286,7 +286,7 @@ Source/
 
 ### Adding a New JUCE Module
 
-1. Open `SamplifyPlus.jucer` in Projucer
+1. Open `Samplore.jucer` in Projucer
 2. Add module in Modules section
 3. Configure module path: `/home/jakee/Documents/juce/modules`
 4. Disable "Use global path"
@@ -303,4 +303,4 @@ Access through `Sample::Reference` wrapper methods. Changes broadcast to listene
 
 ### Adding New Color Themes
 
-Colors managed in `SamplifyLookAndFeel` and `PreferenceWindow`. Use JUCE's `Colour` and `LookAndFeel::setColour()` system with custom `ColourIds`.
+Colors managed in `SamploreLookAndFeel` and `PreferenceWindow`. Use JUCE's `Colour` and `LookAndFeel::setColour()` system with custom `ColourIds`.

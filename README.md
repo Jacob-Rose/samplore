@@ -1,66 +1,94 @@
-## Samplify Plus
-![SamplifyImage1](https://i.imgur.com/TEacSr6.png)
-[^1]:
-*concept image*
+# Samplore
 
-A File Manager based around music production and samples.
+![Samplore Screenshot](https://i.imgur.com/TEacSr6.png)
 
-Music production has hundreds of great tools to allow creators to make new and amazing things, but searching for the right sounding sample when creators have libraries of thousands of files is very difficult in modern softwares like Ableton Live and FL Studio.
+A modern, open-source sample library manager for music producers built with JUCE.
 
-File organization is not the only solution for these projects, but properly organizing and labeling samples.
-Tags allow users to label each sample with certain traits that they can define. Label a sample with the tags *kick*, *short*, *trigger* and search for multiple tags at once to find the sample for the situation.
+## Overview
 
-Optimized file loading prevents crashes, only loads supported files, and after a first launch it takes only seconds to start up.
+Music production has hundreds of great tools, but searching for the right sample when you have libraries of thousands of files is difficult in modern DAWs like Ableton Live and FL Studio.
 
-Easy drag and drop from Samplify into your preferred DAW, similar to dragging it in from any OS File Explorer.
-
-### JUCE Library
-
-My first attempt with using the JUCE library.
-
-The library offers many tools that make it easier than ever to create an audio application.
-
-Juce will allow an easy port to a VST, simplier cryptography and copy protection as well as online authorization. Also allows cross platform support that is required as music production device market share is split between Windows and Mac.
+**Samplore** (formerly Samplify) is a dedicated sample browser that makes discovering and organizing your sound library effortless.
 
 ## Features
-- Directory View of Folders
-- Waveform View of Files
-- Drag and Drop ability
-- Tag system
-- File sticky notes, easy ways to save a file for later and any ideas had with the file
-- Site is more up to date on these features
-![SamplifyImage1](https://i.imgur.com/yw0G0ml.png)
-- Color preferences setting, allows changing to whatever you wish!
-![SamplifyImage2](https://i.imgur.com/vaobH0v.png)
 
-### Future Plans
+- **Fast Sample Preview** - Near-zero latency playback, start from any point in the sample
+- **Directory Explorer** - Navigate your sample folders with a hierarchical tree view
+- **Waveform Visualization** - See your samples with customizable waveform detail
+- **Tag System** - Organize samples with custom tags and colors
+- **Search & Filter** - Quickly find samples by name, tags, or directory
+- **Drag & Drop** - Seamlessly drag samples into your DAW
+- **Sample Notes** - Leave notes and ideas on individual samples
+- **Customizable Themes** - Dark/Light themes with custom color schemes
+- **Cross-Platform** - Runs on Windows, macOS, and Linux
 
-- Development is mostly finished due to lack of time commitment, have a few ideas I would like but we will see
+![Samplore Interface](https://i.imgur.com/yw0G0ml.png)
 
+## Building from Source
 
-## Learning Outcomes
+### Prerequisites
 
-- Learned how to read waveforms and draw custom waveforms based off their data
-- Learned how to manage memory effectively to reduce UI hanging
-- Learned to use JUCE library
-- Gained skill in C++ and standard library features included in it
+- JUCE framework (version 7+)
+- C++17 compatible compiler
+- Platform-specific dependencies:
 
+**Linux:**
+```bash
+sudo apt-get install libfreetype6-dev libwebkit2gtk-4.1-dev libgtk-3-dev libasound2-dev libcurl4-openssl-dev
+```
 
-__Goal of project was to create a new sample browser for music producers.__
+### Setup
 
-Tha main mechanic that I wanted from a sample browser was a waveform view and a tagging system. The waveform view is working great, with the ability to custom draw the waveform in any way desired, but the loading of this many waveforms slows down the system greatly, especially with large sample libraries.
+1. Clone the repository:
+```bash
+git clone https://github.com/Jacob-Rose/samplore.git
+cd samplore
+```
 
+2. Configure environment:
+```bash
+cp .env.example .env
+# Edit .env and set your JUCE_PATH
+```
 
+3. Build:
+```bash
+./scripts/build.sh
+```
 
-Current passion project, working on as I can. Hopefully beta release with online authorization soon! :ok_hand:
+4. Run:
+```bash
+./scripts/run.sh
+```
 
+See [CLAUDE.md](CLAUDE.md) for detailed build instructions and architecture documentation.
 
-### Legal
+## Technology
 
-I have included all the JUCE library files I used, I do not own these files and all rights for those files fall under their specified license.
+Built with the [JUCE framework](https://juce.com/), Samplore provides:
+- Professional audio processing
+- Cross-platform compatibility
+- Modern C++ architecture
+- Efficient memory management for large libraries
 
-I have included a FontAwesome module for JUCE, I do not own these files and all rights for those files fall under their specified license. (This has since been deprecated and we are now using proper icons legally sourced, but code remnants might remain)
+## Contributing
 
-## Rename Required
+Contributions are welcome! Please feel free to:
+- Report bugs
+- Suggest features
+- Submit pull requests
+- Improve documentation
 
-I have received legal notice that a trademark is active for Samplify. If this app sees any future updates, a rename will be part of that endevor now.
+## History
+
+Originally developed as "Samplify" as a personal project and learning experience with JUCE. Now open source and renamed to "Samplore" to avoid trademark conflicts.
+
+## License
+
+See repository for license details.
+
+## Acknowledgments
+
+- Built with [JUCE](https://juce.com/)
+- Icons sourced legally (see CLAUDE.md for details)
+- Font resources included under their respective licenses

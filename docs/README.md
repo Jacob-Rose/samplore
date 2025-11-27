@@ -1,6 +1,6 @@
-# Samplify Website
+# Samplore Website
 
-This directory contains the GitHub Pages site for Samplify.
+This directory contains the GitHub Pages site for Samplore.
 
 ## Local Development
 
