@@ -87,41 +87,18 @@ The project includes a comprehensive cross-platform build toolchain with **Pytho
 
 **Note**: The `.jucer` file uses placeholder paths that are configured per-machine. The `configure.py` script handles this automatically.
 
-### Windows Cross-Compilation
+### Building for Windows
 
-You can cross-compile for Windows from Linux using MinGW-w64:
+**On Windows:**
+- Use Visual Studio 2019 or 2022 to open `Builds/VisualStudio2022/Samplore.sln`
+- Or use the Python build scripts as shown above
 
-```bash
-# Install cross-compiler dependencies
-sudo apt-get install mingw-w64
-
-# Cross-compile for Windows
-python3 scripts/cross-compile-windows.py
-
-# Build Debug version
-python3 scripts/cross-compile-windows.py --config Debug
-```
-
-The cross-compiled Windows executable will be created in `Builds/VisualStudio2022/build/Release/App/Samplore.exe`.
+**From Linux/macOS:**
+- Cross-compilation is not officially supported by JUCE
+- Use a Windows VM or dual-boot setup for Windows builds
+- Alternatively, use GitHub Actions or CI/CD for automated Windows builds
 
 See [CLAUDE.md](CLAUDE.md) for detailed build instructions and architecture documentation.
-
-### Windows Cross-Compilation
-
-You can cross-compile for Windows from Linux using MinGW-w64:
-
-```bash
-# Install cross-compiler dependencies
-sudo apt-get install mingw-w64
-
-# Cross-compile for Windows
-python3 scripts/cross-compile-windows.py
-
-# Build Debug version
-python3 scripts/cross-compile-windows.py --config Debug
-```
-
-The cross-compiled Windows executable will be created in `Builds/VisualStudio2022/build/Release/App/Samplore.exe`.
 
 ## Technology
 
