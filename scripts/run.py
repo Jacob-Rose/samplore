@@ -50,7 +50,7 @@ def get_platform():
 
 def run_linux():
     """Run Linux binary."""
-    binary_path = BUILDS_DIR / "LinuxMakefile" / "build" / "SamplifyPlus"
+    binary_path = BUILDS_DIR / "LinuxMakefile" / "build" / "Samplore"
     
     if not binary_path.exists():
         print(f"✗ Binary not found at {binary_path}")
@@ -75,7 +75,7 @@ def run_linux():
 
 def run_macos(config):
     """Run macOS application."""
-    app_path = BUILDS_DIR / "MacOSX" / "build" / config / "SamplifyPlus.app"
+    app_path = BUILDS_DIR / "MacOSX" / "build" / config / "Samplore.app"
     
     if not app_path.exists():
         print(f"✗ Application not found at {app_path}")
@@ -98,18 +98,18 @@ def run_macos(config):
 def run_windows(config):
     """Run Windows executable."""
     # Try VS2022 first
-    exe_path = BUILDS_DIR / "VisualStudio2022" / "x64" / config / "SamplifyPlus.exe"
+    exe_path = BUILDS_DIR / "VisualStudio2022" / "x64" / config / "Samplore.exe"
     
     if not exe_path.exists():
         # Try VS2019
-        exe_path = BUILDS_DIR / "VisualStudio2019" / "x64" / config / "App" / "SamplifyPlus.exe"
+        exe_path = BUILDS_DIR / "VisualStudio2019" / "x64" / config / "App" / "Samplore.exe"
     
     if not exe_path.exists():
         print(f"✗ Executable not found")
         print()
         print("Expected locations:")
-        print(f"  {BUILDS_DIR / 'VisualStudio2022' / 'x64' / config / 'SamplifyPlus.exe'}")
-        print(f"  {BUILDS_DIR / 'VisualStudio2019' / 'x64' / config / 'App' / 'SamplifyPlus.exe'}")
+        print(f"  {BUILDS_DIR / 'VisualStudio2022' / 'x64' / config / 'Samplore.exe'}")
+        print(f"  {BUILDS_DIR / 'VisualStudio2019' / 'x64' / config / 'App' / 'Samplore.exe'}")
         print()
         print("Build the application first:")
         print("  ./scripts/build.sh")

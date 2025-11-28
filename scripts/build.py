@@ -72,11 +72,11 @@ def get_output_binary(plat, config):
     if not build_dir:
         return None
     if plat == "linux":
-        return build_dir / "build" / "SamplifyPlus"
+        return build_dir / "build" / "Samplore"
     elif plat == "macos":
-        return build_dir / "build" / config / "SamplifyPlus.app"
+        return build_dir / "build" / config / "Samplore.app"
     elif plat == "windows":
-        return build_dir / f"x64/{config}/SamplifyPlus.exe"
+        return build_dir / f"x64/{config}/Samplore.exe"
     return None
 
 

@@ -87,13 +87,13 @@ void SampleTile::paint (Graphics& g)
 		}
 
 		// Draw title with modern typography (20px)
-		g.setFont(Font(20.0f, Font::bold));
+		g.setFont(FontOptions(20.0f, Font::bold));
 		g.setColour(titleColor);
 		g.drawText(mSample.getFile().getFileName(), titleRect, Justification::centredLeft, true);
 
 		// Draw time with secondary text color
 		g.setColour(theme.get(ThemeManager::ColorRole::TextSecondary));
-		g.setFont(Font(14.0f));
+		g.setFont(FontOptions(14.0f));
 		std::stringstream secondsStr;
 		std::stringstream minutesStr;
 		int minutes = ((int)mSample.getLength()) / 60;

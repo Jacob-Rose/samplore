@@ -3,7 +3,7 @@
 
 using namespace samplore;
 
-TagContainer::TagContainer(bool updateHeight) : tagFont(AppValues::getInstance().SAMPLE_TAG_FONT_SIZE)
+TagContainer::TagContainer(bool updateHeight) : tagFont(FontOptions(AppValues::getInstance().SAMPLE_TAG_FONT_SIZE))
 {
 	mUpdateHeight = updateHeight;
 }
@@ -49,7 +49,9 @@ void TagContainer::updateItemBounds()
 	}
 	for (int i = 0; i < mCurrentTags.size(); i++)
 	{
-		float fontWidth = tagFont.getStringWidth(mCurrentTags[i]);
+		GlyphArrangement glyphs;
+		glyphs.addLineOfText(tagFont, mCurrentTags[i], 0, 0);
+		float fontWidth = glyphs.getBoundingBox(0, -1, true).getWidth();
 		float boxWidth = fontWidth + (padding * 2);
 		if (currentWidth + boxWidth < getWidth())
 		{

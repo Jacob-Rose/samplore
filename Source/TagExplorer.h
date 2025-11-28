@@ -47,7 +47,7 @@ namespace samplore
 				updateTagContainerBounds();
 			}
 		private:
-			const Font infoFont = Font(16.0f);
+			const Font infoFont = FontOptions(16.0f);
 			TagContainer mNewTags;
 			TagContainer mContainedTags; //all tags for current files in directory with text from search bar contained in it
 			TagContainer mNotContainedTags; //all tags for lower half, only ones with the text in search bar contained in it

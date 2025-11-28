@@ -17,7 +17,7 @@ using namespace samplore;
 
 PreferenceWindow::PreferenceWindow() : DialogWindow("Preferences", AppValues::getInstance().MAIN_BACKGROUND_COLOR, true)
 {
-    setContentComponent(&mView);
+    setContentNonOwned(&mView, true);
     setSize(600, 800);
     setWantsKeyboardFocus(true);
     setResizable(false, false);
@@ -58,7 +58,7 @@ PreferenceWindow::View::View()
 
     // ===== THEME SECTION =====
     mThemeLabel.setText("Theme", dontSendNotification);
-    mThemeLabel.setFont(Font(18.0f, Font::bold));
+    mThemeLabel.setFont(FontOptions(18.0f, Font::bold));
     mThemeLabel.setColour(Label::textColourId, theme.get(ThemeManager::ColorRole::TextPrimary));
     addAndMakeVisible(mThemeLabel);
 
@@ -74,7 +74,7 @@ PreferenceWindow::View::View()
 
     // ===== COLOR CUSTOMIZATION SECTION =====
     mColorCustomizationLabel.setText("Custom Colors", dontSendNotification);
-    mColorCustomizationLabel.setFont(Font(18.0f, Font::bold));
+    mColorCustomizationLabel.setFont(FontOptions(18.0f, Font::bold));
     mColorCustomizationLabel.setColour(Label::textColourId, theme.get(ThemeManager::ColorRole::TextPrimary));
     addAndMakeVisible(mColorCustomizationLabel);
 
@@ -103,7 +103,7 @@ PreferenceWindow::View::View()
 
     // ===== COLOR PRESETS SECTION =====
     mColorPresetsLabel.setText("Color Presets", dontSendNotification);
-    mColorPresetsLabel.setFont(Font(18.0f, Font::bold));
+    mColorPresetsLabel.setFont(FontOptions(18.0f, Font::bold));
     mColorPresetsLabel.setColour(Label::textColourId, theme.get(ThemeManager::ColorRole::TextPrimary));
     addAndMakeVisible(mColorPresetsLabel);
 
@@ -134,7 +134,7 @@ PreferenceWindow::View::View()
 
     // ===== APPEARANCE SECTION =====
     mAppearanceLabel.setText("Appearance", dontSendNotification);
-    mAppearanceLabel.setFont(Font(18.0f, Font::bold));
+    mAppearanceLabel.setFont(FontOptions(18.0f, Font::bold));
     mAppearanceLabel.setColour(Label::textColourId, theme.get(ThemeManager::ColorRole::TextPrimary));
     addAndMakeVisible(mAppearanceLabel);
 

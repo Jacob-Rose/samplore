@@ -58,6 +58,6 @@ namespace samplore
 		static std::unique_ptr<AppValues> instance;
 	};
 
-	const Font SAMPLE_TILE_TITLE_FONT = Font(Typeface::createSystemTypefaceFor(Fonts::AbelRegular_ttf, Fonts::AbelRegular_ttfSize)).withHeight(24.0f);
+	const Font SAMPLE_TILE_TITLE_FONT = FontOptions(Typeface::createSystemTypefaceFor(Fonts::AbelRegular_ttf, Fonts::AbelRegular_ttfSize)).withHeight(24.0f);
 }
 #endif

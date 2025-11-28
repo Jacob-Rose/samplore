@@ -117,7 +117,7 @@ void TagTile::mouseUp(const MouseEvent& e)
 
 void TagTile::mouseDrag(const MouseEvent& e)
 {
-	startDragging("Tags", this, juce::Image(), true);
+	startDragging("Tags", this, juce::ScaledImage(juce::Image()), true, nullptr, nullptr);
 }
 
 void TagTile::mouseEnter(const MouseEvent& e)

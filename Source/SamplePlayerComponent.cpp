@@ -145,7 +145,7 @@ void SamplePlayerComponent::paint (Graphics& g)
 
         // Draw title with modern typography
         g.setColour(theme.get(ThemeManager::ColorRole::TextPrimary));
-        g.setFont(Font(20.0f, Font::bold));
+        g.setFont(FontOptions(20.0f, Font::bold));
         g.drawText(samp.getFile().getFileName(), m_TitleRect, Justification::left, true);
 
         // Draw waveform with modern styling

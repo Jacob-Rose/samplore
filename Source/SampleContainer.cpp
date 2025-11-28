@@ -6,8 +6,6 @@
 #include <algorithm>
 #include <cmath>
 
-#define JUCE_ENABLE_REPAINT_DEBUGGING true
-
 using namespace samplore;
 
 SampleContainer::SampleContainer()
