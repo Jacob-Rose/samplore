@@ -48,13 +48,6 @@ python3 scripts/build.py    # Build the project
 python3 scripts/run.py      # Run the application
 ```
 
-**Using Shell Scripts (Alternative):**
-```bash
-./scripts/setup.sh    # Setup
-./scripts/build.sh    # Build
-./scripts/run.sh      # Run
-```
-
 **Manual Setup:**
 ```bash
 # 1. Clone and configure
@@ -73,17 +66,17 @@ python3 scripts/run.py
 
 ### Build Toolchain
 
-The project includes a comprehensive cross-platform build toolchain with **Python scripts** (recommended) and shell script alternatives:
+The project includes a comprehensive cross-platform build toolchain with **Python scripts**:
 
-| Script | Python | Shell | Description |
-|--------|--------|-------|-------------|
-| **Setup** | `setup.py` | `setup.sh` | Interactive first-time configuration wizard |
-| **Configure** | `configure.py` | - | Updates `.jucer` file, generates build files |
-| **Build** | `build.py` | `build.sh` | Compiles the project |
-| **Clean** | `clean.py` | `clean.sh` | Removes build artifacts |
-| **Run** | `run.py` | `run.sh` | Launches the built application |
+| Script | Description |
+|--------|-------------|
+| **`setup.py`** | Interactive first-time configuration wizard |
+| **`configure.py`** | Updates `.jucer` file, generates build files |
+| **`build.py`** | Compiles the project for current platform |
+| **`clean.py`** | Removes build artifacts |
+| **`run.py`** | Launches the built application |
 
-**Why Python?** Python scripts work identically across all platforms (Linux, macOS, Windows) without requiring Git Bash or MSYS2 on Windows.
+**Why Python?** Python scripts work identically across all platforms (Linux, macOS, Windows) without any platform-specific dependencies or shell requirements.
 
 **Note**: The `.jucer` file uses placeholder paths that are configured per-machine. The `configure.py` script handles this automatically.
 

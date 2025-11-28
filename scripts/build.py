@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Samplore Cross-Platform Build Script
-Supports: Windows, macOS, Linux
+Samplore Native Build Script
+Builds Samplore for the current platform (Linux, macOS, or Windows)
 """
 
 import argparse
@@ -130,10 +130,16 @@ def clean_build(plat):
 def build_linux(config, jobs):
     """Build on Linux using make."""
     build_dir = get_build_dir("linux")
-    if not build_dir or not build_dir.exists():
-        print(f"Error: Linux build directory not found: {build_dir}")
-        print("Run: python3 scripts/configure.py")
-        return 1
+    if not build_dir or not build_dir.exists() or not (build_dir / "Makefile").exists():
+        print(f"⚠ Linux build files not found")
+        print("Generating build files...")
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT_DIR / "configure.py")],
+            cwd=PROJECT_ROOT
+        )
+        if result.returncode != 0:
+            print("✗ Failed to generate build files")
+            return 1
 
     cmd = ["make", f"CONFIG={config}", f"-j{jobs}"]
     return run_command(cmd, cwd=build_dir)
@@ -142,21 +148,35 @@ def build_linux(config, jobs):
 def build_macos(config):
     """Build on macOS using xcodebuild."""
     build_dir = get_build_dir("macos")
-    if not build_dir or not build_dir.exists():
-        print(f"Error: macOS build directory not found: {build_dir}")
-        print("Run: python3 scripts/configure.py")
-        return 1
-
+    
     # Find the xcodeproj
     xcodeproj = None
-    for item in build_dir.iterdir():
-        if item.suffix == ".xcodeproj":
-            xcodeproj = item
-            break
-
+    if build_dir and build_dir.exists():
+        for item in build_dir.iterdir():
+            if item.suffix == ".xcodeproj":
+                xcodeproj = item
+                break
+    
     if not xcodeproj:
-        print("Error: No .xcodeproj found in build directory")
-        return 1
+        print(f"⚠ macOS build files not found")
+        print("Generating build files...")
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT_DIR / "configure.py")],
+            cwd=PROJECT_ROOT
+        )
+        if result.returncode != 0:
+            print("✗ Failed to generate build files")
+            return 1
+        
+        # Re-check for xcodeproj
+        for item in build_dir.iterdir():
+            if item.suffix == ".xcodeproj":
+                xcodeproj = item
+                break
+        
+        if not xcodeproj:
+            print("✗ No .xcodeproj found after generation")
+            return 1
 
     cmd = [
         "xcodebuild",
@@ -171,21 +191,35 @@ def build_macos(config):
 def build_windows(config):
     """Build on Windows using MSBuild."""
     build_dir = get_build_dir("windows")
-    if not build_dir or not build_dir.exists():
-        print(f"Error: Windows build directory not found: {build_dir}")
-        print("Run: python3 scripts/configure.py")
-        return 1
-
+    
     # Find the solution file
     sln_file = None
-    for item in build_dir.iterdir():
-        if item.suffix == ".sln":
-            sln_file = item
-            break
-
+    if build_dir and build_dir.exists():
+        for item in build_dir.iterdir():
+            if item.suffix == ".sln":
+                sln_file = item
+                break
+    
     if not sln_file:
-        print("Error: No .sln file found in build directory")
-        return 1
+        print(f"⚠ Windows build files not found")
+        print("Generating build files...")
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT_DIR / "configure.py")],
+            cwd=PROJECT_ROOT
+        )
+        if result.returncode != 0:
+            print("✗ Failed to generate build files")
+            return 1
+        
+        # Re-check for solution file
+        for item in build_dir.iterdir():
+            if item.suffix == ".sln":
+                sln_file = item
+                break
+        
+        if not sln_file:
+            print("✗ No .sln file found after generation")
+            return 1
 
     # Try to find MSBuild
     msbuild_paths = [
@@ -219,7 +253,7 @@ def build_windows(config):
 
 def build(plat, config, jobs):
     """Run the build for the specified platform."""
-    print(f"Building SamplifyPlus for {plat} ({config})")
+    print(f"Building Samplore for {plat} ({config})")
     print("=" * 60)
 
     if plat == "linux":
@@ -250,16 +284,16 @@ def run_app(plat, config):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="SamplifyPlus Cross-Platform Build Script",
+        description="Samplore Native Build Script",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python build.py                    # Build Release
-  python build.py --config Debug     # Build Debug
-  python build.py --clean            # Clean build artifacts
-  python build.py --clean --build    # Clean then build
-  python build.py --run              # Build and run
-  python build.py -j8                # Build with 8 parallel jobs
+  python3 scripts/build.py                    # Build Release
+  python3 scripts/build.py --config Debug     # Build Debug
+  python3 scripts/build.py --clean            # Clean build artifacts
+  python3 scripts/build.py --clean --build    # Clean then build
+  python3 scripts/build.py --run              # Build and run
+  python3 scripts/build.py -j8                # Build with 8 parallel jobs
         """
     )
 
