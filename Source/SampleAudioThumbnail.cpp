@@ -30,7 +30,7 @@ void SampleAudioThumbnail::drawChannel(Graphics& g, const Rectangle<int>& area, 
 	for (int i = 0; i < lineCount; i++)
 	{
 		float max, min;
-		getApproximateMinMax(startTimeSeconds + (segmentTimeLength * i), startTimeSeconds + (segmentTimeLength * i + 1), channelNum, min, max);
+		getApproximateMinMax(startTimeSeconds + (segmentTimeLength * i), startTimeSeconds + (segmentTimeLength * (i + 1)), channelNum, min, max);
 		//min /= peak; //normalize
 		//max /= peak; //normalize
 		float posX = area.getPosition().x + (widthSegment * i);
