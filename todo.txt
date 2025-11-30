@@ -6,7 +6,9 @@ Major Blockers:
 [ ] (P0) Cross platform python build script
 
 Bugs:
-[ ] (P1) Address Leetal Issues
+[ ] (P1) Fix Theme Updates to work immeditely
+[ ] (P2) Custom Color Caching has some ai sloppiness to it.
+[ ] (P1) Reduce AI Slop + Initialize Agents.md
 
 Fixins:
 [ ] Add + Remove directories should be done from preferences.
