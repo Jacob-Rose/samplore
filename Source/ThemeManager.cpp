@@ -145,46 +145,6 @@ const ThemeManager::ThemePalette& ThemeManager::getCurrentPalette() const
     return (currentTheme == Theme::Dark) ? darkTheme : lightTheme;
 }
 
-float ThemeManager::getSpacing(Spacing spacing) const
-{
-    switch (spacing)
-    {
-        case Spacing::Hairline:  return 1.0f;
-        case Spacing::XXS:       return 2.0f;
-        case Spacing::XS:        return 4.0f;
-        case Spacing::SM:        return 8.0f;   // Base unit
-        case Spacing::MD:        return 16.0f;
-        case Spacing::LG:        return 24.0f;
-        case Spacing::XL:        return 32.0f;
-        case Spacing::XXL:       return 48.0f;
-        default:                 return 8.0f;
-    }
-}
-
-juce::DropShadow ThemeManager::getShadow(Elevation elevation) const
-{
-    switch (elevation)
-    {
-        case Elevation::Level0:
-            return juce::DropShadow(Colours::transparentBlack, 0, juce::Point<int>(0, 0));
-
-        case Elevation::Level1:  // Tiles at rest
-            return juce::DropShadow(Colours::black.withAlpha(0.2f), 3, juce::Point<int>(0, 1));
-
-        case Elevation::Level2:  // Tiles on hover
-            return juce::DropShadow(Colours::black.withAlpha(0.3f), 8, juce::Point<int>(0, 4));
-
-        case Elevation::Level3:  // Dialogs
-            return juce::DropShadow(Colours::black.withAlpha(0.4f), 16, juce::Point<int>(0, 8));
-
-        case Elevation::Level4:  // Modals
-            return juce::DropShadow(Colours::black.withAlpha(0.5f), 32, juce::Point<int>(0, 16));
-
-        default:
-            return juce::DropShadow(Colours::transparentBlack, 0, juce::Point<int>(0, 0));
-    }
-}
-
 void ThemeManager::savePreferences()
 {
     auto* props = SamplifyProperties::getInstance();

@@ -54,25 +54,6 @@ namespace samplore
             BorderFocus
         };
 
-        enum class Spacing {
-            Hairline,   // 1px
-            XXS,        // 2px
-            XS,         // 4px
-            SM,         // 8px (base unit)
-            MD,         // 16px
-            LG,         // 24px
-            XL,         // 32px
-            XXL         // 48px
-        };
-
-        enum class Elevation {
-            Level0,  // none
-            Level1,  // tiles at rest
-            Level2,  // tiles on hover
-            Level3,  // dialogs
-            Level4   // modals
-        };
-
         struct ThemePalette {
             std::map<ColorRole, Colour> colors;
         };
@@ -91,10 +72,6 @@ namespace samplore
         Colour get(ColorRole role) const;
         void setCustomColor(ColorRole role, Colour color);
         void resetToDefaultColors();
-
-        // Spacing and elevation
-        float getSpacing(Spacing spacing) const;
-        juce::DropShadow getShadow(Elevation elevation) const;
 
         // Persistence
         void savePreferences();
