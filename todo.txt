@@ -11,7 +11,7 @@ Bugs:
 [ ] (P1) Reduce AI Slop (and 5+ year code rot)
 
 Fixins:
-[ ] Add + Remove directories should be done from preferences.
+[ ] (P1) Add + Remove directories should be done from preferences.
 
 Features:
 
