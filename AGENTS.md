@@ -7,12 +7,18 @@ Quick reference for AI coding agents working in this repository. See CLAUDE.md f
 ```bash
 # Setup (first time only)
 python3 scripts/setup.py              # Interactive setup with .env configuration
+                                      # Includes optional VSCode IntelliSense setup
 # OR
 ./scripts/setup.sh                    # Shell wrapper for setup.py
 
 # Configure (generate build files from .jucer)
 python3 scripts/configure.py          # Configures JUCE paths and generates build files
                                       # Will auto-build Projucer if not found
+
+# VSCode IntelliSense (optional - auto-syncs with .env + .jucer)
+python3 scripts/setup_vscode.py       # Generate c_cpp_properties.json
+python3 scripts/setup_vscode.py --force  # Regenerate if JUCE path changed
+python3 scripts/setup_vscode.py --check  # Check current status
 
 # Build
 python3 scripts/build.py              # Build for current platform (auto-detect)

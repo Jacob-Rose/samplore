@@ -24,39 +24,39 @@ Music production has hundreds of great tools, but searching for the right sample
 
 ![Samplore Interface](https://i.imgur.com/yw0G0ml.png)
 
-## Building from Source
+## Quick Setup Guide
 
-### Prerequisites
+### 🚀 One-Command Setup
 
-- JUCE framework (version 7+)
-- C++17 compatible compiler
-- Platform-specific dependencies:
-
-**Linux:**
-```bash
-sudo apt-get install libfreetype6-dev libwebkit2gtk-4.1-dev libgtk-3-dev libasound2-dev libcurl4-openssl-dev
-```
-
-### Quick Start
-
-**Automated Setup (Recommended):**
 ```bash
 git clone https://github.com/Jacob-Rose/samplore.git
 cd samplore
 python3 scripts/setup.py    # Interactive setup wizard
+```
+
+The setup wizard will:
+- ✅ **Install JUCE** (if you don't have it)
+- ✅ **Configure build paths** automatically  
+- ✅ **Install Linux dependencies** (if needed)
+- ✅ **Set up VSCode IntelliSense** (optional)
+- ✅ **Generate build files** automatically
+
+### 🏗️ Build & Run
+
+```bash
 python3 scripts/build.py    # Build the project
 python3 scripts/run.py      # Run the application
 ```
 
-**Manual Setup:**
+### 🔧 Advanced Options
+
+**Manual Configuration:**
 ```bash
-# 1. Clone and configure
-git clone https://github.com/Jacob-Rose/samplore.git
-cd samplore
+# 1. Configure manually
 cp .env.example .env
 # Edit .env and set JUCE_PATH=/path/to/your/juce
 
-# 2. Generate build files
+# 2. Generate build files  
 python3 scripts/configure.py
 
 # 3. Build and run
@@ -64,21 +64,62 @@ python3 scripts/build.py
 python3 scripts/run.py
 ```
 
-### Build Toolchain
+**Debugging (Linux):**
+```bash
+# Interactive debugger menu
+python3 scripts/debug.py
 
-The project includes a comprehensive cross-platform build toolchain with **Python scripts**:
+# Or use specific debugger
+python3 scripts/debug.py --cgdb    # Best TUI experience
+```
+
+**VSCode IntelliSense:**
+```bash
+# Generate VSCode config (auto-syncs with .env + .jucer)
+python3 scripts/setup_vscode.py
+```
+
+### 📋 Build Scripts
 
 | Script | Description |
 |--------|-------------|
-| **`setup.py`** | Interactive first-time configuration wizard |
-| **`configure.py`** | Updates `.jucer` file, generates build files |
-| **`build.py`** | Compiles the project for current platform |
+| **`setup.py`** | Interactive first-time setup wizard |
+| **`configure.py`** | Updates `.jucer`, generates build files |
+| **`build.py`** | Compiles project for current platform |
+| **`debug.py`** | Interactive debugging menu (Linux) |
+| **`setup_vscode.py`** | VSCode IntelliSense configuration |
 | **`clean.py`** | Removes build artifacts |
 | **`run.py`** | Launches the built application |
 
-**Why Python?** Python scripts work identically across all platforms (Linux, macOS, Windows) without any platform-specific dependencies or shell requirements.
+### 🐧 Linux Dependencies
 
-**Note**: The `.jucer` file uses placeholder paths that are configured per-machine. The `configure.py` script handles this automatically.
+The setup script automatically installs these on Linux:
+```bash
+sudo apt-get install libfreetype6-dev libwebkit2gtk-4.1-dev libgtk-3-dev libasound2-dev libcurl4-openssl-dev
+```
+
+### 💻 Platform Support
+
+- ✅ **Linux** - Full support with GCC
+- ✅ **macOS** - Full support with Clang  
+- ✅ **Windows** - Full support with MSVC
+- ✅ **VSCode** - Cross-platform IntelliSense
+
+### 🔄 Why Python Scripts?
+
+All build scripts use **Python standard library only** - no external dependencies required! This provides:
+- **Cross-platform consistency** (Linux/macOS/Windows)
+- **No shell compatibility issues**
+- **Rich error handling and user feedback**
+- **Interactive menus and progress indicators**
+
+### 📝 Configuration Files
+
+- **`.env`** - Local configuration (JUCE path, build settings)
+- **`Samplore.jucer`** - JUCE project configuration
+- **`.vscode/c_cpp_properties.json`** - VSCode IntelliSense (auto-generated)
+
+**Note**: `.jucer` uses placeholder paths that are configured per-machine by the setup wizard.
 
 ### Building for Windows
 

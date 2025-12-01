@@ -458,6 +458,47 @@ def main():
         print("✗ Configuration failed")
         return 1
     
+    # Ask about VSCode setup
+    print()
+    print("=" * 70)
+    print("VSCode IntelliSense Setup (Optional)")
+    print("=" * 70)
+    print()
+    print("Would you like to configure VSCode IntelliSense for JUCE?")
+    print()
+    print("This will:")
+    print("  - Generate .vscode/c_cpp_properties.json")
+    print("  - Configure include paths for JUCE modules")
+    print("  - Enable IntelliSense autocomplete for JUCE classes")
+    print("  - Fix 'JuceHeader.h' not found errors")
+    print()
+    
+    if get_yes_no("Setup VSCode IntelliSense?", default_yes=True):
+        print()
+        print("Generating VSCode configuration...")
+        
+        try:
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT_DIR / "setup_vscode.py"), "--force"],
+                check=False
+            )
+            
+            if result.returncode == 0:
+                print("✓ VSCode IntelliSense configured")
+            else:
+                print("⚠ VSCode setup had warnings (check output above)")
+                print("  You can run it manually later:")
+                print("    python3 scripts/setup_vscode.py")
+        except Exception as e:
+            print(f"✗ Error setting up VSCode: {e}")
+            print("  You can run it manually later:")
+            print("    python3 scripts/setup_vscode.py")
+    else:
+        print()
+        print("Skipping VSCode setup.")
+        print("You can run it later with:")
+        print("  python3 scripts/setup_vscode.py")
+    
     # Success!
     print()
     print("=" * 70)
