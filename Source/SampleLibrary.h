@@ -27,6 +27,7 @@ namespace samplore
 
 		struct Tag
 		{
+			static Tag EmptyTag;
 			//simple holder for information, can be expanded later
 			Tag(juce::String title, juce::Colour color) : mTitle(title), mColor(color) {}
 

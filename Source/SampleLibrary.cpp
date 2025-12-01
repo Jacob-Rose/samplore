@@ -3,6 +3,8 @@
 
 using namespace samplore;
 
+SampleLibrary::Tag SampleLibrary::Tag::EmptyTag = SampleLibrary::Tag(juce::String(), juce::Colours::magenta);
+
 SampleLibrary::SampleLibrary()
 {
 	
@@ -204,6 +206,7 @@ SampleLibrary::Tag SampleLibrary::getTag(juce::String tag)
 			return mTags[i];
 		}
 	}
+	return SampleLibrary::Tag::EmptyTag;
 }
 
 Sample::List SampleLibrary::getAllSamplesInDirectories(juce::String query, bool ignoreCheckSystem)
