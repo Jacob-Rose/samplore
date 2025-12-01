@@ -74,12 +74,12 @@ namespace samplore
             auto& theme = ThemeManager::getInstance();
             
             // Use theme colors
-            g.fillAll(theme.get(ThemeManager::ColorRole::Background));
+            g.fillAll(theme.getColorForRole(ThemeManager::ColorRole::Background));
             
-            g.setColour(theme.get(ThemeManager::ColorRole::AccentPrimary));
+            g.setColour(theme.getColorForRole(ThemeManager::ColorRole::AccentPrimary));
             g.fillRoundedRectangle(getLocalBounds().reduced(20).toFloat(), 10.0f);
             
-            g.setColour(theme.get(ThemeManager::ColorRole::TextPrimary));
+            g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
             g.drawText("Themed Component", getLocalBounds(), 
                       juce::Justification::centred);
         }
@@ -89,8 +89,8 @@ namespace samplore
         {
             // Cache frequently-used colors if needed
             auto& theme = ThemeManager::getInstance();
-            mBackgroundColor = theme.get(ThemeManager::ColorRole::Background);
-            mAccentColor = theme.get(ThemeManager::ColorRole::AccentPrimary);
+            mBackgroundColor = theme.getColorForRole(ThemeManager::ColorRole::Background);
+            mAccentColor = theme.getColorForRole(ThemeManager::ColorRole::AccentPrimary);
         }
         
         Colour mBackgroundColor;
@@ -127,7 +127,7 @@ namespace samplore
         void paint(juce::Graphics& g) override
         {
             auto& theme = ThemeManager::getInstance();
-            g.fillAll(theme.get(ThemeManager::ColorRole::Background));
+            g.fillAll(theme.getColorForRole(ThemeManager::ColorRole::Background));
         }
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SimpleThemedComponent)

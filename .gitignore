@@ -3,11 +3,14 @@
 **/Build
 **/build
 
+**/cmake-build
+
 # Environment configuration (local paths)
 .env
 
 # OpenCode temporary files
 .opencodetmp
+opencodetmp
 opencodetmp*.orig
 *.rej
 *.o

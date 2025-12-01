@@ -42,7 +42,7 @@ void TagDrawer::DrawTagBox(Graphics& g,
 	float roundness,
 	float thickness)
 {
-	Colour color = SamplifyProperties::getInstance()->getTagColor(tag);
+	Colour color = SamplifyProperties::getInstance()->getSampleLibrary()->getTagColor(tag);
 	g.setColour(color);
 	//g.fillRoundedRectangle();
 	g.fillRoundedRectangle(bounds, roundness);

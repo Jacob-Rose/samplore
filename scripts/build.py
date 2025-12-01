@@ -127,10 +127,50 @@ def clean_build(plat):
     return 1
 
 
-def build_linux(config, jobs):
-    """Build on Linux using make."""
-    build_dir = get_build_dir("linux")
-    if not build_dir or not build_dir.exists() or not (build_dir / "Makefile").exists():
+def build_linux(config, jobs, use_cmake=False, build_dir=None):
+    """Build on Linux using make or CMake."""
+    if use_cmake:
+        return build_linux_cmake(config, jobs, build_dir)
+    else:
+        return build_linux_projucer(config, jobs, build_dir)
+
+
+def build_linux_cmake(config, jobs, build_dir):
+    """Build on Linux using CMake."""
+    if not build_dir:
+        build_dir = PROJECT_ROOT / "build"
+    else:
+        build_dir = Path(build_dir)
+    build_dir.mkdir(exist_ok=True)
+    
+    # Configure with CMake (use project root as source)
+    configure_result = run_command(
+        ["cmake", "-S", str(PROJECT_ROOT), "-B", str(build_dir), "-DCMAKE_BUILD_TYPE=" + config],
+        cwd=PROJECT_ROOT
+    )
+    if configure_result != 0:
+        print(f"✗ CMake configuration failed")
+        return configure_result
+    
+    # Build with CMake
+    build_result = run_command(
+        ["cmake", "--build", str(build_dir), "--parallel", str(os.cpu_count() or 4)],
+        cwd=PROJECT_ROOT
+    )
+    
+    if build_result != 0:
+        print(f"✗ CMake build failed")
+        return build_result
+    
+    print("✓ CMake build successful")
+    return 0
+
+
+def build_linux_projucer(config, jobs, build_dir):
+    """Build on Linux using Projucer (original method)."""
+    projucer_build_dir = get_build_dir("linux")
+
+    if not projucer_build_dir or not projucer_build_dir.exists() or not (projucer_build_dir / "Makefile").exists():
         print(f"⚠ Linux build files not found")
         print("Generating build files...")
         result = subprocess.run(
@@ -141,8 +181,26 @@ def build_linux(config, jobs):
             print("✗ Failed to generate build files")
             return 1
 
+        # Re-check for Makefile
+        projucer_build_dir = get_build_dir("linux")
+
     cmd = ["make", f"CONFIG={config}", f"-j{jobs}"]
-    return run_command(cmd, cwd=build_dir)
+    result = run_command(cmd, cwd=projucer_build_dir)
+
+    # If using custom build directory, copy results there
+    if result == 0 and build_dir:
+        custom_build_dir = Path(build_dir)
+        custom_build_dir.mkdir(exist_ok=True)
+
+        # Copy the built executable
+        output_binary = get_output_binary("linux", config)
+        if output_binary and output_binary.exists():
+            custom_binary = custom_build_dir / output_binary.name
+            import shutil
+            shutil.copy2(str(output_binary), str(custom_binary))
+            print(f"✓ Copied to: {custom_binary}")
+
+    return result
 
 
 def build_macos(config):
@@ -188,19 +246,49 @@ def build_macos(config):
     return run_command(cmd, cwd=build_dir)
 
 
-def build_windows(config):
+def build_windows(config, jobs, use_cmake=False, build_dir=None):
+    """Build on Windows using MSBuild or CMake."""
+    if use_cmake:
+        return build_windows_cmake(config, jobs, build_dir)
+    else:
+        return build_windows_projucer(config, jobs, build_dir)
+
+
+def build_windows_cmake(config, jobs, build_dir):
+    """Build on Windows using CMake."""
+    if not build_dir:
+        build_dir = PROJECT_ROOT / "build"
+    else:
+        build_dir = Path(build_dir)
+    build_dir.mkdir(exist_ok=True)
+    
+    # Configure with CMake (use project root as source)
+    configure_result = run_command(
+        ["cmake", "-S", str(PROJECT_ROOT), "-B", str(build_dir), "-DCMAKE_BUILD_TYPE=" + config],
+        cwd=PROJECT_ROOT
+    )
+    if configure_result != 0:
+        print(f"✗ CMake configuration failed")
+        return configure_result
+    
+    # Build with CMake
+    build_result = run_command(
+        ["cmake", "--build", str(build_dir), "--parallel", str(os.cpu_count() or 4)],
+        cwd=PROJECT_ROOT
+    )
+    
+    if build_result != 0:
+        print(f"✗ CMake build failed")
+        return build_result
+    
+    print("✓ CMake build successful")
+    return 0
+
+
+def build_windows_projucer(config, jobs, build_dir):
     """Build on Windows using MSBuild."""
-    build_dir = get_build_dir("windows")
-    
-    # Find the solution file
-    sln_file = None
-    if build_dir and build_dir.exists():
-        for item in build_dir.iterdir():
-            if item.suffix == ".sln":
-                sln_file = item
-                break
-    
-    if not sln_file:
+    projucer_build_dir = build_dir or get_build_dir("windows")
+    if not projucer_build_dir or not projucer_build_dir.exists() or not (projucer_build_dir / "Makefile").exists():
         print(f"⚠ Windows build files not found")
         print("Generating build files...")
         result = subprocess.run(
@@ -212,7 +300,7 @@ def build_windows(config):
             return 1
         
         # Re-check for solution file
-        for item in build_dir.iterdir():
+        for item in projucer_build_dir.iterdir():
             if item.suffix == ".sln":
                 sln_file = item
                 break
@@ -221,83 +309,55 @@ def build_windows(config):
             print("✗ No .sln file found after generation")
             return 1
 
-    # Try to find MSBuild
-    msbuild_paths = [
-        r"C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe",
-        r"C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe",
-        r"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe",
-        r"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe",
-        r"C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin\MSBuild.exe",
-        "msbuild",  # Try PATH
-    ]
-
-    msbuild = None
-    for path in msbuild_paths:
-        if Path(path).exists() or shutil.which(path):
-            msbuild = path
-            break
-
-    if not msbuild:
-        print("Error: MSBuild not found. Install Visual Studio or add MSBuild to PATH.")
-        return 1
-
     cmd = [
-        msbuild,
-        str(sln_file),
+        "msbuild", str(sln_file),
         f"/p:Configuration={config}",
-        "/p:Platform=x64",
-        "/m",  # Parallel build
+        f"/m:{os.cpu_count() or 4}",
+        "/nologo",
+        "/verbosity:minimal"
     ]
-    return run_command(cmd, cwd=build_dir)
+    return run_command(cmd, cwd=projucer_build_dir)
 
 
-def build(plat, config, jobs, build_tests=False):
+def build(plat, config, jobs, build_tests=False, use_cmake=False, build_dir=None):
     """Run the build for the specified platform."""
-    print(f"Building Samplore for {plat} ({config})")
+    build_method = "CMake" if use_cmake else "Projucer"
+    print(f"Building Samplore for {plat} ({config}) using {build_method}")
     print("=" * 60)
     
     if plat == "linux":
-        result = build_linux(config, jobs)
+        result = build_linux(config, jobs, use_cmake, build_dir)
         if build_tests:
-            test_result = build_linux_tests()
-            # If only building tests, return test result
-            # Otherwise return main build result
-            if result != 0:
-                print("⚠ Main project build failed, but continuing with tests...")
-            return test_result if build_tests else result
+            build_linux_tests(build_dir)
         return result
     elif plat == "macos":
-        result = build_macos(config)
+        result = build_macos(config, use_cmake, build_dir)
         if build_tests:
-            test_result = build_macos_tests()
-            if result != 0:
-                print("⚠ Main project build failed, but continuing with tests...")
-            return test_result if build_tests else result
+            build_macos_tests()
         return result
     elif plat == "windows":
-        result = build_windows(config)
+        result = build_windows(config, use_cmake, build_dir)
         if build_tests:
-            test_result = build_windows_tests()
-            if result != 0:
-                print("⚠ Main project build failed, but continuing with tests...")
-            return test_result if build_tests else result
+            build_windows_tests()
         return result
     else:
         print(f"Unsupported platform: {plat}")
         return 1
 
 
-def build_linux_tests():
+def build_linux_tests(build_dir=None):
     """Build tests on Linux using CMake."""
     print("Building tests...")
     
     test_dir = PROJECT_ROOT / "Source" / "Tests"
-    build_dir = test_dir / "build"
-    build_dir.mkdir(exist_ok=True)
+    test_build_dir = build_dir or test_dir / "build"
+    if isinstance(test_build_dir, str):
+        test_build_dir = Path(test_build_dir)
+    test_build_dir.mkdir(exist_ok=True)
     
     # Configure with CMake
     configure_result = run_command(
-        ["cmake", "-S", str(test_dir), "-B", str(build_dir), "-DCMAKE_BUILD_TYPE=Debug"],
+        ["cmake", "-S", str(test_dir), "-B", str(test_build_dir), "-DCMAKE_BUILD_TYPE=Debug"],
         cwd=test_dir
     )
     if configure_result != 0:
@@ -306,7 +366,7 @@ def build_linux_tests():
     
     # Build with CMake
     build_result = run_command(
-        ["cmake", "--build", str(build_dir), "--parallel", str(os.cpu_count() or 4)],
+        ["cmake", "--build", str(test_build_dir), "--parallel", str(os.cpu_count() or 4)],
         cwd=test_dir
     )
     
@@ -422,6 +482,25 @@ Examples:
         action="store_true",
         help="Build and run unit tests"
     )
+    
+    parser.add_argument(
+        "--build-with-cmake",
+        action="store_true",
+        help="Build using CMake (default: use Projucer)"
+    )
+    
+    parser.add_argument(
+        "--build-with-projucer",
+        action="store_true",
+        help="Build using Projucer (default)"
+    )
+    
+    parser.add_argument(
+        "--build-dir",
+        type=str,
+        default="build",
+        help="Build directory (isolates .o files, default: build)"
+    )
 
     args = parser.parse_args()
 
@@ -439,11 +518,47 @@ Examples:
 
     # Clean
     if args.clean:
-        print("Cleaning...")
         result = clean_build(plat)
         if result != 0:
             print("Clean failed!")
             return result
+
+    # Build tests (always uses Debug config)
+    if args.build_tests:
+        result = build(plat, "Debug", args.jobs, build_tests=True, 
+                         use_cmake=args.build_with_cmake, build_dir=args.build_dir)
+        if result != 0:
+            print("\nTest build failed!")
+            return result
+
+    # Build main project
+    if args.build or args.run:
+        result = build(plat, args.config, args.jobs,
+                         use_cmake=args.build_with_cmake, build_dir=args.build_dir)
+        if result != 0:
+            print("\nBuild failed!")
+            return result
+        print("\nBuild successful!")
+
+        # Show output location
+        if args.build_dir and args.build_dir != "build":
+            # Show the isolated build location
+            binary = Path(args.build_dir) / "Samplore"
+            print(f"Output: {binary}")
+        else:
+            binary = get_output_binary(plat, args.config)
+            if binary and binary.exists():
+                print(f"Output: {binary}")
+
+    # Run
+    if args.run and result == 0:
+        print()
+        result = run_app(plat, args.config)
+        if result != 0:
+            print("\nRun failed!")
+            return result
+
+    return result
 
     # Build tests (always uses Debug config)
     if args.build_tests:
