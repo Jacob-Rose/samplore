@@ -251,20 +251,149 @@ def build_windows(config):
     return run_command(cmd, cwd=build_dir)
 
 
-def build(plat, config, jobs):
+def build(plat, config, jobs, build_tests=False):
     """Run the build for the specified platform."""
     print(f"Building Samplore for {plat} ({config})")
     print("=" * 60)
-
+    
     if plat == "linux":
-        return build_linux(config, jobs)
+        result = build_linux(config, jobs)
+        if build_tests:
+            build_linux_tests()
+        return result
     elif plat == "macos":
-        return build_macos(config)
+        result = build_macos(config)
+        if build_tests:
+            build_macos_tests()
+        return result
     elif plat == "windows":
-        return build_windows(config)
+        result = build_windows(config)
+        if build_tests:
+            build_windows_tests()
+        return result
     else:
         print(f"Unsupported platform: {plat}")
         return 1
+
+
+def build_linux_tests():
+    """Build tests on Linux using CMake."""
+    print("Building tests...")
+    
+    test_dir = BUILDS_DIR / "LinuxMakefile"
+    cmake_build_dir = test_dir / "cmake-build"
+    
+    # Create build directory
+    cmake_build_dir.mkdir(exist_ok=True)
+    
+    # Configure with CMake
+    cmake_args = [
+        "cmake",
+        "-S", str(test_dir.parent / "Source" / "Tests"),
+        "-B", str(cmake_build_dir),
+        "-DCMAKE_BUILD_TYPE=Debug",
+        f"-DJUCE_MODULE_PATH={PROJECT_ROOT / 'JuceLibraryCode'}",
+    ]
+    
+    result = subprocess.run(cmake_args, cwd=test_dir)
+    if result.returncode != 0:
+        print(f"✗ CMake configuration failed")
+        return result.returncode
+    
+    # Build with CMake
+    build_args = [
+        "cmake",
+        "--build", str(cmake_build_dir),
+        "--parallel", str(os.cpu_count() or 4),
+    ]
+    
+    result = subprocess.run(build_args, cwd=cmake_build_dir)
+    if result.returncode != 0:
+        print(f"✗ Test build failed")
+        return result.returncode
+    
+    print("✓ Tests built successfully")
+    return 0
+
+
+def build_macos_tests():
+    """Build tests on macOS using CMake."""
+    print("Building tests...")
+    
+    test_dir = BUILDS_DIR / "MacOSX"
+    cmake_build_dir = test_dir / "cmake-build"
+    
+    # Create build directory
+    cmake_build_dir.mkdir(exist_ok=True)
+    
+    # Configure with CMake
+    cmake_args = [
+        "cmake",
+        "-S", str(test_dir.parent / "Source" / "Tests"),
+        "-B", str(cmake_build_dir),
+        "-DCMAKE_BUILD_TYPE=Debug",
+        f"-DJUCE_MODULE_PATH={PROJECT_ROOT / 'JuceLibraryCode'}",
+    ]
+    
+    result = subprocess.run(cmake_args, cwd=test_dir)
+    if result.returncode != 0:
+        print(f"✗ CMake configuration failed")
+        return result.returncode
+    
+    # Build with CMake
+    build_args = [
+        "cmake",
+        "--build", str(cmake_build_dir),
+        "--parallel", str(os.cpu_count() or 4),
+    ]
+    
+    result = subprocess.run(build_args, cwd=cmake_build_dir)
+    if result.returncode != 0:
+        print(f"✗ Test build failed")
+        return result.returncode
+    
+    print("✓ Tests built successfully")
+    return 0
+
+
+def build_windows_tests():
+    """Build tests on Windows using CMake."""
+    print("Building tests...")
+    
+    test_dir = BUILDS_DIR / "VisualStudio2022"
+    cmake_build_dir = test_dir / "cmake-build"
+    
+    # Create build directory
+    cmake_build_dir.mkdir(exist_ok=True)
+    
+    # Configure with CMake
+    cmake_args = [
+        "cmake",
+        "-S", str(test_dir.parent / "Source" / "Tests"),
+        "-B", str(cmake_build_dir),
+        "-DCMAKE_BUILD_TYPE=Debug",
+        f"-DJUCE_MODULE_PATH={PROJECT_ROOT / 'JuceLibraryCode'}",
+    ]
+    
+    result = subprocess.run(cmake_args, cwd=test_dir)
+    if result.returncode != 0:
+        print(f"✗ CMake configuration failed")
+        return result.returncode
+    
+    # Build with CMake
+    build_args = [
+        "cmake",
+        "--build", str(cmake_build_dir),
+        "--parallel", str(os.cpu_count() or 4),
+    ]
+    
+    result = subprocess.run(build_args, cwd=cmake_build_dir)
+    if result.returncode != 0:
+        print(f"✗ Test build failed")
+        return result.returncode
+    
+    print("✓ Tests built successfully")
+    return 0
 
 
 def run_app(plat, config):
@@ -330,6 +459,11 @@ Examples:
         default=None,
         help="Target platform (default: auto-detect)"
     )
+    parser.add_argument(
+        "--build-tests",
+        action="store_true",
+        help="Build and run unit tests"
+    )
 
     args = parser.parse_args()
 
@@ -340,7 +474,7 @@ Examples:
     print()
 
     # Default to build if no action specified
-    if not args.clean and not args.build and not args.run:
+    if not args.clean and not args.build and not args.run and not args.build_tests:
         args.build = True
 
     result = 0
@@ -352,9 +486,15 @@ Examples:
         if result != 0:
             print("Clean failed!")
             return result
-        print()
 
-    # Build
+    # Build tests (always uses Debug config)
+    if args.build_tests:
+        result = build(plat, "Debug", args.jobs, build_tests=True)
+        if result != 0:
+            print("\nTest build failed!")
+            return result
+
+    # Build main project
     if args.build or args.run:
         result = build(plat, args.config, args.jobs)
         if result != 0:
@@ -371,6 +511,9 @@ Examples:
     if args.run and result == 0:
         print()
         result = run_app(plat, args.config)
+        if result != 0:
+            print("\nRun failed!")
+            return result
 
     return result
 
