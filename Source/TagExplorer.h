@@ -16,7 +16,9 @@
 
 namespace samplore
 {
-	class TagExplorer : public Component, public ChangeListener
+	class TagExplorer 
+		: public Component
+		, public ChangeListener
 	{
 	public:
 		TagExplorer();

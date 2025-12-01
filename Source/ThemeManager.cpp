@@ -93,12 +93,25 @@ void ThemeManager::initializeDefaultPalettes()
     lightTheme.colors[ColorRole::BorderFocus]         = Colour(0xFF007AFF);  // #007AFF
 }
 
+void ThemeManager::addListener(Listener* listener)
+{
+    mListeners.add(listener);
+}
+
+void ThemeManager::removeListener(Listener* listener)
+{
+    mListeners.remove(listener);
+}
+
 void ThemeManager::setTheme(Theme theme)
 {
     if (currentTheme != theme)
     {
         currentTheme = theme;
         savePreferences();
+        
+        // Notify listeners
+        mListeners.call([theme](Listener& l) { l.themeChanged(theme); });
     }
 }
 
@@ -131,6 +144,9 @@ void ThemeManager::setCustomColor(ColorRole role, Colour color)
     customColors.colors[role] = color;
     useCustomColors = true;
     savePreferences();
+    
+    // Notify listeners
+    mListeners.call([role, color](Listener& l) { l.colorChanged(role, color); });
 }
 
 void ThemeManager::resetToDefaultColors()
@@ -138,6 +154,9 @@ void ThemeManager::resetToDefaultColors()
     customColors.colors.clear();
     useCustomColors = false;
     savePreferences();
+    
+    // Notify listeners
+    mListeners.call([](Listener& l) { l.themeReset(); });
 }
 
 const ThemeManager::ThemePalette& ThemeManager::getCurrentPalette() const

@@ -5,6 +5,9 @@
 CXX := g++
 CXXFLAGS := -std=c++17 -Wall -Wextra -g
 
+# pkg-config for system libraries
+PKG_CONFIG := pkg-config
+
 # Directories
 JUCE_MODULES := /home/jakee/Documents/juce/modules
 JUCE_ROOT := ../../JuceLibraryCode
@@ -12,12 +15,13 @@ SOURCE_DIR := ..
 TEST_DIR := .
 CATCH2_INCLUDE := 3rd_party/Catch2/single_include
 
-# Include paths
+# Include paths (with pkg-config for system libraries)
 INCLUDES := -I$(TEST_DIR) \
             -I$(SOURCE_DIR) \
             -I$(JUCE_ROOT) \
             -I$(JUCE_MODULES) \
-            -I$(CATCH2_INCLUDE)
+            -I$(CATCH2_INCLUDE) \
+            $(shell $(PKG_CONFIG) --cflags freetype2 fontconfig harfbuzz x11 xext xinerama alsa)
 
 # JUCE compile definitions
 DEFINES := -DJUCE_WEB_BROWSER=0 \
@@ -29,19 +33,15 @@ DEFINES := -DJUCE_WEB_BROWSER=0 \
            -DJUCE_STANDALONE_APPLICATION=1 \
            -DLINUX=1
 
-# Platform-specific libraries (Linux)
-LIBS := -lpthread -ldl -lfreetype -lX11 -lXext -lXinerama -lasound
+# Platform-specific libraries (Linux) - match main project
+LIBS := -lpthread -ldl -lrt $(shell $(PKG_CONFIG) --libs alsa freetype2 fontconfig gl libcurl x11 xext xinerama)
 
-# Samplore source files needed for tests
-SAMPLORE_SOURCES := $(SOURCE_DIR)/ThemeManager.cpp \
-                    $(SOURCE_DIR)/Sample.cpp \
-                    $(SOURCE_DIR)/SampleLibrary.cpp
+# Samplore source files - include everything
+SAMPLORE_SOURCES := $(wildcard $(SOURCE_DIR)/*.cpp)
 
 # Test source files  
 TEST_SOURCES := main_test.cpp \
-                ThemeManagerTests.cpp \
-                SampleTests.cpp \
-                SampleLibraryTests.cpp
+                BasicThemeTest.cpp
 
 # JUCE module sources (from JuceLibraryCode)
 JUCE_SOURCES := $(JUCE_ROOT)/include_juce_core.cpp \

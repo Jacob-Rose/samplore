@@ -58,12 +58,36 @@ namespace samplore
             std::map<ColorRole, Colour> colors;
         };
 
+        //======================================================================
+        /// Specialized listener for theme changes
+        class Listener
+        {
+        public:
+            virtual ~Listener() = default;
+            
+            /// Called when the theme changes (Dark/Light)
+            virtual void themeChanged(Theme newTheme) {}
+            
+            /// Called when a specific color is customized
+            virtual void colorChanged(ColorRole role, Colour newColor) {}
+            
+            /// Called when all custom colors are reset to defaults
+            virtual void themeReset() {}
+        };
+
+        //======================================================================
         // Singleton pattern
         ThemeManager();
         static void initInstance();
         static void cleanupInstance();
         static ThemeManager& getInstance();
 
+        //======================================================================
+        // Listener management
+        void addListener(Listener* listener);
+        void removeListener(Listener* listener);
+
+        //======================================================================
         // Theme management
         Theme getCurrentTheme() const { return currentTheme; }
         void setTheme(Theme theme);
@@ -91,6 +115,7 @@ namespace samplore
         Theme currentTheme;
         bool useCustomColors;
 
+        juce::ListenerList<Listener> mListeners;
         static std::unique_ptr<ThemeManager> instance;
     };
 }

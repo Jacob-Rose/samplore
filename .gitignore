@@ -1,4 +1,7 @@
 **/Builds
+**/builds
+**/Build
+**/build
 
 # Environment configuration (local paths)
 .env
