@@ -144,7 +144,174 @@ def find_projucer(juce_path):
     return None
 
 
-def generate_build_files(jucer_path, juce_path):
+def build_projucer(juce_path, plat):
+    """Build Projucer from source for the current platform."""
+    juce_root = Path(juce_path).expanduser()
+    projucer_dir = juce_root / "extras/Projucer"
+    
+    if not projucer_dir.exists():
+        print(f"✗ Projucer source not found at {projucer_dir}")
+        return None
+    
+    print(f"Building Projucer from source...")
+    print(f"Source: {projucer_dir}")
+    print()
+    
+    if plat == "linux":
+        build_dir = projucer_dir / "Builds/LinuxMakefile"
+        makefile = build_dir / "Makefile"
+        
+        if not makefile.exists():
+            print(f"✗ Projucer Makefile not found at {makefile}")
+            print("  Build files need to be generated first (bootstrapping problem)")
+            return None
+        
+        # Build with make
+        jobs = os.cpu_count() or 4
+        print(f"Running: make CONFIG=Release -j{jobs}")
+        print(f"In: {build_dir}")
+        print("-" * 60)
+        
+        result = subprocess.run(
+            ["make", "CONFIG=Release", f"-j{jobs}"],
+            cwd=build_dir
+        )
+        
+        if result.returncode != 0:
+            print("✗ Projucer build failed")
+            return None
+        
+        output_binary = build_dir / "build/Projucer"
+        if output_binary.exists():
+            print(f"✓ Projucer built successfully: {output_binary}")
+            return output_binary
+        else:
+            print(f"✗ Build completed but binary not found at {output_binary}")
+            return None
+    
+    elif plat == "macos":
+        build_dir = projucer_dir / "Builds/MacOSX"
+        
+        # Find the xcodeproj
+        xcodeproj = None
+        if build_dir.exists():
+            for item in build_dir.iterdir():
+                if item.suffix == ".xcodeproj":
+                    xcodeproj = item
+                    break
+        
+        if not xcodeproj:
+            print(f"✗ Projucer Xcode project not found in {build_dir}")
+            print("  Build files need to be generated first (bootstrapping problem)")
+            return None
+        
+        # Build with xcodebuild
+        print(f"Running: xcodebuild -configuration Release")
+        print(f"In: {build_dir}")
+        print("-" * 60)
+        
+        result = subprocess.run(
+            [
+                "xcodebuild",
+                "-project", str(xcodeproj),
+                "-configuration", "Release",
+                "-jobs", str(os.cpu_count() or 4),
+                "build",
+            ],
+            cwd=build_dir
+        )
+        
+        if result.returncode != 0:
+            print("✗ Projucer build failed")
+            return None
+        
+        output_binary = build_dir / "build/Release/Projucer.app/Contents/MacOS/Projucer"
+        if output_binary.exists():
+            print(f"✓ Projucer built successfully: {output_binary}")
+            return output_binary
+        else:
+            print(f"✗ Build completed but binary not found at {output_binary}")
+            return None
+    
+    elif plat == "windows":
+        # Try VS2022 first, then VS2019
+        build_dirs = [
+            projucer_dir / "Builds/VisualStudio2022",
+            projucer_dir / "Builds/VisualStudio2019",
+        ]
+        
+        build_dir = None
+        sln_file = None
+        
+        for bd in build_dirs:
+            if bd.exists():
+                for item in bd.iterdir():
+                    if item.suffix == ".sln":
+                        build_dir = bd
+                        sln_file = item
+                        break
+                if sln_file:
+                    break
+        
+        if not sln_file or not build_dir:
+            print(f"✗ Projucer Visual Studio solution not found")
+            print("  Build files need to be generated first (bootstrapping problem)")
+            return None
+        
+        # Try to find MSBuild
+        msbuild_paths = [
+            r"C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe",
+            r"C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe",
+            r"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe",
+            r"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe",
+            r"C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin\MSBuild.exe",
+            "msbuild",  # Try PATH
+        ]
+        
+        msbuild = None
+        for path in msbuild_paths:
+            if Path(path).exists() or shutil.which(path):
+                msbuild = path
+                break
+        
+        if not msbuild:
+            print("✗ MSBuild not found. Install Visual Studio or add MSBuild to PATH.")
+            return None
+        
+        # Build with MSBuild
+        print(f"Running: MSBuild /p:Configuration=Release")
+        print(f"In: {build_dir}")
+        print("-" * 60)
+        
+        result = subprocess.run(
+            [
+                msbuild,
+                str(sln_file),
+                "/p:Configuration=Release",
+                "/p:Platform=x64",
+                "/m",  # Parallel build
+            ],
+            cwd=build_dir
+        )
+        
+        if result.returncode != 0:
+            print("✗ Projucer build failed")
+            return None
+        
+        output_binary = build_dir / "x64/Release/App/Projucer.exe"
+        if output_binary.exists():
+            print(f"✓ Projucer built successfully: {output_binary}")
+            return output_binary
+        else:
+            print(f"✗ Build completed but binary not found at {output_binary}")
+            return None
+    
+    else:
+        print(f"✗ Unsupported platform: {plat}")
+        return None
+
+
+def generate_build_files(jucer_path, juce_path, plat):
     """Generate platform-specific build files using Projucer."""
     projucer = find_projucer(juce_path)
     
@@ -153,18 +320,26 @@ def generate_build_files(jucer_path, juce_path):
         print("WARNING: Projucer not found!")
         print("!" * 70)
         print()
-        print("Build files cannot be automatically generated.")
+        print("Attempting to build Projucer from source...")
         print()
-        print("To generate build files manually:")
-        print("  1. Download and install Projucer from https://juce.com/")
-        print("  2. Open Samplore.jucer in Projucer")
-        print("  3. Click 'Save Project' to generate build files")
+        
+        # Try to build Projucer automatically
+        projucer = build_projucer(juce_path, plat)
+        
+        if not projucer:
+            print()
+            print("✗ Failed to build Projucer automatically")
+            print()
+            print("Manual options:")
+            print("  1. Download pre-built Projucer from https://juce.com/")
+            print("  2. Open Samplore.jucer in Projucer")
+            print("  3. Click 'Save Project' to generate build files")
+            print()
+            return False
+        
         print()
-        print("Or build Projucer from your JUCE installation:")
-        print(f"  cd {juce_path}/extras/Projucer/Builds/LinuxMakefile")
-        print("  make -j4")
+        print("✓ Successfully built Projucer!")
         print()
-        return False
     
     print()
     print(f"Found Projucer: {projucer}")
@@ -340,7 +515,7 @@ Examples:
     # Generate build files
     if not args.no_generate:
         print()
-        success = generate_build_files(JUCER_FILE, juce_path)
+        success = generate_build_files(JUCER_FILE, juce_path, plat)
         if not success:
             print("\nContinuing without generated build files...")
             print("You'll need to generate them manually using Projucer.")

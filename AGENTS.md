@@ -6,7 +6,13 @@ Quick reference for AI coding agents working in this repository. See CLAUDE.md f
 
 ```bash
 # Setup (first time only)
-./scripts/setup.sh                    # Interactive setup with .env configuration
+python3 scripts/setup.py              # Interactive setup with .env configuration
+# OR
+./scripts/setup.sh                    # Shell wrapper for setup.py
+
+# Configure (generate build files from .jucer)
+python3 scripts/configure.py          # Configures JUCE paths and generates build files
+                                      # Will auto-build Projucer if not found
 
 # Build
 python3 scripts/build.py              # Build for current platform (auto-detect)

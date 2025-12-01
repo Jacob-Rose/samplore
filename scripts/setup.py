@@ -116,6 +116,55 @@ def install_linux_dependencies(packages):
         return False
 
 
+def clone_juce(install_path, branch="master"):
+    """Clone JUCE from GitHub to the specified path."""
+    print()
+    print(f"Cloning JUCE from GitHub to {install_path}...")
+    print(f"Branch: {branch}")
+    print()
+    print("This may take a few minutes...")
+    print()
+    
+    # Check if git is installed
+    if not shutil.which("git"):
+        print("✗ Git is not installed. Please install git first.")
+        return False
+    
+    # Create parent directory if it doesn't exist
+    install_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    # Clone the repository
+    try:
+        result = subprocess.run(
+            [
+                "git", "clone",
+                "--branch", branch,
+                "--depth", "1",  # Shallow clone for faster download
+                "https://github.com/juce-framework/JUCE.git",
+                str(install_path)
+            ],
+            check=True
+        )
+        
+        if result.returncode == 0:
+            print()
+            print("✓ JUCE cloned successfully!")
+            return True
+        else:
+            print()
+            print("✗ Failed to clone JUCE")
+            return False
+            
+    except subprocess.CalledProcessError as e:
+        print()
+        print(f"✗ Git clone failed: {e}")
+        return False
+    except Exception as e:
+        print()
+        print(f"✗ Error: {e}")
+        return False
+
+
 def update_env_file(key, value):
     """Update a key=value pair in the .env file."""
     if not ENV_FILE.exists():
@@ -181,46 +230,170 @@ def main():
         print("✓ Created .env")
         print()
     
-    # Prompt for JUCE path
-    print("Please enter the path to your JUCE installation:")
-    print("Examples:")
-    print("  Linux:   /home/username/JUCE")
-    print("  macOS:   /Users/username/JUCE")
-    print("  Windows: C:/JUCE")
+    # Find existing JUCE installations
+    suggestions = find_juce_installations()
+    
+    # Ask user how they want to provide JUCE
+    print("JUCE Setup Options:")
+    print("  1) Use existing JUCE installation")
+    print("  2) Clone JUCE from GitHub (recommended if you don't have JUCE)")
     print()
     
-    # Find and suggest JUCE installations
-    suggestions = find_juce_installations()
     if suggestions:
-        print("Found possible JUCE installations:")
+        print("Found existing JUCE installations:")
         for suggestion in suggestions:
             print(f"  - {suggestion}")
         print()
     
-    # Get JUCE path
-    juce_path_str = get_input("JUCE Path")
+    setup_choice = get_input("Choice", default="1" if suggestions else "2")
+    print()
     
-    if not juce_path_str:
-        print("✗ JUCE path cannot be empty")
-        return 1
+    juce_path = None
     
-    # Expand ~ to home directory
-    juce_path_str = os.path.expanduser(juce_path_str)
-    juce_path = Path(juce_path_str)
-    
-    # Validate path
-    if not juce_path.exists():
+    if setup_choice == "2":
+        # Clone JUCE from GitHub
+        print("Where would you like to install JUCE?")
+        print("Examples:")
+        print("  Linux:   /home/username/JUCE")
+        print("  macOS:   /Users/username/JUCE")
+        print("  Windows: C:/JUCE")
         print()
-        print(f"⚠ Warning: Directory does not exist: {juce_path}")
+        
+        default_path = str(Path.home() / "JUCE")
+        juce_path_str = get_input("Install path", default=default_path)
+        temp_clone_path = Path(os.path.expanduser(juce_path_str))
+        
+        # Check if path already exists
+        if temp_clone_path.exists():
+            print()
+            print(f"⚠ Warning: Directory already exists: {temp_clone_path}")
+            if not get_yes_no("Remove and re-clone?", default_yes=False):
+                print()
+                print("Using existing directory...")
+                juce_path = temp_clone_path
+            else:
+                print()
+                print(f"Removing {temp_clone_path}...")
+                shutil.rmtree(temp_clone_path)
+                juce_path = None
+        else:
+            juce_path = None
+        
+        # Ask for branch/version
         print()
-        if not get_yes_no("Continue anyway?", default_yes=False):
+        print("Which JUCE version would you like to clone?")
+        print("  1) master (latest stable)")
+        print("  2) develop (cutting edge)")
+        print("  3) Specify a version tag (e.g., 7.0.9, 8.0.0)")
+        print()
+        
+        version_choice = get_input("Choice", default="1")
+        
+        if version_choice == "2":
+            branch = "develop"
+        elif version_choice == "3":
+            branch = get_input("Version tag (e.g., 7.0.9)")
+            if not branch:
+                print("✗ Version tag cannot be empty")
+                return 1
+        else:
+            branch = "master"
+        
+        # Clone JUCE if we don't have it yet
+        if juce_path is None:
+            # First clone to temporary location
+            clone_temp_path = temp_clone_path.parent / "JUCE_temp_clone"
+            
+            if not clone_juce(clone_temp_path, branch):
+                print()
+                print("✗ Failed to clone JUCE")
+                print()
+                print("You can manually download JUCE from https://juce.com/")
+                print("Then re-run this setup script.")
+                return 1
+            
+            # Ask if user wants to rename
+            print()
+            suggested_name = temp_clone_path.name
+            print(f"The repository will be named: {suggested_name}")
+            
+            if get_yes_no("Would you like to use a different folder name?", default_yes=False):
+                print()
+                print("Enter the desired folder name (just the name, not the full path):")
+                print("Examples: JUCE, juce, juce-8.0, my-juce")
+                print()
+                
+                new_name = get_input("Folder name", default=suggested_name)
+                if new_name and new_name != suggested_name:
+                    juce_path = temp_clone_path.parent / new_name
+                else:
+                    juce_path = temp_clone_path
+            else:
+                juce_path = temp_clone_path
+            
+            # Rename if necessary
+            if clone_temp_path != juce_path:
+                print()
+                print(f"Renaming {clone_temp_path.name} → {juce_path.name}...")
+                
+                # Check if target already exists
+                if juce_path.exists():
+                    print(f"✗ Target directory already exists: {juce_path}")
+                    print(f"Cleaning up temporary clone...")
+                    shutil.rmtree(clone_temp_path)
+                    return 1
+                
+                try:
+                    shutil.move(str(clone_temp_path), str(juce_path))
+                    print("✓ Renamed successfully")
+                except Exception as e:
+                    print(f"✗ Failed to rename: {e}")
+                    print("Using original name...")
+                    juce_path = clone_temp_path
+        
+        # Verify clone
+        if not (juce_path / "modules").exists():
+            print()
+            print("✗ JUCE clone appears incomplete - modules directory not found")
             return 1
-    
-    if juce_path.exists() and not (juce_path / "modules").exists():
+        
         print()
-        print("⚠ Warning: No 'modules' directory found in JUCE path")
-        print(f"   Expected: {juce_path / 'modules'}")
+        print(f"✓ JUCE installed at: {juce_path}")
+    else:
+        # Use existing JUCE installation
+        print("Please enter the path to your JUCE installation:")
+        print("Examples:")
+        print("  Linux:   /home/username/JUCE")
+        print("  macOS:   /Users/username/JUCE")
+        print("  Windows: C:/JUCE")
         print()
+        
+        juce_path_str = get_input("JUCE Path")
+        
+        if not juce_path_str:
+            print("✗ JUCE path cannot be empty")
+            return 1
+        
+        # Expand ~ to home directory
+        juce_path_str = os.path.expanduser(juce_path_str)
+        juce_path = Path(juce_path_str)
+        
+        # Validate path
+        if not juce_path.exists():
+            print()
+            print(f"✗ Error: Directory does not exist: {juce_path}")
+            print()
+            print("Please provide a valid JUCE installation path,")
+            print("or choose option 2 to clone JUCE from GitHub.")
+            return 1
+        
+        if not (juce_path / "modules").exists():
+            print()
+            print("✗ Error: No 'modules' directory found in JUCE path")
+            print(f"   Expected: {juce_path / 'modules'}")
+            print()
+            print("This doesn't appear to be a valid JUCE installation.")
+            return 1
     
     # Update .env with JUCE path
     print()
