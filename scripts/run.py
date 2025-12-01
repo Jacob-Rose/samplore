@@ -98,7 +98,7 @@ def run_macos(config):
 def run_windows(config):
     """Run Windows executable."""
     # Try VS2022 first
-    exe_path = BUILDS_DIR / "VisualStudio2022" / "x64" / config / "Samplore.exe"
+    exe_path = BUILDS_DIR / "VisualStudio2022" / "x64" / config / "App" / "Samplore.exe"
     
     if not exe_path.exists():
         # Try VS2019
