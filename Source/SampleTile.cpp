@@ -40,28 +40,28 @@ void SampleTile::paint (Graphics& g)
 
 		if (isHovered)
 		{
-			backgroundColor = theme.get(ThemeManager::ColorRole::SurfaceHover);
-			foregroundColor = theme.get(ThemeManager::ColorRole::AccentPrimary);
+			backgroundColor = theme.getColorForRole(ThemeManager::ColorRole::SurfaceHover);
+			foregroundColor = theme.getColorForRole(ThemeManager::ColorRole::AccentPrimary);
 		}
 		else
 		{
-			backgroundColor = theme.get(ThemeManager::ColorRole::Surface);
-			foregroundColor = theme.get(ThemeManager::ColorRole::WaveformPrimary);
+			backgroundColor = theme.getColorForRole(ThemeManager::ColorRole::Surface);
+			foregroundColor = theme.getColorForRole(ThemeManager::ColorRole::WaveformPrimary);
 		}
 
-		titleColor = theme.get(ThemeManager::ColorRole::TextPrimary);
+		titleColor = theme.getColorForRole(ThemeManager::ColorRole::TextPrimary);
 
 		// Draw shadow (elevation level 1)
 		if (!isHovered)
 		{
-			DropShadow shadow(theme.get(ThemeManager::ColorRole::Background).withAlpha(0.5f),
+			DropShadow shadow(theme.getColorForRole(ThemeManager::ColorRole::Background).withAlpha(0.5f),
 			                  8, Point<int>(0, 2));
 			shadow.drawForRectangle(g, getLocalBounds().toNearestInt());
 		}
 		else
 		{
 			// Larger shadow on hover (elevation level 2)
-			DropShadow shadow(theme.get(ThemeManager::ColorRole::Background).withAlpha(0.6f),
+			DropShadow shadow(theme.getColorForRole(ThemeManager::ColorRole::Background).withAlpha(0.6f),
 			                  12, Point<int>(0, 4));
 			shadow.drawForRectangle(g, getLocalBounds().toNearestInt());
 		}
@@ -92,7 +92,7 @@ void SampleTile::paint (Graphics& g)
 		g.drawText(mSample.getFile().getFileName(), titleRect, Justification::centredLeft, true);
 
 		// Draw time with secondary text color
-		g.setColour(theme.get(ThemeManager::ColorRole::TextSecondary));
+		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
 		g.setFont(FontOptions(14.0f));
 		std::stringstream secondsStr;
 		std::stringstream minutesStr;
@@ -131,13 +131,13 @@ void SampleTile::paint (Graphics& g)
 			float y2 = waveformRect.getBottom();
 
 			// Draw start position with subtle color
-			g.setColour(theme.get(ThemeManager::ColorRole::TextSecondary).withAlpha(0.5f));
+			g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary).withAlpha(0.5f));
 			g.drawLine(startX, y1, startX, y2, 1.5f);
 
 			// Draw current position with accent color
 			if (auxPlayer->getState() == AudioPlayer::TransportState::Playing)
 			{
-				g.setColour(theme.get(ThemeManager::ColorRole::AccentSecondary));
+				g.setColour(theme.getColorForRole(ThemeManager::ColorRole::AccentSecondary));
 				g.drawLine(currentX, y1, currentX, y2, 2.0f);
 				repaint();
 			}
@@ -392,6 +392,6 @@ void SampleTile::InfoIcon::paint(Graphics& g)
 		auto& theme = ThemeManager::getInstance();
 		IconLibrary::getInstance().drawIcon(g, IconLibrary::Icon::Info,
 		                                     getBounds().reduced(2.0f).toFloat(),
-		                                     theme.get(ThemeManager::ColorRole::TextSecondary));
+		                                     theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
 	}
 }

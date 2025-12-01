@@ -47,7 +47,7 @@ void TagTile::paint (Graphics& g)
 		Colour textColor;
 		if (mainColor.getPerceivedBrightness() > 0.5f)
 		{
-			textColor = theme.get(ThemeManager::ColorRole::TextPrimary).darker(0.3f);
+			textColor = theme.getColorForRole(ThemeManager::ColorRole::TextPrimary).darker(0.3f);
 		}
 		else
 		{

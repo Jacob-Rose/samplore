@@ -102,7 +102,7 @@ void ThemeManager::setTheme(Theme theme)
     }
 }
 
-Colour ThemeManager::get(ColorRole role) const
+Colour ThemeManager::getColorForRole(ColorRole role) const
 {
     // Check for user custom colors first
     if (useCustomColors)

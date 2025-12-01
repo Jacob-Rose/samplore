@@ -98,18 +98,27 @@ def run_macos(config):
 def run_windows(config):
     """Run Windows executable."""
     # Try VS2022 first
-    exe_path = BUILDS_DIR / "VisualStudio2022" / "x64" / config / "Samplore.exe"
+
+    win_paths = [
+        BUILDS_DIR / "VisualStudio2022" / "x64" / config / "App" / "Samplore.exe",
+        BUILDS_DIR / "VisualStudio2022" / "x64" / config / "Samplore.exe",
+        BUILDS_DIR / "VisualStudio2019" / "x64" / config / "App" / "Samplore.exe",
+        BUILDS_DIR / "VisualStudio2019" / "x64" / config / "Samplore.exe"
+    ]
+
+    found_path = None
+
+    for exe_path in win_paths:
+        if exe_path.exists():
+            found_path = exe_path
+            break
     
-    if not exe_path.exists():
-        # Try VS2019
-        exe_path = BUILDS_DIR / "VisualStudio2019" / "x64" / config / "App" / "Samplore.exe"
-    
-    if not exe_path.exists():
+    if not found_path:
         print(f"✗ Executable not found")
         print()
         print("Expected locations:")
-        print(f"  {BUILDS_DIR / 'VisualStudio2022' / 'x64' / config / 'Samplore.exe'}")
-        print(f"  {BUILDS_DIR / 'VisualStudio2019' / 'x64' / config / 'App' / 'Samplore.exe'}")
+        for exe_path in win_paths:
+            print(f" {exe_path}")
         print()
         print("Build the application first:")
         print("  ./scripts/build.sh")
