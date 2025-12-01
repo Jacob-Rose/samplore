@@ -59,7 +59,7 @@ PreferenceWindow::View::View()
     // ===== THEME SECTION =====
     mThemeLabel.setText("Theme", dontSendNotification);
     mThemeLabel.setFont(FontOptions(18.0f, Font::bold));
-    mThemeLabel.setColour(Label::textColourId, theme.get(ThemeManager::ColorRole::TextPrimary));
+    mThemeLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
     addAndMakeVisible(mThemeLabel);
 
     mThemeSelector.setName("Theme Selector");
@@ -75,11 +75,11 @@ PreferenceWindow::View::View()
     // ===== COLOR CUSTOMIZATION SECTION =====
     mColorCustomizationLabel.setText("Custom Colors", dontSendNotification);
     mColorCustomizationLabel.setFont(FontOptions(18.0f, Font::bold));
-    mColorCustomizationLabel.setColour(Label::textColourId, theme.get(ThemeManager::ColorRole::TextPrimary));
+    mColorCustomizationLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
     addAndMakeVisible(mColorCustomizationLabel);
 
     mPrimaryColorLabel.setText("Primary Color:", dontSendNotification);
-    mPrimaryColorLabel.setColour(Label::textColourId, theme.get(ThemeManager::ColorRole::TextSecondary));
+    mPrimaryColorLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
     addAndMakeVisible(mPrimaryColorLabel);
 
     mPrimaryColorButton.setName("Primary Color");
@@ -88,7 +88,7 @@ PreferenceWindow::View::View()
     addAndMakeVisible(mPrimaryColorButton);
 
     mAccentColorLabel.setText("Accent Color:", dontSendNotification);
-    mAccentColorLabel.setColour(Label::textColourId, theme.get(ThemeManager::ColorRole::TextSecondary));
+    mAccentColorLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
     addAndMakeVisible(mAccentColorLabel);
 
     mAccentColorButton.setName("Accent Color");
@@ -104,7 +104,7 @@ PreferenceWindow::View::View()
     // ===== COLOR PRESETS SECTION =====
     mColorPresetsLabel.setText("Color Presets", dontSendNotification);
     mColorPresetsLabel.setFont(FontOptions(18.0f, Font::bold));
-    mColorPresetsLabel.setColour(Label::textColourId, theme.get(ThemeManager::ColorRole::TextPrimary));
+    mColorPresetsLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
     addAndMakeVisible(mColorPresetsLabel);
 
     mPresetStudioDark.setName("Preset Studio Dark");
@@ -135,11 +135,11 @@ PreferenceWindow::View::View()
     // ===== APPEARANCE SECTION =====
     mAppearanceLabel.setText("Appearance", dontSendNotification);
     mAppearanceLabel.setFont(FontOptions(18.0f, Font::bold));
-    mAppearanceLabel.setColour(Label::textColourId, theme.get(ThemeManager::ColorRole::TextPrimary));
+    mAppearanceLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
     addAndMakeVisible(mAppearanceLabel);
 
     mTileSizeLabel.setText("Min Tile Size (px):", dontSendNotification);
-    mTileSizeLabel.setColour(Label::textColourId, theme.get(ThemeManager::ColorRole::TextSecondary));
+    mTileSizeLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
     addAndMakeVisible(mTileSizeLabel);
 
     mSampleMinSizeValue.setName("Tile Size");
@@ -149,7 +149,7 @@ PreferenceWindow::View::View()
     addAndMakeVisible(mSampleMinSizeValue);
 
     mThumbnailLinesLabel.setText("Tile Waveform Lines:", dontSendNotification);
-    mThumbnailLinesLabel.setColour(Label::textColourId, theme.get(ThemeManager::ColorRole::TextSecondary));
+    mThumbnailLinesLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
     addAndMakeVisible(mThumbnailLinesLabel);
 
     mThumbnailLineCount.setName("Waveform Lines");
@@ -160,7 +160,7 @@ PreferenceWindow::View::View()
 
 
     mThumbnailLinesPlayerLabel.setText("Player Waveform Lines:", dontSendNotification);
-    mThumbnailLinesPlayerLabel.setColour(Label::textColourId, theme.get(ThemeManager::ColorRole::TextSecondary));
+    mThumbnailLinesPlayerLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
     addAndMakeVisible(mThumbnailLinesPlayerLabel);
 
     mThumbnailLineCountPlayer.setName("Player Waveform Lines");
@@ -189,7 +189,7 @@ void PreferenceWindow::View::buttonClicked(Button* button)
         mColorEditMode = ColorEditMode::Primary;
         mColourSelector = std::make_unique<ColourSelector>();
         mColourSelector->setSize(300, 300);
-        mColourSelector->setCurrentColour(theme.get(ThemeManager::ColorRole::AccentPrimary));
+        mColourSelector->setCurrentColour(theme.getColorForRole(ThemeManager::ColorRole::AccentPrimary));
         mColourSelector->addChangeListener(this);
         CallOutBox::launchAsynchronously(std::move(mColourSelector), button->getScreenBounds(), nullptr);
     }
@@ -198,7 +198,7 @@ void PreferenceWindow::View::buttonClicked(Button* button)
         mColorEditMode = ColorEditMode::Accent;
         mColourSelector = std::make_unique<ColourSelector>();
         mColourSelector->setSize(300, 300);
-        mColourSelector->setCurrentColour(theme.get(ThemeManager::ColorRole::AccentSecondary));
+        mColourSelector->setCurrentColour(theme.getColorForRole(ThemeManager::ColorRole::AccentSecondary));
         mColourSelector->addChangeListener(this);
         CallOutBox::launchAsynchronously(std::move(mColourSelector), button->getScreenBounds(), nullptr);
     }
@@ -324,12 +324,12 @@ void PreferenceWindow::View::updateColorButtons()
 {
     auto& theme = ThemeManager::getInstance();
 
-    Colour primaryColor = theme.get(ThemeManager::ColorRole::AccentPrimary);
+    Colour primaryColor = theme.getColorForRole(ThemeManager::ColorRole::AccentPrimary);
     mPrimaryColorButton.setColour(TextButton::buttonColourId, primaryColor);
     mPrimaryColorButton.setColour(TextButton::textColourOffId,
         primaryColor.getPerceivedBrightness() > 0.5f ? Colours::black : Colours::white);
 
-    Colour accentColor = theme.get(ThemeManager::ColorRole::AccentSecondary);
+    Colour accentColor = theme.getColorForRole(ThemeManager::ColorRole::AccentSecondary);
     mAccentColorButton.setColour(TextButton::buttonColourId, accentColor);
     mAccentColorButton.setColour(TextButton::textColourOffId,
         accentColor.getPerceivedBrightness() > 0.5f ? Colours::black : Colours::white);
@@ -370,9 +370,9 @@ void PreferenceWindow::View::applyColorPreset(const String& presetName)
 
     // Update waveform colors to match
     theme.setCustomColor(ThemeManager::ColorRole::WaveformPrimary,
-        theme.get(ThemeManager::ColorRole::AccentPrimary));
+        theme.getColorForRole(ThemeManager::ColorRole::AccentPrimary));
     theme.setCustomColor(ThemeManager::ColorRole::WaveformSecondary,
-        theme.get(ThemeManager::ColorRole::AccentSecondary));
+        theme.getColorForRole(ThemeManager::ColorRole::AccentSecondary));
 
     SamplifyMainComponent::setupLookAndFeel(getLookAndFeel());
     updateColorButtons();
@@ -388,10 +388,10 @@ void PreferenceWindow::View::applyColorPreset(const String& presetName)
 void PreferenceWindow::View::paint(Graphics& g)
 {
     auto& theme = ThemeManager::getInstance();
-    g.fillAll(theme.get(ThemeManager::ColorRole::Background));
+    g.fillAll(theme.getColorForRole(ThemeManager::ColorRole::Background));
 
     // Draw section separators
-    g.setColour(theme.get(ThemeManager::ColorRole::Border));
+    g.setColour(theme.getColorForRole(ThemeManager::ColorRole::Border));
     g.drawLine(16, 80, getWidth() - 16, 80, 1.0f);      // After theme section
     g.drawLine(16, 280, getWidth() - 16, 280, 1.0f);   // After color customization
     g.drawLine(16, 430, getWidth() - 16, 430, 1.0f);   // After color presets

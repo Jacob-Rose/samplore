@@ -69,7 +69,7 @@ namespace samplore
         void setTheme(Theme theme);
 
         // Color access
-        Colour get(ColorRole role) const;
+        Colour getColorForRole(ColorRole role) const;
         void setCustomColor(ColorRole role, Colour color);
         void resetToDefaultColors();
 
@@ -78,8 +78,8 @@ namespace samplore
         void loadPreferences();
 
         // Backward compatibility with AppValues
-        Colour getBackgroundColor() const { return get(ColorRole::Background); }
-        Colour getForegroundColor() const { return get(ColorRole::AccentPrimary); }
+        Colour getBackgroundColor() const { return getColorForRole(ColorRole::Background); }
+        Colour getForegroundColor() const { return getColorForRole(ColorRole::AccentPrimary); }
 
     private:
         void initializeDefaultPalettes();

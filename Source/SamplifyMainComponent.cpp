@@ -118,64 +118,64 @@ void samplore::SamplifyMainComponent::setupLookAndFeel(LookAndFeel& laf)
 	using CR = ThemeManager::ColorRole;
 
 	// Window background
-	laf.setColour(ResizableWindow::backgroundColourId, theme.get(CR::Background));
+	laf.setColour(ResizableWindow::backgroundColourId, theme.getColorForRole(CR::Background));
 
 	// SampleTile colors
-	laf.setColour(SampleTile::backgroundDefaultColorID, theme.get(CR::BackgroundTertiary));
-	laf.setColour(SampleTile::backgroundHoverColorID, theme.get(CR::SurfaceHover));
-	laf.setColour(SampleTile::foregroundDefaultColorID, theme.get(CR::AccentPrimary));
-	laf.setColour(SampleTile::foregroundHoverColorID, theme.get(CR::AccentPrimary).brighter(0.1f));
+	laf.setColour(SampleTile::backgroundDefaultColorID, theme.getColorForRole(CR::BackgroundTertiary));
+	laf.setColour(SampleTile::backgroundHoverColorID, theme.getColorForRole(CR::SurfaceHover));
+	laf.setColour(SampleTile::foregroundDefaultColorID, theme.getColorForRole(CR::AccentPrimary));
+	laf.setColour(SampleTile::foregroundHoverColorID, theme.getColorForRole(CR::AccentPrimary).brighter(0.1f));
 
 	// SampleExplorer
-	laf.setColour(SampleExplorer::loadingWheelColorId, theme.get(CR::AccentPrimary));
+	laf.setColour(SampleExplorer::loadingWheelColorId, theme.getColorForRole(CR::AccentPrimary));
 
 	// DirectoryExplorerTreeViewItem
 	laf.setColour(DirectoryExplorerTreeViewItem::defaultBackgroundId, Colours::transparentBlack);
-	laf.setColour(DirectoryExplorerTreeViewItem::selectedBackgroundId, theme.get(CR::AccentPrimary).withAlpha(0.15f));
-	laf.setColour(DirectoryExplorerTreeViewItem::checkboxActiveBackgroundId, theme.get(CR::AccentPrimary));
-	laf.setColour(DirectoryExplorerTreeViewItem::checkboxMixedBackgroundId, theme.get(CR::AccentPrimary).withSaturation(0.3f));
-	laf.setColour(DirectoryExplorerTreeViewItem::checkboxDisabledBackgroundId, theme.get(CR::TextDisabled));
-	laf.setColour(DirectoryExplorerTreeViewItem::checkboxNotLoadedBackgroundId, theme.get(CR::Warning));
+	laf.setColour(DirectoryExplorerTreeViewItem::selectedBackgroundId, theme.getColorForRole(CR::AccentPrimary).withAlpha(0.15f));
+	laf.setColour(DirectoryExplorerTreeViewItem::checkboxActiveBackgroundId, theme.getColorForRole(CR::AccentPrimary));
+	laf.setColour(DirectoryExplorerTreeViewItem::checkboxMixedBackgroundId, theme.getColorForRole(CR::AccentPrimary).withSaturation(0.3f));
+	laf.setColour(DirectoryExplorerTreeViewItem::checkboxDisabledBackgroundId, theme.getColorForRole(CR::TextDisabled));
+	laf.setColour(DirectoryExplorerTreeViewItem::checkboxNotLoadedBackgroundId, theme.getColorForRole(CR::Warning));
 
 	// TextEditor
-	laf.setColour(TextEditor::backgroundColourId, theme.get(CR::BackgroundTertiary));
-	laf.setColour(TextEditor::textColourId, theme.get(CR::TextPrimary));
-	laf.setColour(TextEditor::outlineColourId, theme.get(CR::Border));
-	laf.setColour(TextEditor::focusedOutlineColourId, theme.get(CR::BorderFocus));
+	laf.setColour(TextEditor::backgroundColourId, theme.getColorForRole(CR::BackgroundTertiary));
+	laf.setColour(TextEditor::textColourId, theme.getColorForRole(CR::TextPrimary));
+	laf.setColour(TextEditor::outlineColourId, theme.getColorForRole(CR::Border));
+	laf.setColour(TextEditor::focusedOutlineColourId, theme.getColorForRole(CR::BorderFocus));
 
 	// TextButton
 	laf.setColour(TextButton::textColourOnId, Colours::white);
-	laf.setColour(TextButton::buttonOnColourId, theme.get(CR::AccentPrimary));
-	laf.setColour(TextButton::buttonColourId, theme.get(CR::Surface));
-	laf.setColour(TextButton::textColourOffId, theme.get(CR::TextPrimary));
+	laf.setColour(TextButton::buttonOnColourId, theme.getColorForRole(CR::AccentPrimary));
+	laf.setColour(TextButton::buttonColourId, theme.getColorForRole(CR::Surface));
+	laf.setColour(TextButton::textColourOffId, theme.getColorForRole(CR::TextPrimary));
 
 	// ScrollBar
-	laf.setColour(ScrollBar::thumbColourId, theme.get(CR::TextSecondary).withAlpha(0.4f));
+	laf.setColour(ScrollBar::thumbColourId, theme.getColorForRole(CR::TextSecondary).withAlpha(0.4f));
 	laf.setColour(ScrollBar::trackColourId, Colours::transparentBlack);
 
 	// ComboBox
-	laf.setColour(ComboBox::backgroundColourId, theme.get(CR::Surface));
-	laf.setColour(ComboBox::textColourId, theme.get(CR::TextPrimary));
-	laf.setColour(ComboBox::arrowColourId, theme.get(CR::TextSecondary));
-	laf.setColour(ComboBox::outlineColourId, theme.get(CR::Border));
-	laf.setColour(ComboBox::buttonColourId, theme.get(CR::AccentPrimary));
-	laf.setColour(ComboBox::focusedOutlineColourId, theme.get(CR::BorderFocus));
+	laf.setColour(ComboBox::backgroundColourId, theme.getColorForRole(CR::Surface));
+	laf.setColour(ComboBox::textColourId, theme.getColorForRole(CR::TextPrimary));
+	laf.setColour(ComboBox::arrowColourId, theme.getColorForRole(CR::TextSecondary));
+	laf.setColour(ComboBox::outlineColourId, theme.getColorForRole(CR::Border));
+	laf.setColour(ComboBox::buttonColourId, theme.getColorForRole(CR::AccentPrimary));
+	laf.setColour(ComboBox::focusedOutlineColourId, theme.getColorForRole(CR::BorderFocus));
 
 	// SamplePlayerComponent
-	laf.setColour(SamplePlayerComponent::waveformColourId, theme.get(CR::WaveformPrimary));
+	laf.setColour(SamplePlayerComponent::waveformColourId, theme.getColorForRole(CR::WaveformPrimary));
 
 	// LookAndFeel_V4 default colors
-	laf.setColour(LookAndFeel_V4::ColourScheme::UIColour::defaultFill, theme.get(CR::Surface));
-	laf.setColour(LookAndFeel_V4::ColourScheme::UIColour::defaultText, theme.get(CR::TextPrimary));
-	laf.setColour(LookAndFeel_V4::ColourScheme::UIColour::highlightedFill, theme.get(CR::AccentPrimary));
+	laf.setColour(LookAndFeel_V4::ColourScheme::UIColour::defaultFill, theme.getColorForRole(CR::Surface));
+	laf.setColour(LookAndFeel_V4::ColourScheme::UIColour::defaultText, theme.getColorForRole(CR::TextPrimary));
+	laf.setColour(LookAndFeel_V4::ColourScheme::UIColour::highlightedFill, theme.getColorForRole(CR::AccentPrimary));
 	laf.setColour(LookAndFeel_V4::ColourScheme::UIColour::highlightedText, Colours::white);
 
 	// PopupMenu
-	laf.setColour(PopupMenu::backgroundColourId, theme.get(CR::BackgroundSecondary));
-	laf.setColour(PopupMenu::headerTextColourId, theme.get(CR::TextPrimary));
-	laf.setColour(PopupMenu::highlightedBackgroundColourId, theme.get(CR::AccentPrimary));
+	laf.setColour(PopupMenu::backgroundColourId, theme.getColorForRole(CR::BackgroundSecondary));
+	laf.setColour(PopupMenu::headerTextColourId, theme.getColorForRole(CR::TextPrimary));
+	laf.setColour(PopupMenu::highlightedBackgroundColourId, theme.getColorForRole(CR::AccentPrimary));
 	laf.setColour(PopupMenu::highlightedTextColourId, Colours::white);
-	laf.setColour(PopupMenu::textColourId, theme.get(CR::TextPrimary));
+	laf.setColour(PopupMenu::textColourId, theme.getColorForRole(CR::TextPrimary));
 }
 
 //==============================================================================

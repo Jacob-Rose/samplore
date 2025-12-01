@@ -44,7 +44,7 @@ SamplePlayerComponent::SamplePlayerComponent() : mSampleTagContainer(false)
     // Info editor
     mSampleInfoEditor.addListener(this);
     mSampleInfoEditor.setTextToShowWhenEmpty("Add notes about this sample...",
-        theme.get(ThemeManager::ColorRole::TextSecondary));
+        theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
     mSampleInfoEditor.setMultiLine(true, true);
     mSampleInfoEditor.setReturnKeyStartsNewLine(true);
 
@@ -137,14 +137,14 @@ void SamplePlayerComponent::paint (Graphics& g)
     Sample::Reference samp = getCurrentSample();
 
     // Draw background
-    g.fillAll(theme.get(ThemeManager::ColorRole::BackgroundSecondary));
+    g.fillAll(theme.getColorForRole(ThemeManager::ColorRole::BackgroundSecondary));
 
     if (!samp.isNull())
     {
         mSampleInfoEditor.setText(samp.getInfoText());
 
         // Draw title with modern typography
-        g.setColour(theme.get(ThemeManager::ColorRole::TextPrimary));
+        g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
         g.setFont(FontOptions(20.0f, Font::bold));
         g.drawText(samp.getFile().getFileName(), m_TitleRect, Justification::left, true);
 
@@ -152,11 +152,11 @@ void SamplePlayerComponent::paint (Graphics& g)
         if (samp.getThumbnail() != nullptr)
         {
             // Draw waveform background
-            g.setColour(theme.get(ThemeManager::ColorRole::BackgroundTertiary));
+            g.setColour(theme.getColorForRole(ThemeManager::ColorRole::BackgroundTertiary));
             g.fillRoundedRectangle(m_ThumbnailRect.toFloat(), 8.0f);
 
             // Draw waveform
-            g.setColour(theme.get(ThemeManager::ColorRole::WaveformPrimary));
+            g.setColour(theme.getColorForRole(ThemeManager::ColorRole::WaveformPrimary));
             if (SampleAudioThumbnail* thumbnail = dynamic_cast<SampleAudioThumbnail*>(samp.getThumbnail().get()))
             {
                 samp.getThumbnail()->drawChannels(g, m_ThumbnailRect, 0, samp.getLength(), 1.0f, AppValues::getInstance().AUDIO_THUMBNAIL_LINE_COUNT_PLAYER);
@@ -167,7 +167,7 @@ void SamplePlayerComponent::paint (Graphics& g)
             }
 
             // Draw subtle border around waveform
-            g.setColour(theme.get(ThemeManager::ColorRole::Border));
+            g.setColour(theme.getColorForRole(ThemeManager::ColorRole::Border));
             g.drawRoundedRectangle(m_ThumbnailRect.toFloat(), 8.0f, 1.0f);
         }
 
@@ -183,13 +183,13 @@ void SamplePlayerComponent::paint (Graphics& g)
             float y2 = m_ThumbnailRect.getBottom();
 
             // Draw start position with subtle color
-            g.setColour(theme.get(ThemeManager::ColorRole::TextSecondary).withAlpha(0.5f));
+            g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary).withAlpha(0.5f));
             g.drawLine(startX, y1, startX, y2, 1.5f);
 
             // Draw current position with accent color
             if (auxPlayer->getState() == AudioPlayer::TransportState::Playing)
             {
-                g.setColour(theme.get(ThemeManager::ColorRole::AccentSecondary));
+                g.setColour(theme.getColorForRole(ThemeManager::ColorRole::AccentSecondary));
                 g.drawLine(currentX, y1, currentX, y2, 2.0f);
                 repaint();
             }
@@ -281,24 +281,24 @@ void SamplePlayerComponent::updateThemeColors()
 
     // Update text editor colors
     mSampleInfoEditor.setColour(TextEditor::backgroundColourId,
-        theme.get(ThemeManager::ColorRole::Surface));
+        theme.getColorForRole(ThemeManager::ColorRole::Surface));
     mSampleInfoEditor.setColour(TextEditor::textColourId,
-        theme.get(ThemeManager::ColorRole::TextPrimary));
+        theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
     mSampleInfoEditor.setColour(TextEditor::outlineColourId,
-        theme.get(ThemeManager::ColorRole::Border));
+        theme.getColorForRole(ThemeManager::ColorRole::Border));
     mSampleInfoEditor.setColour(TextEditor::focusedOutlineColourId,
-        theme.get(ThemeManager::ColorRole::BorderFocus));
+        theme.getColorForRole(ThemeManager::ColorRole::BorderFocus));
 
     // Update button colors
     mSampleDirectoryChainButton.setColour(TextButton::buttonColourId,
-        theme.get(ThemeManager::ColorRole::Surface));
+        theme.getColorForRole(ThemeManager::ColorRole::Surface));
     mSampleDirectoryChainButton.setColour(TextButton::textColourOffId,
-        theme.get(ThemeManager::ColorRole::TextPrimary));
+        theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
 
     mSampleRemoveColorButton.setColour(TextButton::buttonColourId,
-        theme.get(ThemeManager::ColorRole::Surface));
+        theme.getColorForRole(ThemeManager::ColorRole::Surface));
     mSampleRemoveColorButton.setColour(TextButton::textColourOffId,
-        theme.get(ThemeManager::ColorRole::TextPrimary));
+        theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
 
     repaint();
 }

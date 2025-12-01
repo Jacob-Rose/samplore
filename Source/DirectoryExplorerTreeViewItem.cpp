@@ -96,7 +96,7 @@ void DirectoryExplorerTreeViewItem::paintItem(Graphics & g, int width, int heigh
 		g.drawRoundedRectangle(0, 0, width, height, 4.0f, 1.0f);
 
 		// Use theme text color instead of calculating from background
-		textColor = ThemeManager::getInstance().get(ThemeManager::ColorRole::TextPrimary);
+		textColor = ThemeManager::getInstance().getColorForRole(ThemeManager::ColorRole::TextPrimary);
 
 		if (mShouldUseFile)
 		{
