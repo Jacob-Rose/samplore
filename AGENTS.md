@@ -24,10 +24,19 @@ make -C Builds/LinuxMakefile CONFIG=Release -j4  # Linux release build
 python3 scripts/run.py                # Launch the built application
 ./Builds/LinuxMakefile/build/Samplore # Direct launch (Linux)
 
+# Debug (CLI/TUI debuggers - Linux only)
+python3 scripts/debug.py              # Interactive menu with install options
+python3 scripts/debug.py --cgdb       # Launch with CGDB (best TUI)
+python3 scripts/debug.py --tui        # Launch with GDB TUI mode
+python3 scripts/debug.py --attach     # Attach to running process
+python3 scripts/debug.py -b main      # Set breakpoint at main()
+
 # Testing: No formal test suite yet - manual testing required
 ```
 
 ## Code Style
+
+**AI**: CLAUDE.md should be maintained and kept in sync with AGENTS.md for the time being.
 
 **Language**: C++17 (JUCE framework)  
 **Namespace**: All code in `namespace samplore { }`  
