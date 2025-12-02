@@ -5,6 +5,8 @@
 
 **/cmake-build
 
+dist/*.tar.gz
+
 # Environment configuration (local paths)
 .env
 
