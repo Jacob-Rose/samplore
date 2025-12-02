@@ -1,6 +1,6 @@
 # Samplore
 
-![Samplore Screenshot](https://i.imgur.com/TEacSr6.png)
+![Samplore Screenshot](https://i.imgur.com/NFJkxvD.png)
 
 A modern, open-source sample library manager for music producers built with JUCE.
 
@@ -22,7 +22,7 @@ Music production has hundreds of great tools, but searching for the right sample
 - **Customizable Themes** - Dark/Light themes with custom color schemes
 - **Cross-Platform** - Runs on Windows, macOS, and Linux
 
-![Samplore Interface](https://i.imgur.com/yw0G0ml.png)
+![Samplore Interface](https://i.imgur.com/MJquPYz.png)
 
 ## Quick Setup Guide
 
@@ -153,6 +153,8 @@ Contributions are welcome! Please feel free to:
 ## History
 
 Originally developed as "Samplify" as a personal project and learning experience with JUCE. Now open source and renamed to "Samplore" to avoid trademark conflicts.
+
+![Concept Screenshot](https://i.imgur.com/TEacSr6.png)
 
 ## License
 
