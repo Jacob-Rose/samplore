@@ -97,15 +97,11 @@ SampleExplorer::SampleViewport::SampleViewport(SampleContainer* container)
 
 void SampleExplorer::SampleViewport::visibleAreaChanged(const Rectangle<int>& newVisibleArea)
 {
-	int height = mSampleContainer->getHeight();
-	int bottomBounds = newVisibleArea.getBottomLeft().y;
-	int topBounds = newVisibleArea.getTopLeft().y;
-	if (height == bottomBounds)
-	{
-		mSampleContainer->extendItems();
-		
-		setViewPosition(0, topBounds);
-	}
+	// Update visible items based on current viewport position
+	int viewportTop = newVisibleArea.getY();
+	int viewportHeight = newVisibleArea.getHeight();
+	
+	mSampleContainer->updateVisibleItems(viewportTop, viewportHeight);
 }
 
 SampleExplorer::SampleSearchbar::SampleSearchbar()

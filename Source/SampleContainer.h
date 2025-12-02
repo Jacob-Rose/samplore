@@ -28,21 +28,25 @@ namespace samplore
 		void paint(Graphics&) override;
 		void resized() override;
 
-		void updateItems();
-		void extendItems();
+		void updateVisibleItems(int viewportTop, int viewportHeight);
 		void clearItems();
 
 		void setSampleItems(Sample::List mSamples);
 		//======================================================
-		int calculateAllRowsHeight();
-		int calculateRowCount();
-		int calculateColumnCount();
+		int calculateTotalHeight() const;
+		int getTotalRowCount() const;
+		int getColumnCount() const;
+		int getTileHeight() const;
+		int getTileWidth() const;
 	private:
 		//=============================================================================
-		std::vector<SampleTile*> mUsedSampleTiles;
-		std::vector<SampleTile*> mUnusedSampleTiles;
+		/// Pool of reusable SampleTile objects
+		std::vector<std::unique_ptr<SampleTile>> mTilePool;
+		/// All samples (full list)
 		Sample::List mCurrentSamples;
-		int mMaxItems = 20;
+		/// Current viewport position for optimization
+		int mLastViewportTop = -1;
+		int mLastViewportHeight = -1;
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SampleContainer)
 	};

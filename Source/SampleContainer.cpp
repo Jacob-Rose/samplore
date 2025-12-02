@@ -25,124 +25,136 @@ void SampleContainer::paint (Graphics& g)
 
 void SampleContainer::resized()
 {
-	updateItems();
+	// Set total height based on all samples
+	int totalHeight = calculateTotalHeight();
+	setSize(getWidth(), totalHeight);
+	
+	// Update visible items (will be called by viewport)
+	// For now, just update with current view (0, 0)
+	updateVisibleItems(0, getParentHeight());
 }
 
-void SampleContainer::updateItems()
+void SampleContainer::updateVisibleItems(int viewportTop, int viewportHeight)
 {
-	int columns = calculateColumnCount();
-	//first, if there are too many then move them
-	if (mUsedSampleTiles.size() > mCurrentSamples.size())
+	if (mCurrentSamples.size() == 0)
 	{
-		for (int i = mCurrentSamples.size(); i < mUsedSampleTiles.size(); i++)
+		// Hide all tiles
+		for (auto& tile : mTilePool)
 		{
-			mUsedSampleTiles[i]->setSample(nullptr);
-			mUnusedSampleTiles.push_back(mUsedSampleTiles[i]);
-			mUsedSampleTiles.erase(mUsedSampleTiles.begin() + i);
-			i--;
+			tile->setVisible(false);
 		}
+		return;
 	}
-	if (columns > 0)
+	
+	int columns = getColumnCount();
+	if (columns <= 0)
+		return;
+	
+	int tileWidth = getTileWidth();
+	int tileHeight = getTileHeight();
+	int padding = AppValues::getInstance().SAMPLE_TILE_CONTAINER_ITEM_PADDING;
+	
+	// Calculate which rows are visible (with buffer for smooth scrolling)
+	int firstVisibleRow = jmax(0, (viewportTop / tileHeight) - 1);
+	int lastVisibleRow = jmin(getTotalRowCount() - 1, 
+	                          ((viewportTop + viewportHeight) / tileHeight) + 1);
+	
+	// Calculate range of sample indices that are visible
+	int firstVisibleIndex = firstVisibleRow * columns;
+	int lastVisibleIndex = jmin((int)mCurrentSamples.size() - 1, 
+	                            (lastVisibleRow + 1) * columns - 1);
+	
+	int visibleCount = lastVisibleIndex - firstVisibleIndex + 1;
+	
+	// Ensure we have enough tiles in the pool
+	while ((int)mTilePool.size() < visibleCount)
 	{
-		int width = getWidth() / columns;
-		int height = AppValues::getInstance().SAMPLE_TILE_ASPECT_RATIO * width;
-		for (unsigned int i = 0; i < mCurrentSamples.size() && i < mMaxItems; i++)
-		{
-			int column = i % columns;
-			int row = i / columns; //will cut off, not round (i feel like a real coder)
-
-			SampleTile* tile;
-			if (i < mUsedSampleTiles.size())
-			{
-				tile = mUsedSampleTiles[i];
-			}
-			else
-			{
-				tile = new SampleTile(mCurrentSamples[i]);
-				mUsedSampleTiles.push_back(tile);
-				addAndMakeVisible(tile);
-			}
-			tile->setBounds((column * width) + AppValues::getInstance().SAMPLE_TILE_CONTAINER_ITEM_PADDING,
-								(row * height) + AppValues::getInstance().SAMPLE_TILE_CONTAINER_ITEM_PADDING,
-								width - (AppValues::getInstance().SAMPLE_TILE_CONTAINER_ITEM_PADDING * 2),
-								height - (AppValues::getInstance().SAMPLE_TILE_CONTAINER_ITEM_PADDING * 2));
-			tile->setSample(mCurrentSamples[i]);
-		}
-
-		setBounds(Rectangle<int>(0, 0, calculateColumnCount() * width, calculateRowCount() * height));
+		auto tile = std::make_unique<SampleTile>(nullptr);
+		addAndMakeVisible(tile.get());
+		mTilePool.push_back(std::move(tile));
 	}
+	
+	// Update visible tiles
+	for (int i = 0; i < visibleCount && (firstVisibleIndex + i) < (int)mCurrentSamples.size(); i++)
+	{
+		int sampleIndex = firstVisibleIndex + i;
+		int column = sampleIndex % columns;
+		int row = sampleIndex / columns;
+		
+		SampleTile* tile = mTilePool[i].get();
+		tile->setVisible(true);
+		tile->setBounds((column * tileWidth) + padding,
+		                (row * tileHeight) + padding,
+		                tileWidth - (padding * 2),
+		                tileHeight - (padding * 2));
+		tile->setSample(mCurrentSamples[sampleIndex]);
+	}
+	
+	// Hide unused tiles
+	for (int i = visibleCount; i < (int)mTilePool.size(); i++)
+	{
+		mTilePool[i]->setVisible(false);
+	}
+	
+	mLastViewportTop = viewportTop;
+	mLastViewportHeight = viewportHeight;
 }
 
 void SampleContainer::clearItems()
 {
-	for (unsigned int i = 0; i < mUsedSampleTiles.size(); i++)
-	{
-		delete mUsedSampleTiles[i];
-		mUsedSampleTiles[i] = nullptr;
-	}
-
-	for (unsigned int i = 0; i < mUnusedSampleTiles.size(); i++)
-	{
-		delete mUnusedSampleTiles[i];
-		mUnusedSampleTiles[i] = nullptr;
-	}
-	mUsedSampleTiles.clear();
+	mTilePool.clear();
 }
 
 void SampleContainer::setSampleItems(Sample::List currentSamples)
 {
-	Sample::List oldSamples = mCurrentSamples;
 	mCurrentSamples = currentSamples;
-	/*
-	bool same = true;
-	for (int i = 0; i < oldSamples.getCount() && i < mCurrentSamples.getCount(); i++)
-	{
-		same = same && mCurrentSamples.getSamples()[i] == oldSamples.getSamples()[i];
-	}
 	
-	if (!same)
-	{*/
-		//updateItems();
-	//}
-	//todo causing threading issue? causes error in xmemory0
-	updateItems();
+	// Recalculate total height based on all samples
+	int totalHeight = calculateTotalHeight();
+	setSize(getWidth(), totalHeight);
+	
+	// Update visible items
+	updateVisibleItems(mLastViewportTop >= 0 ? mLastViewportTop : 0, 
+	                   mLastViewportHeight >= 0 ? mLastViewportHeight : getParentHeight());
 }
 
-int SampleContainer::calculateAllRowsHeight()
+int SampleContainer::calculateTotalHeight() const
 {
-	int columns = calculateColumnCount();
-	float height;
-	if (mUsedSampleTiles.size() > 0)
-	{
-		height = mUsedSampleTiles[0]->getHeight();
-	}
-	else
-	{
-		height = 0;
-	}
-	return height * calculateRowCount();
+	int tileHeight = getTileHeight();
+	int totalRows = getTotalRowCount();
+	return tileHeight * totalRows;
 }
 
-int SampleContainer::calculateRowCount()
+int SampleContainer::getTotalRowCount() const
 {
-	int columns = calculateColumnCount();
-	if (columns > 0)
-	{
-		return mUsedSampleTiles.size() / columns;
-	}
-	return 0;
+	int columns = getColumnCount();
+	if (columns <= 0)
+		return 0;
+	
+	// Calculate total rows needed for ALL samples
+	return (mCurrentSamples.size() + columns - 1) / columns;  // Ceiling division
 }
 
-int SampleContainer::calculateColumnCount()
+int SampleContainer::getColumnCount() const
 {
-	return getWidth() / AppValues::getInstance().SAMPLE_TILE_MIN_WIDTH;
+	int minWidth = AppValues::getInstance().SAMPLE_TILE_MIN_WIDTH;
+	if (minWidth <= 0)
+		return 1;
+	
+	return jmax(1, getWidth() / minWidth);
 }
 
-void SampleContainer::extendItems()
+int SampleContainer::getTileHeight() const
 {
-	if (mCurrentSamples.size() > mMaxItems)
-	{
-		mMaxItems += calculateColumnCount() * 3;
-		updateItems();
-	}
+	int tileWidth = getTileWidth();
+	return AppValues::getInstance().SAMPLE_TILE_ASPECT_RATIO * tileWidth;
+}
+
+int SampleContainer::getTileWidth() const
+{
+	int columns = getColumnCount();
+	if (columns <= 0)
+		return AppValues::getInstance().SAMPLE_TILE_MIN_WIDTH;
+	
+	return getWidth() / columns;
 }
