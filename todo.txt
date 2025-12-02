@@ -3,7 +3,6 @@
 
 Major Blockers:
 [ ] (P0) Make tag for mobirise site in git history, then migrate to a github site with feature breakdown.
-[ ] (P0) Cross platform python build script
 
 Bugs:
 [ ] (P1) Fix Theme Updates to work immeditely
