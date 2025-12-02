@@ -5,7 +5,6 @@ Major Blockers:
 [ ] (P0) Make tag for mobirise site in git history, then migrate to a github site with feature breakdown.
 
 Bugs:
-[ ] (P1) Fix Theme Updates to work immeditely
 [ ] (P2) Custom Color Caching has some ai sloppiness to it. Whole theme manager needs to be event based over this garbage.
 [ ] (P1) Reduce AI Slop (and 5+ year code rot)
 
