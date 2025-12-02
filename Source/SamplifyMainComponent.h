@@ -19,6 +19,8 @@
 #include "SamplePlayerComponent.h"
 #include "SampleExplorer.h"
 #include "ServerAuthUnlockComponent.h"
+#include "KeyBindingManager.h"
+#include "PreferenceWindow.h"
 #include "ThemeManager.h"
 
 namespace samplore

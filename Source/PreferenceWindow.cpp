@@ -168,6 +168,18 @@ PreferenceWindow::View::View()
     mThumbnailLineCountPlayer.setText(String(AppValues::getInstance().AUDIO_THUMBNAIL_LINE_COUNT_PLAYER));
     mThumbnailLineCountPlayer.addListener(this);
     addAndMakeVisible(mThumbnailLineCountPlayer);
+    
+    // ===== KEY BINDINGS SECTION =====
+    mKeyBindingsLabel.setText("Key Bindings", dontSendNotification);
+    mKeyBindingsLabel.setFont(FontOptions(18.0f, Font::bold));
+    mKeyBindingsLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+    addAndMakeVisible(mKeyBindingsLabel);
+
+    mEditKeyBindingsButton.setName("Edit Key Bindings");
+    mEditKeyBindingsButton.setButtonText("Edit Key Bindings");
+    mEditKeyBindingsButton.addListener(this);
+    addAndMakeVisible(mEditKeyBindingsButton);
+    
     // ===== CLOSE BUTTON =====
     mCloseButton.setName("Close");
     mCloseButton.setButtonText("Close");
@@ -243,6 +255,21 @@ void PreferenceWindow::View::buttonClicked(Button* button)
     else if (buttonName == "Preset High Contrast")
     {
         applyColorPreset("High Contrast");
+    }
+    else if (buttonName == "Edit Key Bindings")
+    {
+        // Launch key binding editor dialog
+        DialogWindow::LaunchOptions options;
+        auto* editor = new KeyBindingEditor();
+        options.content.setOwned(editor);
+        options.dialogTitle = "Edit Key Bindings";
+        options.dialogBackgroundColour = ThemeManager::getInstance().getColorForRole(ThemeManager::ColorRole::Background);
+        options.escapeKeyTriggersCloseButton = true;
+        options.useNativeTitleBar = false;
+        options.resizable = false;
+        
+        auto* dialog = options.launchAsync();
+        dialog->centreWithSize(500, 400);
     }
     else if (buttonName == "Close")
     {
@@ -404,6 +431,7 @@ void PreferenceWindow::View::paint(Graphics& g)
     g.drawLine(16, 80, getWidth() - 16, 80, 1.0f);      // After theme section
     g.drawLine(16, 280, getWidth() - 16, 280, 1.0f);   // After color customization
     g.drawLine(16, 430, getWidth() - 16, 430, 1.0f);   // After color presets
+    g.drawLine(16, 580, getWidth() - 16, 580, 1.0f);   // After appearance section
 }
 
 void PreferenceWindow::View::resized()
@@ -485,6 +513,16 @@ void PreferenceWindow::View::resized()
     mThumbnailLinesPlayerLabel.setBounds(margin, y, 180, controlHeight);
     mThumbnailLineCountPlayer.setBounds(margin + 190, y, 100, controlHeight);
     y += controlHeight + margin;
+    
+    // Separator line drawn in paint()
+    y += itemSpacing;
+
+    // ===== KEY BINDINGS SECTION =====
+    mKeyBindingsLabel.setBounds(margin, y, getWidth() - 2 * margin, labelHeight);
+    y += labelHeight + itemSpacing;
+    
+    mEditKeyBindingsButton.setBounds(margin, y, getWidth() - 2 * margin, controlHeight);
+    y += controlHeight + sectionSpacing;
 
     // ===== CLOSE BUTTON =====
     y += sectionSpacing;
@@ -505,6 +543,7 @@ void PreferenceWindow::View::updateAllComponentColors()
     mTileSizeLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
     mThumbnailLinesLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
     mThumbnailLinesPlayerLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
+    mKeyBindingsLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
     
     // Update text editors
     mSampleMinSizeValue.setColour(TextEditor::backgroundColourId, theme.getColorForRole(ThemeManager::ColorRole::Surface));
@@ -524,6 +563,10 @@ void PreferenceWindow::View::updateAllComponentColors()
     mThumbnailLineCountPlayer.setColour(TextEditor::outlineColourId, theme.getColorForRole(ThemeManager::ColorRole::Border));
     mThumbnailLineCountPlayer.applyColourToAllText(theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
     mThumbnailLineCountPlayer.repaint();
+    
+    // Update key bindings button
+    mEditKeyBindingsButton.setColour(TextButton::buttonColourId, theme.getColorForRole(ThemeManager::ColorRole::AccentSecondary));
+    mEditKeyBindingsButton.setColour(TextButton::textColourOnId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
     
     // Update combo box
     mThemeSelector.setColour(ComboBox::backgroundColourId, theme.getColorForRole(ThemeManager::ColorRole::Surface));

@@ -29,6 +29,10 @@
         <FILE id="twO4lX" name="Icons.cpp" compile="1" resource="0" file="Source/Icons.cpp" />
         <FILE id="iqDfsQ" name="SamplifyProperties.h" compile="0" resource="0" file="Source/SamplifyProperties.h" />
         <FILE id="nNZPqb" name="SamplifyProperties.cpp" compile="1" resource="0" file="Source/SamplifyProperties.cpp" />
+        <FILE id="KEYBIND001" name="KeyBindingManager.h" compile="0" resource="0" file="Source/KeyBindingManager.h" />
+        <FILE id="KEYBIND002" name="KeyBindingManager.cpp" compile="1" resource="0" file="Source/KeyBindingManager.cpp" />
+        <FILE id="KEYBIND003" name="KeyBindingEditor.h" compile="0" resource="0" file="Source/KeyBindingEditor.h" />
+        <FILE id="KEYBIND004" name="KeyBindingEditor.cpp" compile="1" resource="0" file="Source/KeyBindingEditor.cpp" />
       <FILE id="THEME001" name="ThemeManager.h" compile="0" resource="0" file="Source/ThemeManager.h" /><FILE id="THEME002" name="ThemeManager.cpp" compile="1" resource="0" file="Source/ThemeManager.cpp" /></GROUP>
       <GROUP id="{79C14502-3025-0432-3989-D402AD2C61DB}" name="Windows">
         <FILE id="nN5T4u" name="PreferenceWindow.cpp" compile="1" resource="0" file="Source/PreferenceWindow.cpp" />

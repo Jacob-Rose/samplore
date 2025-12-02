@@ -12,6 +12,7 @@
 #define PREFERENCEWINDOW_H
 #include "JuceHeader.h"
 #include "ThemeManager.h"
+#include "KeyBindingEditor.h"
 
 namespace samplore
 {
@@ -72,6 +73,10 @@ namespace samplore
             TextEditor mThumbnailLineCountPlayer;
             TextEditor mThumbnailLineCount;
             TextButton mCloseButton;
+
+            // Key bindings section
+            Label mKeyBindingsLabel;
+            TextButton mEditKeyBindingsButton;
 
         private:
             void updateColorButtons();

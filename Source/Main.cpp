@@ -21,6 +21,7 @@
 #include "Sample.h"
 #include "ThemeManager.h"
 #include "UI/IconLibrary.h"
+#include "KeyBindingManager.h"
 
 namespace samplore
 {
@@ -53,6 +54,7 @@ namespace samplore
 			AppValues::initInstance();
 			ThemeManager::initInstance();  // Initialize ThemeManager before SamplifyProperties
 			IconLibrary::initInstance();    // Initialize IconLibrary
+			KeyBindingManager::initInstance(); // Initialize KeyBindingManager
 			SamplifyProperties::initInstance();
 			mainWindow.reset(new MainWindow(getApplicationName()));
 			//}
@@ -62,6 +64,7 @@ namespace samplore
 		{
 			mainWindow.reset(nullptr); //(deletes our window)
 			SamplifyProperties::cleanupInstance();
+			KeyBindingManager::cleanupInstance();
 			IconLibrary::cleanupInstance();
 			ThemeManager::cleanupInstance();
 			AppValues::cleanupInstance();

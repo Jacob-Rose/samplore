@@ -71,18 +71,55 @@ SamplifyMainComponent::~SamplifyMainComponent()
 
 bool SamplifyMainComponent::keyPressed(const KeyPress& key, Component* originatingComponent)
 {
-	//pause/play controls
-	//todo
-	if (key.getTextCharacter() == 'g')
+	auto& keyManager = KeyBindingManager::getInstance();
+	
+	if (keyManager.matchesAction(key, KeyBindingManager::Action::PlayAudio))
 	{
 		SamplifyProperties::getInstance()->getAudioPlayer()->play();
 		return true;
 	}
-	else if (key.getTextCharacter() == 'h')
+	else if (keyManager.matchesAction(key, KeyBindingManager::Action::StopAudio))
 	{
 		SamplifyProperties::getInstance()->getAudioPlayer()->stop();
 		return true;
 	}
+	else if (keyManager.matchesAction(key, KeyBindingManager::Action::TogglePlayerWindow))
+	{
+		mSamplePlayerComponent.setVisible(!mSamplePlayerComponent.isVisible());
+		return true;
+	}
+	else if (keyManager.matchesAction(key, KeyBindingManager::Action::ToggleFilterWindow))
+	{
+		mFilterExplorer.setVisible(!mFilterExplorer.isVisible());
+		return true;
+	}
+	else if (keyManager.matchesAction(key, KeyBindingManager::Action::ToggleDirectoryWindow))
+	{
+		mDirectoryExplorer.setVisible(!mDirectoryExplorer.isVisible());
+		return true;
+	}
+	else if (keyManager.matchesAction(key, KeyBindingManager::Action::OpenPreferences))
+	{
+		// Launch preferences window
+		DialogWindow::LaunchOptions options;
+		auto* prefs = new PreferenceWindow::View();
+		options.content.setOwned(prefs);
+		options.dialogTitle = "Preferences";
+		options.dialogBackgroundColour = ThemeManager::getInstance().getColorForRole(ThemeManager::ColorRole::Background);
+		options.escapeKeyTriggersCloseButton = true;
+		options.useNativeTitleBar = false;
+		options.resizable = false;
+		
+		auto* dialog = options.launchAsync();
+		dialog->centreWithSize(600, 800);
+		return true;
+	}
+	else if (keyManager.matchesAction(key, KeyBindingManager::Action::ExitApplication))
+	{
+		JUCEApplication::getInstance()->systemRequestedQuit();
+		return true;
+	}
+	
 	return false;
 }
 
