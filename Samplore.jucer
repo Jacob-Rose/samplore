@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <JUCERPROJECT id="VOKGye" name="Samplore" projectType="guiapp" cppLanguageStandard="17" companyName="Samplore" companyWebsite="samplore.app" companyEmail="support@samplore.app" version="0.9.0" displaySplashScreen="1" jucerFormatVersion="1">
   <MAINGROUP id="xcW0wO" name="Samplore">
-    <FILE id="ThFu8p" name="logo.PNG" compile="0" resource="1" file="Reference/logo.PNG" />
+    <FILE id="ThFu8p" name="logo.ico" compile="0" resource="1" file="Reference/logo.ico" />
     <GROUP id="{C47D1158-7E95-A42C-1242-8C6595F23D75}" name="Source">
       <FILE id="C3H0P2" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp" />
       <FILE id="N4Xjbk" name="SamplifyLookAndFeel.h" compile="0" resource="0" file="Source/SamplifyLookAndFeel.h" />
@@ -91,21 +91,21 @@
         <CONFIGURATION isDebug="0" name="Release" />
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_video" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_product_unlocking" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_opengl" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_gui_extra" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_gui_basics" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_graphics" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_events" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_data_structures" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_cryptography" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_core" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_audio_utils" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_audio_processors" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_audio_formats" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_audio_devices" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_audio_basics" path="E:/_ENGINES_/JUCE/modules" />
+        <MODULEPATH id="juce_video" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_product_unlocking" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_opengl" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_gui_extra" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_gui_basics" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_graphics" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_events" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_data_structures" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_cryptography" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_core" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_audio_utils" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_audio_processors" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_audio_formats" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_audio_devices" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_audio_basics" path="/home/jakee/Documents/juce/modules" />
       </MODULEPATHS>
     </VS2019>
     <XCODE_MAC targetFolder="Builds/MacOSX" smallIcon="ThFu8p" bigIcon="ThFu8p">
@@ -114,21 +114,21 @@
         <CONFIGURATION isDebug="0" name="Release" />
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_video" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_product_unlocking" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_opengl" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_gui_extra" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_gui_basics" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_graphics" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_events" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_data_structures" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_cryptography" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_core" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_audio_utils" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_audio_processors" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_audio_formats" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_audio_devices" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_audio_basics" path="E:/_ENGINES_/JUCE/modules" />
+        <MODULEPATH id="juce_video" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_product_unlocking" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_opengl" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_gui_extra" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_gui_basics" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_graphics" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_events" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_data_structures" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_cryptography" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_core" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_audio_utils" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_audio_processors" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_audio_formats" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_audio_devices" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_audio_basics" path="/home/jakee/Documents/juce/modules" />
       </MODULEPATHS>
     </XCODE_MAC>
     <LINUX_MAKE targetFolder="Builds/LinuxMakefile">
@@ -137,21 +137,21 @@
         <CONFIGURATION isDebug="0" name="Release" />
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_audio_basics" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_audio_devices" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_audio_formats" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_audio_processors" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_audio_utils" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_core" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_cryptography" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_data_structures" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_events" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_graphics" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_gui_basics" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_gui_extra" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_opengl" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_product_unlocking" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_video" path="E:/_ENGINES_/JUCE/modules" />
+        <MODULEPATH id="juce_audio_basics" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_audio_devices" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_audio_formats" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_audio_processors" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_audio_utils" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_core" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_cryptography" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_data_structures" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_events" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_graphics" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_gui_basics" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_gui_extra" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_opengl" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_product_unlocking" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_video" path="/home/jakee/Documents/juce/modules" />
       </MODULEPATHS>
     </LINUX_MAKE>
     <VS2022 targetFolder="Builds/VisualStudio2022" bigIcon="ThFu8p" smallIcon="ThFu8p">
@@ -160,21 +160,21 @@
         <CONFIGURATION isDebug="0" name="Release" />
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_audio_basics" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_audio_devices" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_audio_formats" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_audio_processors" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_audio_utils" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_core" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_cryptography" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_data_structures" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_events" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_graphics" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_gui_basics" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_gui_extra" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_opengl" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_product_unlocking" path="E:/_ENGINES_/JUCE/modules" />
-        <MODULEPATH id="juce_video" path="E:/_ENGINES_/JUCE/modules" />
+        <MODULEPATH id="juce_audio_basics" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_audio_devices" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_audio_formats" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_audio_processors" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_audio_utils" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_core" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_cryptography" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_data_structures" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_events" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_graphics" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_gui_basics" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_gui_extra" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_opengl" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_product_unlocking" path="/home/jakee/Documents/juce/modules" />
+        <MODULEPATH id="juce_video" path="/home/jakee/Documents/juce/modules" />
       </MODULEPATHS>
     </VS2022>
   </EXPORTFORMATS>

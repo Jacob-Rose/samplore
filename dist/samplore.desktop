@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Samplore
+Comment=Sample Library Manager and Player
+Exec=samplore
+Icon=samplore
+Terminal=false
+Categories=AudioVideo;Audio;Player;
+StartupNotify=true
+StartupWMClass=Samplore
