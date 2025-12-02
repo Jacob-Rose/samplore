@@ -42,38 +42,118 @@ SampleExplorer::~SampleExplorer()
 
 void SampleExplorer::paint (Graphics& g)
 {
+	auto& theme = ThemeManager::getInstance();
+	auto sampleLib = SamplifyProperties::getInstance()->getSampleLibrary();
+	
 	if (mIsUpdating)
 	{
 		float size = getWidth() / 5;
 		getLookAndFeel().drawSpinningWaitAnimation(g, getLookAndFeel().findColour(loadingWheelColorId), (getWidth() / 2) - (size / 2), size, size, size);
 		repaint();
 	}
-	else
+	else if (sampleLib->getDirectories().empty())
 	{
-		// Check if there are no directories
-		auto sampleLib = SamplifyProperties::getInstance()->getSampleLibrary();
-		if (sampleLib->getDirectories().empty())
+		// No directories added - show helpful message
+		g.fillAll(theme.getColorForRole(ThemeManager::ColorRole::Background));
+		
+		// Draw jumbotron-style container
+		Rectangle<int> messageBox = getLocalBounds().reduced(60).withSizeKeepingCentre(
+			jmin(500, getWidth() - 120),
+			jmin(300, getHeight() - 120)
+		);
+		
+		// Draw rounded background
+		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::Surface).withAlpha(0.5f));
+		g.fillRoundedRectangle(messageBox.toFloat(), 12.0f);
+		
+		// Draw border
+		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::Border));
+		g.drawRoundedRectangle(messageBox.toFloat().reduced(1), 12.0f, 2.0f);
+		
+		// Draw icon/emoji at top
+		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
+		g.setFont(48.0f);
+		g.drawText("📁", messageBox.removeFromTop(80), Justification::centred);
+		
+		// Draw title
+		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+		g.setFont(FontOptions(24.0f, Font::bold));
+		g.drawText("No Directories Added", messageBox.removeFromTop(40), Justification::centred);
+		
+		messageBox.removeFromTop(20); // Spacing
+		
+		// Draw message
+		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
+		g.setFont(16.0f);
+		String message = "Add sample directories to get started.\n\nGo to File -> Preferences to add directories.";
+		g.drawFittedText(message, messageBox, Justification::centred, 4);
+	}
+	else if (sampleLib->getCurrentSamples().size() == 0)
+	{
+		// Directories exist but no samples found
+		g.fillAll(theme.getColorForRole(ThemeManager::ColorRole::Background));
+		
+		// Draw jumbotron-style container
+		Rectangle<int> messageBox = getLocalBounds().reduced(60).withSizeKeepingCentre(
+			jmin(500, getWidth() - 120),
+			jmin(300, getHeight() - 120)
+		);
+		
+		// Draw rounded background
+		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::Surface).withAlpha(0.5f));
+		g.fillRoundedRectangle(messageBox.toFloat(), 12.0f);
+		
+		// Draw border
+		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::Border));
+		g.drawRoundedRectangle(messageBox.toFloat().reduced(1), 12.0f, 2.0f);
+		
+		// Draw icon/emoji at top
+		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
+		g.setFont(48.0f);
+		g.drawText("🔍", messageBox.removeFromTop(80), Justification::centred);
+		
+		// Draw title
+		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+		g.setFont(FontOptions(24.0f, Font::bold));
+		
+		String title = mSearchBar.getText().isEmpty() ? "No Samples Found" : "No Matching Samples";
+		g.drawText(title, messageBox.removeFromTop(40), Justification::centred);
+		
+		messageBox.removeFromTop(20); // Spacing
+		
+		// Draw message
+		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
+		g.setFont(16.0f);
+		
+		String message;
+		if (!mSearchBar.getText().isEmpty())
 		{
-			auto& theme = ThemeManager::getInstance();
-			g.fillAll(theme.getColorForRole(ThemeManager::ColorRole::Background));
-			
-			g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
-			g.setFont(16.0f);
-			
-			String message = "No directories added.\n\n";
-			message += "Go to File -> Preferences -> Add Directory\n";
-			message += "to add sample directories.";
-			
-			g.drawFittedText(message, getLocalBounds().reduced(40), Justification::centred, 3);
+			message = "No samples match your search.\n\nTry a different search term or clear the search.";
 		}
+		else
+		{
+			message = "No audio files found in your directories.\n\nMake sure your directories contain audio files,\nor add more directories in File -> Preferences.";
+		}
+		
+		g.drawFittedText(message, messageBox, Justification::centred, 4);
 	}
 }
 
 void SampleExplorer::resized()
 {
-    mSearchBar.setBounds(0, 0, getWidth() - 120, 30);
+	auto sampleLib = SamplifyProperties::getInstance()->getSampleLibrary();
+	bool hasDirectories = !sampleLib->getDirectories().empty();
+	bool hasSamples = sampleLib->getCurrentSamples().size() > 0;
+	
+	// Hide search/filter UI when showing empty state
+	bool showUI = hasDirectories && (hasSamples || !mSearchBar.getText().isEmpty());
+	mSearchBar.setVisible(showUI);
+	mFilter.setVisible(showUI);
+	mViewport.setVisible(showUI);
+	
+	mSearchBar.setBounds(0, 0, getWidth() - 120, 30);
 	mFilter.setBounds(getWidth() - 120, 0, 120, 30);
-	mViewport.setBounds(0,30,getWidth(), getHeight()-30);
+	mViewport.setBounds(0, 30, getWidth(), getHeight() - 30);
 	mSampleContainer.setBounds(mViewport.getBounds().withRight(mViewport.getWidth() - mViewport.getScrollBarThickness()));
 }
 
@@ -97,7 +177,10 @@ void SampleExplorer::changeListenerCallback(ChangeBroadcaster* source)
 			mIsUpdating = false;
 			mSampleContainer.setSampleItems(sl->getCurrentSamples());
 			
-			// Trigger repaint to update viewport scrollbars
+			// Update UI visibility based on current state
+			resized();
+			
+			// Trigger repaint to update viewport scrollbars and empty state
 			repaint();
 		}
 	}
