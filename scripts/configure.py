@@ -104,10 +104,10 @@ def update_jucer_file(jucer_path, juce_path):
         # Write back to file
         print(f"\nWriting changes to {jucer_path.name}...")
         tree.write(jucer_path, encoding='UTF-8', xml_declaration=True)
-        print(f"✓ Updated {changes_made} module path(s)")
+        print(f"[OK] Updated {changes_made} module path(s)")
         return True
     else:
-        print("✓ All module paths already up to date")
+        print("[OK] All module paths already up to date")
         return True
 
 
@@ -150,7 +150,7 @@ def build_projucer(juce_path, plat):
     projucer_dir = juce_root / "extras/Projucer"
     
     if not projucer_dir.exists():
-        print(f"✗ Projucer source not found at {projucer_dir}")
+        print(f"[ERROR] Projucer source not found at {projucer_dir}")
         return None
     
     print(f"Building Projucer from source...")
@@ -162,7 +162,7 @@ def build_projucer(juce_path, plat):
         makefile = build_dir / "Makefile"
         
         if not makefile.exists():
-            print(f"✗ Projucer Makefile not found at {makefile}")
+            print(f"[ERROR] Projucer Makefile not found at {makefile}")
             print("  Build files need to be generated first (bootstrapping problem)")
             return None
         
@@ -178,15 +178,15 @@ def build_projucer(juce_path, plat):
         )
         
         if result.returncode != 0:
-            print("✗ Projucer build failed")
+            print("[ERROR] Projucer build failed")
             return None
         
         output_binary = build_dir / "build/Projucer"
         if output_binary.exists():
-            print(f"✓ Projucer built successfully: {output_binary}")
+            print(f"[OK] Projucer built successfully: {output_binary}")
             return output_binary
         else:
-            print(f"✗ Build completed but binary not found at {output_binary}")
+            print(f"[ERROR] Build completed but binary not found at {output_binary}")
             return None
     
     elif plat == "macos":
@@ -201,7 +201,7 @@ def build_projucer(juce_path, plat):
                     break
         
         if not xcodeproj:
-            print(f"✗ Projucer Xcode project not found in {build_dir}")
+            print(f"[ERROR] Projucer Xcode project not found in {build_dir}")
             print("  Build files need to be generated first (bootstrapping problem)")
             return None
         
@@ -222,15 +222,15 @@ def build_projucer(juce_path, plat):
         )
         
         if result.returncode != 0:
-            print("✗ Projucer build failed")
+            print("[ERROR] Projucer build failed")
             return None
         
         output_binary = build_dir / "build/Release/Projucer.app/Contents/MacOS/Projucer"
         if output_binary.exists():
-            print(f"✓ Projucer built successfully: {output_binary}")
+            print(f"[OK] Projucer built successfully: {output_binary}")
             return output_binary
         else:
-            print(f"✗ Build completed but binary not found at {output_binary}")
+            print(f"[ERROR] Build completed but binary not found at {output_binary}")
             return None
     
     elif plat == "windows":
@@ -254,7 +254,7 @@ def build_projucer(juce_path, plat):
                     break
         
         if not sln_file or not build_dir:
-            print(f"✗ Projucer Visual Studio solution not found")
+            print(f"[ERROR] Projucer Visual Studio solution not found")
             print("  Build files need to be generated first (bootstrapping problem)")
             return None
         
@@ -275,7 +275,7 @@ def build_projucer(juce_path, plat):
                 break
         
         if not msbuild:
-            print("✗ MSBuild not found. Install Visual Studio or add MSBuild to PATH.")
+            print("[ERROR] MSBuild not found. Install Visual Studio or add MSBuild to PATH.")
             return None
         
         # Build with MSBuild
@@ -295,15 +295,15 @@ def build_projucer(juce_path, plat):
         )
         
         if result.returncode != 0:
-            print("✗ Projucer build failed")
+            print("[ERROR] Projucer build failed")
             return None
         
         output_binary = build_dir / "x64/Release/App/Projucer.exe"
         if output_binary.exists():
-            print(f"✓ Projucer built successfully: {output_binary}")
+            print(f"[OK] Projucer built successfully: {output_binary}")
             return output_binary
         else:
-            print(f"✗ Build completed but binary not found at {output_binary}")
+            print(f"[ERROR] Build completed but binary not found at {output_binary}")
             return None
     
     else:
@@ -328,7 +328,7 @@ def generate_build_files(jucer_path, juce_path, plat):
         
         if not projucer:
             print()
-            print("✗ Failed to build Projucer automatically")
+            print("[ERROR] Failed to build Projucer automatically")
             print()
             print("Manual options:")
             print("  1. Download pre-built Projucer from https://juce.com/")
@@ -338,7 +338,7 @@ def generate_build_files(jucer_path, juce_path, plat):
             return False
         
         print()
-        print("✓ Successfully built Projucer!")
+        print("[OK] Successfully built Projucer!")
         print()
     
     print()
@@ -355,20 +355,20 @@ def generate_build_files(jucer_path, juce_path, plat):
         )
         
         if result.returncode == 0:
-            print("✓ Build files generated successfully!")
+            print("[OK] Build files generated successfully!")
             return True
         else:
-            print(f"✗ Projucer failed with exit code {result.returncode}")
+            print(f"[ERROR] Projucer failed with exit code {result.returncode}")
             if result.stderr:
                 print("Error output:")
                 print(result.stderr)
             return False
             
     except subprocess.TimeoutExpired:
-        print("✗ Projucer timed out (took longer than 60 seconds)")
+        print("[ERROR] Projucer timed out (took longer than 60 seconds)")
         return False
     except Exception as e:
-        print(f"✗ Failed to run Projucer: {e}")
+        print(f"[ERROR] Failed to run Projucer: {e}")
         return False
 
 
@@ -402,7 +402,7 @@ def check_dependencies(plat):
             print(f"  sudo apt-get install {' '.join(missing)}")
             return False
         else:
-            print("✓ All Linux dependencies installed")
+            print("[OK] All Linux dependencies installed")
             return True
     
     return True

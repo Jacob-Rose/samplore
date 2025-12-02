@@ -149,7 +149,7 @@ def build_linux_cmake(config, jobs, build_dir):
         cwd=PROJECT_ROOT
     )
     if configure_result != 0:
-        print(f"✗ CMake configuration failed")
+        print(f"[ERROR] CMake configuration failed")
         return configure_result
     
     # Build with CMake
@@ -159,10 +159,10 @@ def build_linux_cmake(config, jobs, build_dir):
     )
     
     if build_result != 0:
-        print(f"✗ CMake build failed")
+        print(f"[ERROR] CMake build failed")
         return build_result
     
-    print("✓ CMake build successful")
+    print("[OK] CMake build successful")
     return 0
 
 
@@ -171,14 +171,14 @@ def build_linux_projucer(config, jobs, build_dir):
     projucer_build_dir = get_build_dir("linux")
 
     if not projucer_build_dir or not projucer_build_dir.exists() or not (projucer_build_dir / "Makefile").exists():
-        print(f"⚠ Linux build files not found")
+        print(f"[WARNING] Linux build files not found")
         print("Generating build files...")
         result = subprocess.run(
             [sys.executable, str(SCRIPT_DIR / "configure.py")],
             cwd=PROJECT_ROOT
         )
         if result.returncode != 0:
-            print("✗ Failed to generate build files")
+            print("[ERROR] Failed to generate build files")
             return 1
 
         # Re-check for Makefile
@@ -198,7 +198,7 @@ def build_linux_projucer(config, jobs, build_dir):
             custom_binary = custom_build_dir / output_binary.name
             import shutil
             shutil.copy2(str(output_binary), str(custom_binary))
-            print(f"✓ Copied to: {custom_binary}")
+            print(f"[OK] Copied to: {custom_binary}")
 
     return result
 
@@ -216,14 +216,14 @@ def build_macos(config):
                 break
     
     if not xcodeproj:
-        print(f"⚠ macOS build files not found")
+        print(f"[WARNING] macOS build files not found")
         print("Generating build files...")
         result = subprocess.run(
             [sys.executable, str(SCRIPT_DIR / "configure.py")],
             cwd=PROJECT_ROOT
         )
         if result.returncode != 0:
-            print("✗ Failed to generate build files")
+            print("[ERROR] Failed to generate build files")
             return 1
         
         # Re-check for xcodeproj
@@ -233,7 +233,7 @@ def build_macos(config):
                 break
         
         if not xcodeproj:
-            print("✗ No .xcodeproj found after generation")
+            print("[ERROR] No .xcodeproj found after generation")
             return 1
 
     cmd = [
@@ -268,7 +268,7 @@ def build_windows_cmake(config, jobs, build_dir):
         cwd=PROJECT_ROOT
     )
     if configure_result != 0:
-        print(f"✗ CMake configuration failed")
+        print(f"[ERROR] CMake configuration failed")
         return configure_result
     
     # Build with CMake
@@ -278,39 +278,77 @@ def build_windows_cmake(config, jobs, build_dir):
     )
     
     if build_result != 0:
-        print(f"✗ CMake build failed")
+        print(f"[ERROR] CMake build failed")
         return build_result
     
-    print("✓ CMake build successful")
+    print("[OK] CMake build successful")
     return 0
+
+
+def find_msbuild():
+    """Find MSBuild executable on Windows."""
+    msbuild_paths = [
+        r"C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe",
+        r"C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe",
+        r"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe",
+        r"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe",
+        r"C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin\MSBuild.exe",
+        "msbuild",  # Try PATH
+    ]
+
+    for path in msbuild_paths:
+        if Path(path).exists() or shutil.which(path):
+            return path
+
+    return None
 
 
 def build_windows_projucer(config, jobs, build_dir):
     """Build on Windows using MSBuild."""
-    projucer_build_dir = build_dir or get_build_dir("windows")
-    if not projucer_build_dir or not projucer_build_dir.exists() or not (projucer_build_dir / "Makefile").exists():
-        print(f"⚠ Windows build files not found")
+    if build_dir:
+        projucer_build_dir = Path(build_dir) if isinstance(build_dir, str) else build_dir
+    else:
+        projucer_build_dir = get_build_dir("windows")
+
+    # Find the .sln file
+    sln_file = None
+    if projucer_build_dir and projucer_build_dir.exists():
+        for item in projucer_build_dir.iterdir():
+            if item.suffix == ".sln":
+                sln_file = item
+                break
+
+    if not sln_file:
+        print(f"[WARNING] Windows build files not found")
         print("Generating build files...")
         result = subprocess.run(
             [sys.executable, str(SCRIPT_DIR / "configure.py")],
             cwd=PROJECT_ROOT
         )
         if result.returncode != 0:
-            print("✗ Failed to generate build files")
-            return 1
-        
-        # Re-check for solution file
-        for item in projucer_build_dir.iterdir():
-            if item.suffix == ".sln":
-                sln_file = item
-                break
-        
-        if not sln_file:
-            print("✗ No .sln file found after generation")
+            print("[ERROR] Failed to generate build files")
             return 1
 
+        # Re-check for solution file
+        if projucer_build_dir and projucer_build_dir.exists():
+            for item in projucer_build_dir.iterdir():
+                if item.suffix == ".sln":
+                    sln_file = item
+                    break
+
+        if not sln_file:
+            print("[ERROR] No .sln file found after generation")
+            return 1
+
+    # Find MSBuild
+    msbuild = find_msbuild()
+    if not msbuild:
+        print("[ERROR] MSBuild not found. Please run from a Visual Studio Developer Command Prompt,")
+        print("        or install Visual Studio with C++ development tools.")
+        return 1
+
     cmd = [
-        "msbuild", str(sln_file),
+        msbuild, str(sln_file),
         f"/p:Configuration={config}",
         f"/m:{os.cpu_count() or 4}",
         "/nologo",
@@ -331,12 +369,12 @@ def build(plat, config, jobs, build_tests=False, use_cmake=False, build_dir=None
             build_linux_tests(build_dir)
         return result
     elif plat == "macos":
-        result = build_macos(config, use_cmake, build_dir)
+        result = build_macos(config)
         if build_tests:
             build_macos_tests()
         return result
     elif plat == "windows":
-        result = build_windows(config, use_cmake, build_dir)
+        result = build_windows(config, jobs, use_cmake, build_dir)
         if build_tests:
             build_windows_tests()
         return result
@@ -361,7 +399,7 @@ def build_linux_tests(build_dir=None):
         cwd=test_dir
     )
     if configure_result != 0:
-        print(f"✗ Test CMake configuration failed")
+        print(f"[ERROR] Test CMake configuration failed")
         return configure_result
     
     # Build with CMake
@@ -371,10 +409,10 @@ def build_linux_tests(build_dir=None):
     )
     
     if build_result != 0:
-        print(f"✗ Test build failed")
+        print(f"[ERROR] Test build failed")
         return build_result
     
-    print("✓ Tests built successfully")
+    print("[OK] Tests built successfully")
     return 0
 
 
@@ -389,10 +427,10 @@ def build_macos_tests():
     result = run_command(cmd, cwd=test_dir)
     
     if result != 0:
-        print(f"✗ Test build failed")
+        print(f"[ERROR] Test build failed")
         return result
     
-    print("✓ Tests built successfully")
+    print("[OK] Tests built successfully")
     return 0
 
 
@@ -407,10 +445,10 @@ def build_windows_tests():
     result = run_command(cmd, cwd=test_dir)
     
     if result != 0:
-        print(f"✗ Test build failed")
+        print(f"[ERROR] Test build failed")
         return result
     
-    print("✓ Tests built successfully")
+    print("[OK] Tests built successfully")
     return 0
 
 
@@ -525,16 +563,20 @@ Examples:
 
     # Build tests (always uses Debug config)
     if args.build_tests:
-        result = build(plat, "Debug", args.jobs, build_tests=True, 
-                         use_cmake=args.build_with_cmake, build_dir=args.build_dir)
+        # Only use build_dir for CMake builds, not Projucer
+        effective_build_dir = args.build_dir if args.build_with_cmake else None
+        result = build(plat, "Debug", args.jobs, build_tests=True,
+                         use_cmake=args.build_with_cmake, build_dir=effective_build_dir)
         if result != 0:
             print("\nTest build failed!")
             return result
 
     # Build main project
     if args.build or args.run:
+        # Only use build_dir for CMake builds, not Projucer
+        effective_build_dir = args.build_dir if args.build_with_cmake else None
         result = build(plat, args.config, args.jobs,
-                         use_cmake=args.build_with_cmake, build_dir=args.build_dir)
+                         use_cmake=args.build_with_cmake, build_dir=effective_build_dir)
         if result != 0:
             print("\nBuild failed!")
             return result

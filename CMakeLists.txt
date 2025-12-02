@@ -8,7 +8,18 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Add JUCE
-add_subdirectory(/home/jakee/Documents/juce ${CMAKE_BINARY_DIR}/juce)
+# JUCE_PATH should be set in environment or passed via -DJUCE_PATH=...
+if(NOT DEFINED JUCE_PATH)
+    if(DEFINED ENV{JUCE_PATH})
+        set(JUCE_PATH $ENV{JUCE_PATH})
+    else()
+        message(FATAL_ERROR "JUCE_PATH not set. Please set JUCE_PATH environment variable or pass -DJUCE_PATH=/path/to/juce")
+    endif()
+endif()
+
+# Normalize path separators for cross-platform compatibility
+file(TO_CMAKE_PATH "${JUCE_PATH}" JUCE_PATH_NORMALIZED)
+add_subdirectory(${JUCE_PATH_NORMALIZED} ${CMAKE_BINARY_DIR}/juce)
 
 # Add executable
 juce_add_console_app(Samplore
