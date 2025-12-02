@@ -3,6 +3,7 @@
 #include "SamplifyProperties.h"
 #include "SamplifyMainComponent.h"
 #include "SamplifyLookAndFeel.h"
+#include "ThemeManager.h"
 
 using namespace samplore;
 
@@ -29,7 +30,13 @@ SampleExplorer::SampleExplorer() : mViewport(&mSampleContainer)
 
 SampleExplorer::~SampleExplorer()
 {
+	// Remove from ThemeManager
 	ThemeManager::getInstance().removeListener(this);
+	
+	// Remove from SampleLibrary to prevent dangling pointer
+	if (auto lib = SamplifyProperties::getInstance()->getSampleLibrary())
+		lib->removeChangeListener(this);
+	
 	mFilter.setLookAndFeel(nullptr);
 }
 
@@ -40,6 +47,25 @@ void SampleExplorer::paint (Graphics& g)
 		float size = getWidth() / 5;
 		getLookAndFeel().drawSpinningWaitAnimation(g, getLookAndFeel().findColour(loadingWheelColorId), (getWidth() / 2) - (size / 2), size, size, size);
 		repaint();
+	}
+	else
+	{
+		// Check if there are no directories
+		auto sampleLib = SamplifyProperties::getInstance()->getSampleLibrary();
+		if (sampleLib->getDirectories().empty())
+		{
+			auto& theme = ThemeManager::getInstance();
+			g.fillAll(theme.getColorForRole(ThemeManager::ColorRole::Background));
+			
+			g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
+			g.setFont(16.0f);
+			
+			String message = "No directories added.\n\n";
+			message += "Go to File -> Preferences -> Add Directory\n";
+			message += "to add sample directories.";
+			
+			g.drawFittedText(message, getLocalBounds().reduced(40), Justification::centred, 3);
+		}
 	}
 }
 
@@ -70,6 +96,9 @@ void SampleExplorer::changeListenerCallback(ChangeBroadcaster* source)
 		{
 			mIsUpdating = false;
 			mSampleContainer.setSampleItems(sl->getCurrentSamples());
+			
+			// Trigger repaint to update viewport scrollbars
+			repaint();
 		}
 	}
 }

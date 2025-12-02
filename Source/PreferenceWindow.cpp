@@ -12,13 +12,21 @@
 #include "SamplifyLookAndFeel.h"
 #include "SamplifyMainComponent.h"
 #include "ThemeManager.h"
+#include "SampleDirectory.h"
 
 using namespace samplore;
 
 PreferenceWindow::PreferenceWindow() : DialogWindow("Preferences", AppValues::getInstance().MAIN_BACKGROUND_COLOR, true)
 {
-    setContentNonOwned(&mView, true);
-    setSize(600, 800);
+    // Set initial size for view
+    mView.setSize(600, 1000); // Initial size, will be updated in resized()
+    
+    // Wrap view in viewport for scrolling
+    mViewport.setViewedComponent(&mView, false);
+    mViewport.setScrollBarsShown(true, false, true, false);
+    
+    setContentNonOwned(&mViewport, true);
+    setSize(600, 600); // Smaller window height, content scrolls
     setWantsKeyboardFocus(true);
     setResizable(false, false);
     setUsingNativeTitleBar(false);
@@ -180,6 +188,22 @@ PreferenceWindow::View::View()
     mEditKeyBindingsButton.addListener(this);
     addAndMakeVisible(mEditKeyBindingsButton);
     
+    // ===== DIRECTORY MANAGEMENT SECTION =====
+    mDirectoryManagementLabel.setText("Directory Management", dontSendNotification);
+    mDirectoryManagementLabel.setFont(FontOptions(18.0f, Font::bold));
+    mDirectoryManagementLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+    addAndMakeVisible(mDirectoryManagementLabel);
+
+    mAddDirectoryButton.setName("Add Directory");
+    mAddDirectoryButton.setButtonText("Add Directory");
+    mAddDirectoryButton.addListener(this);
+    addAndMakeVisible(mAddDirectoryButton);
+
+    // Setup directory list viewport
+    addAndMakeVisible(mDirectoryViewport);
+    mDirectoryViewport.setViewedComponent(&mDirectoryListContainer, false);
+    mDirectoryViewport.setScrollBarsShown(true, false, true, false);
+    
     // ===== CLOSE BUTTON =====
     mCloseButton.setName("Close");
     mCloseButton.setButtonText("Close");
@@ -189,6 +213,7 @@ PreferenceWindow::View::View()
     // Initialize all component colors
     updateAllComponentColors();
     updateColorButtons();
+    updateDirectoryList();
     
     // Register with ThemeManager
     ThemeManager::getInstance().addListener(this);
@@ -270,6 +295,16 @@ void PreferenceWindow::View::buttonClicked(Button* button)
         
         auto* dialog = options.launchAsync();
         dialog->centreWithSize(500, 400);
+    }
+    else if (buttonName == "Add Directory")
+    {
+        SamplifyProperties::getInstance()->browseForDirectory([](const File& dir)
+        {
+            if (dir.exists())
+            {
+                SamplifyProperties::getInstance()->getSampleLibrary()->addDirectory(dir);
+            }
+        });
     }
     else if (buttonName == "Close")
     {
@@ -432,6 +467,7 @@ void PreferenceWindow::View::paint(Graphics& g)
     g.drawLine(16, 280, getWidth() - 16, 280, 1.0f);   // After color customization
     g.drawLine(16, 430, getWidth() - 16, 430, 1.0f);   // After color presets
     g.drawLine(16, 580, getWidth() - 16, 580, 1.0f);   // After appearance section
+    g.drawLine(16, 730, getWidth() - 16, 730, 1.0f);   // After key bindings section
 }
 
 void PreferenceWindow::View::resized()
@@ -523,10 +559,29 @@ void PreferenceWindow::View::resized()
     
     mEditKeyBindingsButton.setBounds(margin, y, getWidth() - 2 * margin, controlHeight);
     y += controlHeight + sectionSpacing;
+    
+    // Separator line drawn in paint()
+    y += itemSpacing;
+
+    // ===== DIRECTORY MANAGEMENT SECTION =====
+    mDirectoryManagementLabel.setBounds(margin, y, getWidth() - 2 * margin, labelHeight);
+    y += labelHeight + itemSpacing;
+    
+    mAddDirectoryButton.setBounds(margin, y, getWidth() - 2 * margin, controlHeight);
+    y += controlHeight + itemSpacing;
+    
+    // Directory list viewport
+    int listHeight = 120; // Fixed height for directory list
+    mDirectoryViewport.setBounds(margin, y, getWidth() - 2 * margin, listHeight);
+    y += listHeight + itemSpacing;
 
     // ===== CLOSE BUTTON =====
     y += sectionSpacing;
     mCloseButton.setBounds(getWidth() - margin - 120, y, 120, controlHeight);
+    y += controlHeight + margin;
+    
+    // Set the total height of the view (enables scrolling)
+    setSize(getWidth(), y);
 }
 
 void PreferenceWindow::View::updateAllComponentColors()
@@ -568,6 +623,12 @@ void PreferenceWindow::View::updateAllComponentColors()
     mEditKeyBindingsButton.setColour(TextButton::buttonColourId, theme.getColorForRole(ThemeManager::ColorRole::AccentSecondary));
     mEditKeyBindingsButton.setColour(TextButton::textColourOnId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
     
+    // Update directory management components
+    mDirectoryManagementLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+    mAddDirectoryButton.setColour(TextButton::buttonColourId, theme.getColorForRole(ThemeManager::ColorRole::AccentSecondary));
+    mAddDirectoryButton.setColour(TextButton::textColourOnId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+    // Viewport colors will be handled by theme system
+    
     // Update combo box
     mThemeSelector.setColour(ComboBox::backgroundColourId, theme.getColorForRole(ThemeManager::ColorRole::Surface));
     mThemeSelector.setColour(ComboBox::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
@@ -590,6 +651,7 @@ void PreferenceWindow::View::themeChanged(ThemeManager::Theme newTheme)
     );
     
     updateColorButtons();
+    updateDirectoryList();
     repaint();
 }
 
@@ -598,5 +660,117 @@ void PreferenceWindow::View::colorChanged(ThemeManager::ColorRole role, Colour n
     // Update all component colors when any color changes
     updateAllComponentColors();
     updateColorButtons();
+    updateDirectoryList();
     repaint();
+}
+
+void PreferenceWindow::View::updateDirectoryList()
+{
+    // Clear existing list items
+    mDirectoryListContainer.removeAllChildren();
+    
+    auto dirs = SamplifyProperties::getInstance()->getSampleLibrary()->getDirectories();
+    int y = 0;
+    const int itemHeight = 40;
+    int width = 550; // Fixed width based on viewport
+    
+    for (int i = 0; i < dirs.size(); i++)
+    {
+        bool isActive = (dirs[i]->getCheckStatus() == CheckStatus::Enabled || 
+                        dirs[i]->getCheckStatus() == CheckStatus::Mixed);
+        auto* item = new DirectoryListItem(dirs[i], isActive, this);
+        item->setBounds(0, y, width, itemHeight);
+        mDirectoryListContainer.addAndMakeVisible(item);
+        y += itemHeight;
+    }
+    
+    // Update container height
+    mDirectoryListContainer.setSize(width, y);
+}
+
+// DirectoryListItem implementation
+PreferenceWindow::View::DirectoryListItem::DirectoryListItem(std::shared_ptr<SampleDirectory> dir, bool isActive, View* parent)
+    : mDirectory(dir), mParentView(parent)
+{
+    addAndMakeVisible(mActiveCheckbox);
+    mActiveCheckbox.setToggleState(isActive, dontSendNotification);
+    mActiveCheckbox.addListener(this);
+    
+    addAndMakeVisible(mDeleteButton);
+    mDeleteButton.setButtonText("X");
+    mDeleteButton.addListener(this);
+}
+
+PreferenceWindow::View::DirectoryListItem::~DirectoryListItem()
+{
+    mActiveCheckbox.removeListener(this);
+    mDeleteButton.removeListener(this);
+}
+
+void PreferenceWindow::View::DirectoryListItem::paint(Graphics& g)
+{
+    auto& theme = ThemeManager::getInstance();
+    g.fillAll(theme.getColorForRole(ThemeManager::ColorRole::Surface));
+    
+    // Draw border
+    g.setColour(theme.getColorForRole(ThemeManager::ColorRole::Border));
+    g.drawRect(getLocalBounds(), 1);
+    
+    // Draw directory path
+    g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+    g.setFont(13.0f);
+    if (mDirectory)
+    {
+        int textX = 30; // After checkbox
+        int textWidth = getWidth() - textX - 40; // Before delete button
+        g.drawText(mDirectory->getFile().getFullPathName(), textX, 0, textWidth, getHeight(), Justification::centredLeft);
+    }
+}
+
+void PreferenceWindow::View::DirectoryListItem::resized()
+{
+    mActiveCheckbox.setBounds(5, (getHeight() - 20) / 2, 20, 20);
+    mDeleteButton.setBounds(getWidth() - 30, (getHeight() - 25) / 2, 25, 25);
+}
+
+void PreferenceWindow::View::DirectoryListItem::buttonClicked(Button* button)
+{
+    if (button == &mDeleteButton)
+    {
+        // Show confirmation dialog
+        if (mDirectory)
+        {
+            String message = "Are you sure you want to remove this directory?\n\n";
+            message += mDirectory->getFile().getFullPathName();
+            message += "\n\nThis will not delete any files from your computer.";
+            
+            auto options = MessageBoxOptions()
+                .withIconType(MessageBoxIconType::QuestionIcon)
+                .withTitle("Remove Directory")
+                .withMessage(message)
+                .withButton("Remove")
+                .withButton("Cancel");
+            
+            AlertWindow::showAsync(options, [this](int result)
+            {
+                if (result == 1 && mDirectory) // "Remove" button clicked
+                {
+                    SamplifyProperties::getInstance()->getSampleLibrary()->removeDirectory(mDirectory->getFile());
+                }
+            });
+        }
+    }
+    else if (button == &mActiveCheckbox)
+    {
+        // Toggle directory active/inactive state
+        if (mDirectory)
+        {
+            CheckStatus newStatus = mActiveCheckbox.getToggleState() ? 
+                CheckStatus::Enabled : CheckStatus::Disabled;
+            mDirectory->setCheckStatus(newStatus);
+            
+            // Trigger library update to refresh samples
+            SamplifyProperties::getInstance()->getSampleLibrary()->refreshCurrentSamples();
+        }
+    }
 }

@@ -25,15 +25,21 @@ namespace samplore
 	{
 	public:
 
-		struct Tag
+	struct Tag
+	{
+		// Use function-local static to avoid static destruction order issues
+		static const Tag& getEmptyTag()
 		{
-			static Tag EmptyTag;
-			//simple holder for information, can be expanded later
-			Tag(juce::String title, juce::Colour color) : mTitle(title), mColor(color) {}
+			static const Tag emptyTag(juce::String(), juce::Colours::magenta);
+			return emptyTag;
+		}
+		
+		//simple holder for information, can be expanded later
+		Tag(juce::String title, juce::Colour color) : mTitle(title), mColor(color) {}
 
-			juce::String mTitle;
-			juce::Colour mColor;
-		};
+		juce::String mTitle;
+		juce::Colour mColor;
+	};
 
 		SampleLibrary();
 		~SampleLibrary();
@@ -50,7 +56,7 @@ namespace samplore
 
 		void timerCallback() override;
 
-		///Tag Library Merger - They are dependent on each other for results and modifications, so fuck it put them together
+		///Tag Library Merger - They are dependent on each other for results and modifications
 		void addTag(String tag, Colour color);
 		void addTag(String tag);
 		//void renameTag(juce::String currentTagName, juce::String desiredName);
@@ -64,7 +70,7 @@ namespace samplore
 		SampleLibrary::Tag getTag(juce::String tag);
 
 
-		///Directory Manager Merger - Reduce dependencies, less pointers, easier saving, so fuck it put them together
+		///Directory Manager Merger - Reduce dependencies, less pointers, easier saving
 		void addDirectory(const File& dir);
 		std::vector<std::shared_ptr<SampleDirectory>> getDirectories() { return mDirectories; }
 		void removeDirectory(const File& dir);

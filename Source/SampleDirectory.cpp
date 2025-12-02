@@ -11,8 +11,6 @@
 #include "SampleDirectory.h"
 using namespace samplore;
 
-String SampleDirectory::mWildcard = "";
-
 SampleDirectory::SampleDirectory(File file)
 {
 	if (file.exists())
@@ -33,12 +31,24 @@ SampleDirectory::SampleDirectory(File file)
 	}
 
 	//add all child samples in the actual folder
-	DirectoryIterator sampleIter = DirectoryIterator(file, false, mWildcard, File::findFiles);
+	DirectoryIterator sampleIter = DirectoryIterator(file, false, getWildcard(), File::findFiles);
 	while (sampleIter.next())
 	{
 		mChildSamples.push_back(std::make_shared<Sample>(sampleIter.getFile()));
 	}
 	mDirectory = file;
+}
+
+SampleDirectory::~SampleDirectory()
+{
+	// Remove ourselves as a listener from all child directories before destruction
+	for (auto& childDir : mChildDirectories)
+	{
+		if (childDir)
+		{
+			childDir->removeChangeListener(this);
+		}
+	}
 }
 
 Sample::List samplore::SampleDirectory::getChildSamplesRecursive(juce::String query, bool ignoreCheckSystem)
@@ -186,7 +196,7 @@ void SampleDirectory::rescanFiles()
 	
 	// Rescan sample files - rebuild the list entirely
 	mChildSamples.clear();
-	DirectoryIterator sampleIter(mDirectory, false, mWildcard, File::findFiles);
+	DirectoryIterator sampleIter(mDirectory, false, getWildcard(), File::findFiles);
 	while (sampleIter.next())
 	{
 		mChildSamples.push_back(std::make_shared<Sample>(sampleIter.getFile()));

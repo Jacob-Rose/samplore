@@ -29,6 +29,7 @@ namespace samplore
 	{
 	public:
 		SampleDirectory(File file);
+		~SampleDirectory();
 		File getFile() const { return mDirectory; }
 		Sample::List getChildSamplesRecursive(juce::String query, bool ignoreCheckSystem);
 		Sample::List getChildSamples();
@@ -47,19 +48,23 @@ namespace samplore
 		std::shared_ptr<SampleDirectory> getChildDirectory(int index);
 
 
-		friend class SamploreApplication; //sets the wildcard really fucking early
-		friend class DirectoryExplorerTreeViewItem;
-	private:
+	friend class SamploreApplication; //sets the wildcard really early
+	friend class DirectoryExplorerTreeViewItem;
+private:
 
-		SampleDirectory(const samplore::SampleDirectory& samplify) {}; //dont call me
-		CheckStatus mCheckStatus = CheckStatus::Enabled;
-		File mDirectory;
-		bool mIncludeChildSamples = true; //if the folder should load its own samples when getsamples is called
-		std::vector<std::shared_ptr<Sample>> mChildSamples; //safer
-		std::vector<std::shared_ptr<SampleDirectory>> mChildDirectories;
+	SampleDirectory(const samplore::SampleDirectory& samplify) {}; //dont call me
+	CheckStatus mCheckStatus = CheckStatus::Enabled;
+	File mDirectory;
+	bool mIncludeChildSamples = true; //if the folder should load its own samples when getsamples is called
+	std::vector<std::shared_ptr<Sample>> mChildSamples; //safer
+	std::vector<std::shared_ptr<SampleDirectory>> mChildDirectories;
 
-
-		static String mWildcard; //set by SampleLibrary using the audioplayer to get all supported formats
+	// Use function to avoid static destruction order issues
+	static String& getWildcard()
+	{
+		static String wildcard;
+		return wildcard;
+	}
 	};
 }
 #endif

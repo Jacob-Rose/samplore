@@ -28,6 +28,10 @@ DirectoryExplorerTreeViewItem::DirectoryExplorerTreeViewItem(String string)
 
 DirectoryExplorerTreeViewItem::~DirectoryExplorerTreeViewItem()
 {
+	// Remove ourselves as listener from SampleDirectory before destruction
+	if (mSampleDirectory)
+		mSampleDirectory->removeChangeListener(this);
+	
 	ThemeManager::getInstance().removeListener(this);
 	
 	int subItemCount = getNumSubItems();

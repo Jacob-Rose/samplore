@@ -3,8 +3,6 @@
 
 using namespace samplore;
 
-SampleLibrary::Tag SampleLibrary::Tag::EmptyTag = SampleLibrary::Tag(juce::String(), juce::Colours::magenta);
-
 SampleLibrary::SampleLibrary()
 {
 	
@@ -12,6 +10,14 @@ SampleLibrary::SampleLibrary()
 
 SampleLibrary::~SampleLibrary()
 {
+	// Remove ourselves as a listener from all directories before destruction
+	for (auto& dir : mDirectories)
+	{
+		if (dir)
+		{
+			dir->removeChangeListener(this);
+		}
+	}
 }
 
 void SampleLibrary::updateCurrentSamples(String query)
@@ -49,6 +55,9 @@ void SampleLibrary::addDirectory(const File& dir)
 	std::shared_ptr<SampleDirectory> sampDir = std::make_shared<SampleDirectory>(dir);
 	sampDir->addChangeListener(this);
 	mDirectories.push_back(sampDir);
+	
+	// Rescan all samples to include new directory
+	refreshCurrentSamples();
 	sendChangeMessage();
 }
 
@@ -60,6 +69,9 @@ void SampleLibrary::removeDirectory(const File& dir)
 		{
 			(*it)->removeChangeListener(this);
 			mDirectories.erase(it);
+			
+			// Rescan all samples to remove samples from deleted directory
+			refreshCurrentSamples();
 			sendChangeMessage();
 			return;
 		}
@@ -206,7 +218,7 @@ SampleLibrary::Tag SampleLibrary::getTag(juce::String tag)
 			return mTags[i];
 		}
 	}
-	return SampleLibrary::Tag::EmptyTag;
+	return SampleLibrary::Tag::getEmptyTag();
 }
 
 Sample::List SampleLibrary::getAllSamplesInDirectories(juce::String query, bool ignoreCheckSystem)

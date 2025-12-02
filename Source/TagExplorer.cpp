@@ -23,7 +23,12 @@ TagExplorer::TagExplorer()
 
 TagExplorer::~TagExplorer()
 {
+	// Remove from ThemeManager
 	ThemeManager::getInstance().removeListener(this);
+	
+	// Remove from SampleLibrary to prevent dangling pointer
+	if (auto lib = SamplifyProperties::getInstance()->getSampleLibrary())
+		lib->removeChangeListener(this);
 }
 
 void TagExplorer::resized()

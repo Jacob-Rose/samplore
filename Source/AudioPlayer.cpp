@@ -11,6 +11,8 @@ AudioPlayer::AudioPlayer()
 
 AudioPlayer::~AudioPlayer()
 {
+	// Remove ourselves as a listener from the transport source
+	transportSource.removeChangeListener(this);
 }
 
 void AudioPlayer::play()

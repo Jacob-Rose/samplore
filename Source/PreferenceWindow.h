@@ -13,6 +13,7 @@
 #include "JuceHeader.h"
 #include "ThemeManager.h"
 #include "KeyBindingEditor.h"
+#include "SampleLibrary.h"
 
 namespace samplore
 {
@@ -78,16 +79,40 @@ namespace samplore
             Label mKeyBindingsLabel;
             TextButton mEditKeyBindingsButton;
 
+            // Directory management section
+            Label mDirectoryManagementLabel;
+            TextButton mAddDirectoryButton;
+            Viewport mDirectoryViewport;
+            Component mDirectoryListContainer;
+
         private:
             void updateColorButtons();
             void applyColorPreset(const String& presetName);
             void updateAllComponentColors();
+            void updateDirectoryList();
+            
+            // Directory list item component
+            struct DirectoryListItem : public Component, public Button::Listener
+            {
+                DirectoryListItem(std::shared_ptr<SampleDirectory> dir, bool isActive, View* parent);
+                ~DirectoryListItem() override;
+                
+                void paint(Graphics& g) override;
+                void resized() override;
+                void buttonClicked(Button* button) override;
+                
+                std::shared_ptr<SampleDirectory> mDirectory;
+                ToggleButton mActiveCheckbox;
+                TextButton mDeleteButton;
+                View* mParentView;
+            };
 
             std::unique_ptr<ColourSelector> mColourSelector;
             enum class ColorEditMode { Primary, Accent };
             ColorEditMode mColorEditMode = ColorEditMode::Primary;
         };
     private:
+        Viewport mViewport;
         View mView;
 
     };

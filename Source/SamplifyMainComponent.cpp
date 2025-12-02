@@ -61,6 +61,13 @@ SamplifyMainComponent::SamplifyMainComponent() :
 
 SamplifyMainComponent::~SamplifyMainComponent()
 {
+	// CRITICAL: Remove member components as listeners BEFORE they're destroyed
+	// Member variables are destroyed in reverse order of declaration
+	if (auto lib = SamplifyProperties::getInstance()->getSampleLibrary())
+		lib->removeChangeListener(&mSampleExplorer);
+	if (auto player = SamplifyProperties::getInstance()->getAudioPlayer())
+		player->removeChangeListener(&mSamplePlayerComponent);
+	
 	ThemeManager::getInstance().removeListener(this);
 	shutdownAudio();
 	if (mInstance == this)
@@ -91,11 +98,6 @@ bool SamplifyMainComponent::keyPressed(const KeyPress& key, Component* originati
 	else if (keyManager.matchesAction(key, KeyBindingManager::Action::ToggleFilterWindow))
 	{
 		mFilterExplorer.setVisible(!mFilterExplorer.isVisible());
-		return true;
-	}
-	else if (keyManager.matchesAction(key, KeyBindingManager::Action::ToggleDirectoryWindow))
-	{
-		mDirectoryExplorer.setVisible(!mDirectoryExplorer.isVisible());
 		return true;
 	}
 	else if (keyManager.matchesAction(key, KeyBindingManager::Action::OpenPreferences))
@@ -231,20 +233,20 @@ void SamplifyMainComponent::resized()
 	mDirectoryExplorer.setBounds(0, 0, lWidth, getHeight());
 	mResizableEdgeDirectoryExplorer.setBounds(lWidth, 0, edgeSize, getHeight());
 	lWidth += mResizableEdgeDirectoryExplorer.getWidth();
-
+	
 	int rWidth = mFilterExplorer.getWidth(); //set by dragger
 	mFilterExplorer.setBounds(getWidth() - rWidth, 0, rWidth, getHeight()); 
-
+	
 	mResizableEdgeFilterExplorer.setBounds(getWidth() - rWidth - edgeSize, 0, edgeSize, getHeight());
 	rWidth += mResizableEdgeFilterExplorer.getWidth();
-
+	
 	float bHeight = mSamplePlayerComponent.getHeight();
 	mSamplePlayerComponent.setBounds(lWidth, getHeight() - bHeight, getWidth() - (lWidth + rWidth), bHeight);
 	mResizableEdgeAudioPlayer.setBounds(lWidth, getHeight() - (bHeight + edgeSize), getWidth() - (lWidth + rWidth), edgeSize);
 	bHeight += mResizableEdgeAudioPlayer.getHeight();
-
+	
 	mSampleExplorer.setBounds(lWidth, 0, getWidth() - (rWidth + lWidth), getHeight() - bHeight);
-
+	
 	mResizableEdgeDirectoryExplorerBounds.setMaximumWidth(getWidth() - (rWidth));
 	mResizableEdgeFilterExplorerBounds.setMaximumWidth(getWidth() - (lWidth));
 }

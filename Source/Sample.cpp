@@ -20,7 +20,11 @@ Sample::Sample(const File& file) : mFile(file)
 
 Sample::~Sample()
 {
-
+	// Remove ourselves as a listener from the thumbnail if it exists
+	if (mThumbnail)
+	{
+		mThumbnail->removeChangeListener(this);
+	}
 }
 
 bool Sample::isPropertiesFileValid()

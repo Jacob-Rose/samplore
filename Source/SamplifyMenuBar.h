@@ -37,16 +37,10 @@ namespace samplore
 		enum CommandIDs
 		{
 			noCommand = 0,
-			addDirectory = 1,
 			refreshDirectories,
-			removeDirectory = 1024, //outlier number required for removeDirectory sub-menu
-			removeSampFiles = 2,
 			setPreferences,
 			setVolume,
 			exitApplication,
-			togglePlayerWindow,
-			toggleFilterWindow,
-			toggleDirectoryWindow,
 			viewInformation,
 			visitWebsite
 		};

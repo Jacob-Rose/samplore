@@ -24,17 +24,7 @@ StringArray SamplifyMainMenu::getMenuBarNames()
 
 void SamplifyMainMenu::menuItemSelected(int menuItemID, int topLevelMenuIndex)
 {
-	if (menuItemID == addDirectory)
-	{
-		SamplifyProperties::getInstance()->browseForDirectory([](const File& dir)
-		{
-			if (dir.exists())
-			{
-				SamplifyProperties::getInstance()->getSampleLibrary()->addDirectory(dir);
-			}
-		});
-	}
-	else if (menuItemID == refreshDirectories)
+	if (menuItemID == refreshDirectories)
 	{
 		SamplifyProperties::getInstance()->getSampleLibrary()->refreshDirectories();
 	}
@@ -72,32 +62,7 @@ void SamplifyMainMenu::menuItemSelected(int menuItemID, int topLevelMenuIndex)
 	{
 		JUCEApplication::getInstance()->systemRequestedQuit(); //close app
 	}
-	else if (menuItemID == removeSampFiles)
-	{
-		//todo clean this and update app when thread finishes
-		/*
-		File file = SamplifyProperties::browseForDirectory();
-		if (file.exists())
-		{
-			bool notLoaded = true;
-			std::vector<std::shared_ptr<SampleDirectory>> dirs = SamplifyProperties::getInstance()->getSampleLibrary()->getDirectories();
-			for (int i = 0; i < dirs.size(); i++)
-			{
-				if (file == dirs[i]->getFile() || file.isAChildOf(dirs[i]->getFile()))
-				{
-					notLoaded = false;
-					break;
-				}
-			}
-			if (notLoaded)
-			{
-				SamplifyProperties::getInstance()->getSampleLibrary()->removeDirectory(file);
-			}
-			DeleteSamplifyFilesThread deleteThread(file);
-			deleteThread.runThread();
-		}
-		*/
-	}
+
 	else if (menuItemID == viewInformation)
 	{
 		auto* window = new InfoWindow();
@@ -110,16 +75,7 @@ void SamplifyMainMenu::menuItemSelected(int menuItemID, int topLevelMenuIndex)
 	{
 		URL("www.samplify.app").launchInDefaultBrowser();
 	}
-	else if (menuItemID >= removeDirectory)
-	{
-		// Handle remove directory submenu
-		int dirIndex = menuItemID - removeDirectory;
-		std::vector<std::shared_ptr<SampleDirectory>> dirs = SamplifyProperties::getInstance()->getSampleLibrary()->getDirectories();
-		if (dirIndex >= 0 && dirIndex < dirs.size())
-		{
-			SamplifyProperties::getInstance()->getSampleLibrary()->removeDirectory(dirs[dirIndex]->getFile());
-		}
-	}
+
 }
 
 PopupMenu SamplifyMainMenu::getMenuForIndex(int menuIndex, const String& menuName)
@@ -127,21 +83,10 @@ PopupMenu SamplifyMainMenu::getMenuForIndex(int menuIndex, const String& menuNam
 	PopupMenu menu;
 	if (menuIndex == 0) //File
 	{
-		menu.addItem(addDirectory, "Add Directory", true, false);
 		menu.addItem(refreshDirectories, "Refresh Directories", true, false);
-		//menu.addItem(removeSampFiles, "Select Directory and Remove Samples");
-		//menu.addItem(removeDirectory, "Remove Directory");
-		PopupMenu removeMenu;
-		std::vector<std::shared_ptr<SampleDirectory>> dirs = SamplifyProperties::getInstance()->getSampleLibrary()->getDirectories();
-		for (int i = 0; i < dirs.size(); i++)
-		{
-			removeMenu.addItem(removeDirectory + i, dirs[i]->getFile().getFullPathName(), true, false);
-		}
-		menu.addSubMenu("Remove Directory:", removeMenu, true);
 		menu.addSeparator();
 		menu.addItem(setPreferences, "Preferences", true, false);
 		menu.addItem(exitApplication, "Exit Application", true, false);
-		//menu.addItem(removeAndResetDirectory, "Remove Directory and Delete .samp files");
 	}
 	else if (menuIndex == 1) //View
 	{

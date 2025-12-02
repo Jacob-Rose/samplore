@@ -26,6 +26,10 @@ SampleTile::SampleTile(Sample::Reference sample) : mTagContainer(false)
 
 SampleTile::~SampleTile()
 {
+	// Remove ourselves as listener from the sample before destruction
+	if (!mSample.isNull())
+		mSample.removeChangeListener(this);
+	
 	ThemeManager::getInstance().removeListener(this);
 }
 void SampleTile::paint (Graphics& g)

@@ -48,9 +48,9 @@ namespace samplore
 			}
 			*/
 
-			//I KNOW THIS IS INEFFICIENT, BUT LIKE HONESTLY I CREATE IT QUICKLY AND DELETE SO FUCK YOU
-			std::shared_ptr<AudioPlayer> audioPlayer = std::make_shared<AudioPlayer>();
-			SampleDirectory::mWildcard = audioPlayer->getFormatManager()->getWildcardForAllFormats();
+			//I KNOW THIS IS INEFFICIENT, BUT LIKE HONESTLY I CREATE IT QUICKLY AND DELETE
+		std::shared_ptr<AudioPlayer> audioPlayer = std::make_shared<AudioPlayer>();
+		SampleDirectory::getWildcard() = audioPlayer->getFormatManager()->getWildcardForAllFormats();
 			AppValues::initInstance();
 			ThemeManager::initInstance();  // Initialize ThemeManager before SamplifyProperties
 			IconLibrary::initInstance();    // Initialize IconLibrary

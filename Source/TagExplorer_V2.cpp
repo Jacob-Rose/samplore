@@ -29,6 +29,9 @@ TagExplorer_V2::TagExplorer_V2() : mTagsContainer(false)
 
 TagExplorer_V2::~TagExplorer_V2()
 {
+	// Remove from SampleLibrary to prevent dangling pointer
+	if (auto lib = SamplifyProperties::getInstance()->getSampleLibrary())
+		lib->removeChangeListener(this);
 }
 
 void TagExplorer_V2::resized()
