@@ -155,8 +155,8 @@ void ThemeManager::resetToDefaultColors()
     useCustomColors = false;
     savePreferences();
     
-    // Notify listeners
-    mListeners.call([](Listener& l) { l.themeReset(); });
+    // Notify listeners of theme change to trigger repaint with default colors
+    mListeners.call([this](Listener& l) { l.themeChanged(currentTheme); });
 }
 
 const ThemeManager::ThemePalette& ThemeManager::getCurrentPalette() const

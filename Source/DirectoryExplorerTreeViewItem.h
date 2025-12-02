@@ -14,10 +14,11 @@
 #include "JuceHeader.h"
 
 #include "SampleDirectory.h"
+#include "ThemeManager.h"
 
 namespace samplore
 {
-	class DirectoryExplorerTreeViewItem : public TreeViewItem, public FileDragAndDropTarget, public ChangeListener
+	class DirectoryExplorerTreeViewItem : public TreeViewItem, public FileDragAndDropTarget, public ChangeListener, public ThemeManager::Listener
 	{
 	public:
 		enum ColourIds
@@ -55,6 +56,11 @@ namespace samplore
 		String getName();
 		
 		void itemCheckCycled();
+
+		//==================================================================
+		// ThemeManager::Listener interface
+		void themeChanged(ThemeManager::Theme newTheme) override;
+		void colorChanged(ThemeManager::ColorRole role, Colour newColor) override;
 
 	private:
 		std::shared_ptr<SampleDirectory> mSampleDirectory;

@@ -19,10 +19,11 @@
 #include "SamplePlayerComponent.h"
 #include "SampleExplorer.h"
 #include "ServerAuthUnlockComponent.h"
+#include "ThemeManager.h"
 
 namespace samplore
 {
-	class SamplifyMainComponent : public AudioAppComponent, public KeyListener, public ChangeListener, private Timer
+	class SamplifyMainComponent : public AudioAppComponent, public KeyListener, public ChangeListener, private Timer, public ThemeManager::Listener
 	{
 	public:
 		static SamplifyMainComponent* getInstance();
@@ -53,6 +54,10 @@ namespace samplore
 		SamplePlayerComponent& getSamplePlayerComponent() { return mSamplePlayerComponent; }
 		std::shared_ptr<AudioPlayer> getAudioPlayer() { return mAudioPlayer; }
 
+		//==================================================================
+		// ThemeManager::Listener interface
+		void themeChanged(ThemeManager::Theme newTheme) override;
+		void colorChanged(ThemeManager::ColorRole role, Colour newColor) override;
 		
 	private:
 		DirectoryExplorer mDirectoryExplorer;

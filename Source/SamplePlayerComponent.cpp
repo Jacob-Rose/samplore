@@ -49,11 +49,14 @@ SamplePlayerComponent::SamplePlayerComponent() : mSampleTagContainer(false)
     mSampleInfoEditor.setReturnKeyStartsNewLine(true);
 
     updateThemeColors();
+    
+    // Register with ThemeManager
+    ThemeManager::getInstance().addListener(this);
 }
 
 SamplePlayerComponent::~SamplePlayerComponent()
 {
-
+    ThemeManager::getInstance().removeListener(this);
 }
 
 void SamplePlayerComponent::changeListenerCallback(ChangeBroadcaster* source)
@@ -301,4 +304,16 @@ void SamplePlayerComponent::updateThemeColors()
         theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
 
     repaint();
+}
+
+//==============================================================================
+// ThemeManager::Listener implementation
+void SamplePlayerComponent::themeChanged(ThemeManager::Theme newTheme)
+{
+    updateThemeColors();
+}
+
+void SamplePlayerComponent::colorChanged(ThemeManager::ColorRole role, Colour newColor)
+{
+    updateThemeColors();
 }

@@ -17,6 +17,7 @@
 #include "TagContainer.h"
 #include "SamplifyProperties.h"
 #include "Animation/AnimationManager.h"
+#include "ThemeManager.h"
 
 namespace samplore
 {
@@ -24,7 +25,8 @@ namespace samplore
 	class SampleTile : public Component,
 		public DragAndDropTarget,
 		public ChangeListener,
-		private AnimatedComponent
+		private AnimatedComponent,
+		public ThemeManager::Listener
 	{
 	public:
 
@@ -62,6 +64,11 @@ namespace samplore
 
 		void setSample(Sample::Reference);
 		Sample::Reference getSample();
+
+		//===========================================================================
+		// ThemeManager::Listener interface
+		void themeChanged(ThemeManager::Theme newTheme) override;
+		void colorChanged(ThemeManager::ColorRole role, Colour newColor) override;
 
 		class InfoIcon : public Component, public TooltipClient
 		{

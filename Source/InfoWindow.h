@@ -11,10 +11,11 @@
 #ifndef INFOWINDOW_H
 #define INFOWINDOW_H
 #include "JuceHeader.h"
+#include "ThemeManager.h"
 
 namespace samplore
 {
-	class InfoWindow : public DialogWindow
+	class InfoWindow : public DialogWindow, public ThemeManager::Listener
 	{
 	public:
 		StringArray attributions = {
@@ -24,9 +25,16 @@ namespace samplore
 		"Cross Icon made by xnimrodx from www.flaticon.com"
 		};
 		InfoWindow();
+		~InfoWindow() override;
 		void paint(Graphics& g) override;
 
 		void closeButtonPressed() override;
+		
+		//==================================================================
+		// ThemeManager::Listener interface
+		void themeChanged(ThemeManager::Theme newTheme) override;
+		void colorChanged(ThemeManager::ColorRole role, Colour newColor) override;
+		
 	private:
 
 	};

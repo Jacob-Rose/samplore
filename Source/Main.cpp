@@ -78,7 +78,7 @@ namespace samplore
 			quit();
 		}
 		//The main application that creates the SamplifyMainComponent
-		class MainWindow : public DocumentWindow
+		class MainWindow : public DocumentWindow, public ThemeManager::Listener
 		{
 		public:
 			MainWindow(String name) : DocumentWindow(name,
@@ -103,10 +103,13 @@ namespace samplore
 				setMenuBar(&mMainMenuModel);
 				mMainMenuModel.setLookAndFeel(&mLookAndFeel);
 #endif
-					
+				
+				// Register with ThemeManager to update menu bar colors
+				ThemeManager::getInstance().addListener(this);
 			}
 			~MainWindow()
 			{
+				ThemeManager::getInstance().removeListener(this);
 #if JUCE_MAC
 				MenuBarModel::setMacMainMenu(nullptr);
 #else
@@ -116,6 +119,31 @@ namespace samplore
 				getContentComponent()->setLookAndFeel(nullptr);
 				setLookAndFeel(nullptr);
 				clearContentComponent();
+			}
+			
+			// ThemeManager::Listener interface
+			void themeChanged(ThemeManager::Theme newTheme) override
+			{
+				SamplifyMainComponent::setupLookAndFeel(mLookAndFeel);
+				
+				// Update DocumentWindow background color
+				auto& theme = ThemeManager::getInstance();
+				setBackgroundColour(theme.getColorForRole(ThemeManager::ColorRole::Background));
+				
+				repaint();
+			}
+			
+			void colorChanged(ThemeManager::ColorRole role, Colour newColor) override
+			{
+				SamplifyMainComponent::setupLookAndFeel(mLookAndFeel);
+				
+				// Update DocumentWindow background color if it changed
+				if (role == ThemeManager::ColorRole::Background)
+				{
+					setBackgroundColour(newColor);
+				}
+				
+				repaint();
 			}
 
 			void closeButtonPressed() override

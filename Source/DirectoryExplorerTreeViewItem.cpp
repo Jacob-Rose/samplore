@@ -12,16 +12,24 @@ DirectoryExplorerTreeViewItem::DirectoryExplorerTreeViewItem(std::shared_ptr<Sam
 	mSampleDirectory = dir;
 	mSampleDirectory->addChangeListener(this);
 	mShouldUseFile = true;
+	
+	// Register with ThemeManager
+	ThemeManager::getInstance().addListener(this);
 }
 
 DirectoryExplorerTreeViewItem::DirectoryExplorerTreeViewItem(String string)
 { 
 	mText = string;
 	mShouldUseFile = false;
+	
+	// Register with ThemeManager
+	ThemeManager::getInstance().addListener(this);
 }
 
 DirectoryExplorerTreeViewItem::~DirectoryExplorerTreeViewItem()
 {
+	ThemeManager::getInstance().removeListener(this);
+	
 	int subItemCount = getNumSubItems();
 	for (int i = 0; i < subItemCount; i++)
 	{
@@ -225,4 +233,16 @@ void samplore::DirectoryExplorerTreeViewItem::refreshChildrenPaint()
 void DirectoryExplorerTreeViewItem::itemCheckCycled()
 {
 	mSampleDirectory->cycleCurrentCheck();
+}
+
+//==============================================================================
+// ThemeManager::Listener implementation
+void DirectoryExplorerTreeViewItem::themeChanged(ThemeManager::Theme newTheme)
+{
+	repaintItem();
+}
+
+void DirectoryExplorerTreeViewItem::colorChanged(ThemeManager::ColorRole role, Colour newColor)
+{
+	repaintItem();
 }

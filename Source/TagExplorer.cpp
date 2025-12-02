@@ -16,10 +16,14 @@ TagExplorer::TagExplorer()
 	//mTagViewport.setViewedComponent()
 	mTagViewport.setScrollBarsShown(true, false, true, false);
 	SamplifyProperties::getInstance()->getSampleLibrary()->addChangeListener(this);
+	
+	// Register with ThemeManager
+	ThemeManager::getInstance().addListener(this);
 }
 
 TagExplorer::~TagExplorer()
 {
+	ThemeManager::getInstance().removeListener(this);
 }
 
 void TagExplorer::resized()
@@ -174,4 +178,20 @@ void TagExplorer::Container::resetTags()
 		}
 	}
 	*/
+}
+
+//==============================================================================
+// ThemeManager::Listener implementation
+void TagExplorer::themeChanged(ThemeManager::Theme newTheme)
+{
+	mTagsContainer.repaint();
+}
+
+void TagExplorer::colorChanged(ThemeManager::ColorRole role, Colour newColor)
+{
+	// Repaint if text colors changed
+	if (role == ThemeManager::ColorRole::TextPrimary || role == ThemeManager::ColorRole::TextSecondary)
+	{
+		mTagsContainer.repaint();
+	}
 }

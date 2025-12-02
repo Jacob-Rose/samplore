@@ -13,12 +13,14 @@
 #include "JuceHeader.h"
 
 #include "TagContainer.h"
+#include "ThemeManager.h"
 
 namespace samplore
 {
 	class TagExplorer 
 		: public Component
 		, public ChangeListener
+		, public ThemeManager::Listener
 	{
 	public:
 		TagExplorer();
@@ -63,6 +65,12 @@ namespace samplore
 		Container& getContainer() { return mTagsContainer; }
 
 		void changeListenerCallback(ChangeBroadcaster* source) override;
+		
+		//==================================================================
+		// ThemeManager::Listener interface
+		void themeChanged(ThemeManager::Theme newTheme) override;
+		void colorChanged(ThemeManager::ColorRole role, Colour newColor) override;
+		
 	private:
 
 		TextButton mNewButtonTag;

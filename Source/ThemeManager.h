@@ -70,9 +70,6 @@ namespace samplore
             
             /// Called when a specific color is customized
             virtual void colorChanged(ColorRole role, Colour newColor) {}
-            
-            /// Called when all custom colors are reset to defaults
-            virtual void themeReset() {}
         };
 
         //======================================================================

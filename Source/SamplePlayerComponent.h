@@ -13,10 +13,11 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "Sample.h"
 #include "TagContainer.h"
+#include "ThemeManager.h"
 
 namespace samplore
 {
-    class SamplePlayerComponent : public Component, public ChangeListener, public TextEditor::Listener, public Button::Listener
+    class SamplePlayerComponent : public Component, public ChangeListener, public TextEditor::Listener, public Button::Listener, public ThemeManager::Listener
     {
     public:
 
@@ -43,6 +44,11 @@ namespace samplore
         Sample::Reference getCurrentSample();
 
         void updateThemeColors();
+
+        //==================================================================
+        // ThemeManager::Listener interface
+        void themeChanged(ThemeManager::Theme newTheme) override;
+        void colorChanged(ThemeManager::ColorRole role, Colour newColor) override;
 
     private:
         TextEditor mSampleInfoEditor;

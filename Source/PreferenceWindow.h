@@ -11,6 +11,7 @@
 #ifndef PREFERENCEWINDOW_H
 #define PREFERENCEWINDOW_H
 #include "JuceHeader.h"
+#include "ThemeManager.h"
 
 namespace samplore
 {
@@ -23,10 +24,11 @@ namespace samplore
         void closeButtonPressed() override;
         bool keyPressed(const KeyPress& key) override;
 
-        class View : public Component, public Button::Listener, public TextEditor::Listener, public ChangeListener, public ComboBox::Listener
+        class View : public Component, public Button::Listener, public TextEditor::Listener, public ChangeListener, public ComboBox::Listener, public ThemeManager::Listener
         {
         public:
             View();
+            ~View() override;
 
             void buttonClicked(Button*) override;
             void textEditorTextChanged(TextEditor&) override;
@@ -35,6 +37,11 @@ namespace samplore
 
             void paint(Graphics& g) override;
             void resized() override;
+
+            //==================================================================
+            // ThemeManager::Listener interface
+            void themeChanged(ThemeManager::Theme newTheme) override;
+            void colorChanged(ThemeManager::ColorRole role, Colour newColor) override;
 
             // Theme section
             Label mThemeLabel;
@@ -69,6 +76,7 @@ namespace samplore
         private:
             void updateColorButtons();
             void applyColorPreset(const String& presetName);
+            void updateAllComponentColors();
 
             std::unique_ptr<ColourSelector> mColourSelector;
             enum class ColorEditMode { Primary, Accent };

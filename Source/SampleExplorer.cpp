@@ -22,10 +22,14 @@ SampleExplorer::SampleExplorer() : mViewport(&mSampleContainer)
 	mViewport.setScrollBarsShown(true, false, true, false);
 	mSearchBar.addListener(this);
 	mFilter.addListener(this);
+	
+	// Register with ThemeManager
+	ThemeManager::getInstance().addListener(this);
 }
 
 SampleExplorer::~SampleExplorer()
 {
+	ThemeManager::getInstance().removeListener(this);
 	mFilter.setLookAndFeel(nullptr);
 }
 
@@ -115,4 +119,20 @@ void SampleExplorer::SampleSearchbar::resized()
 {
 	mEraseSearchButton.setBoundsRelative(0.8f, 0.2f, 0.1f, 0.6f);
 	TextEditor::resized();
+}
+
+//==============================================================================
+// ThemeManager::Listener implementation
+void SampleExplorer::themeChanged(ThemeManager::Theme newTheme)
+{
+	repaint();
+}
+
+void SampleExplorer::colorChanged(ThemeManager::ColorRole role, Colour newColor)
+{
+	// Only repaint if the loading wheel color changed
+	if (role == ThemeManager::ColorRole::AccentPrimary)
+	{
+		repaint();
+	}
 }

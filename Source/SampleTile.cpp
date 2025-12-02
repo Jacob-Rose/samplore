@@ -19,10 +19,14 @@ SampleTile::SampleTile(Sample::Reference sample) : mTagContainer(false)
     mTagContainer.addMouseListener(this, false);
 	addAndMakeVisible(mTagContainer);
 	addAndMakeVisible(m_InfoIcon);
+	
+	// Register with ThemeManager
+	ThemeManager::getInstance().addListener(this);
 }
 
 SampleTile::~SampleTile()
 {
+	ThemeManager::getInstance().removeListener(this);
 }
 void SampleTile::paint (Graphics& g)
 {
@@ -394,4 +398,16 @@ void SampleTile::InfoIcon::paint(Graphics& g)
 		                                     getBounds().reduced(2.0f).toFloat(),
 		                                     theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
 	}
+}
+
+//==============================================================================
+// ThemeManager::Listener implementation
+void SampleTile::themeChanged(ThemeManager::Theme newTheme)
+{
+	repaint();
+}
+
+void SampleTile::colorChanged(ThemeManager::ColorRole role, Colour newColor)
+{
+	repaint();
 }

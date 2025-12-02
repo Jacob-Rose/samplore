@@ -16,13 +16,15 @@
 #include "SampleContainer.h"
 
 #include "SamplifyProperties.h"
+#include "ThemeManager.h"
 
 namespace samplore
 {
 	class SampleExplorer : public Component, 
 		public TextEditor::Listener, 
 		public ComboBox::Listener,
-		public ChangeListener
+		public ChangeListener,
+		public ThemeManager::Listener
 	{
 	public:
 		enum ColourIds
@@ -65,6 +67,12 @@ namespace samplore
 
 		TextEditor& getSearchBar() { return mSearchBar; }
 		SampleContainer& getSampleContainer() { return mSampleContainer; }
+		
+		//==================================================================
+		// ThemeManager::Listener interface
+		void themeChanged(ThemeManager::Theme newTheme) override;
+		void colorChanged(ThemeManager::ColorRole role, Colour newColor) override;
+		
 	private:
 		//============================================================
 		bool mIsUpdating = false;

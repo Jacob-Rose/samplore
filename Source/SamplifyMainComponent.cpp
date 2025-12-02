@@ -54,10 +54,14 @@ SamplifyMainComponent::SamplifyMainComponent() :
 	setSize(AppValues::getInstance().WINDOW_WIDTH, AppValues::getInstance().WINDOW_HEIGHT);
 	//initial load
 	SamplifyProperties::getInstance()->getSampleLibrary()->updateCurrentSamples("");
+	
+	// Register with ThemeManager
+	ThemeManager::getInstance().addListener(this);
 }
 
 SamplifyMainComponent::~SamplifyMainComponent()
 {
+	ThemeManager::getInstance().removeListener(this);
 	shutdownAudio();
 	if (mInstance == this)
 	{
@@ -227,4 +231,20 @@ void SamplifyMainComponent::timerCallback()
 void SamplifyMainComponent::mouseDrag(const MouseEvent& e)
 {
 	resized();
+}
+
+//==============================================================================
+// ThemeManager::Listener implementation
+void SamplifyMainComponent::themeChanged(ThemeManager::Theme newTheme)
+{
+	setupLookAndFeel(getLookAndFeel());
+	mSamplePlayerComponent.updateThemeColors();
+	repaint();
+}
+
+void SamplifyMainComponent::colorChanged(ThemeManager::ColorRole role, Colour newColor)
+{
+	setupLookAndFeel(getLookAndFeel());
+	mSamplePlayerComponent.updateThemeColors();
+	repaint();
 }

@@ -15,6 +15,7 @@
 #define SAMPLIFYMENUBAR_H
 
 #include "JuceHeader.h"
+#include "ThemeManager.h"
 
 namespace samplore
 {
@@ -30,7 +31,7 @@ namespace samplore
 	};
 	*/
 
-	class SamplifyMainMenu : public Component, public MenuBarModel
+	class SamplifyMainMenu : public Component, public MenuBarModel, public ThemeManager::Listener
 	{
 	public:
 		enum CommandIDs
@@ -51,10 +52,17 @@ namespace samplore
 		};
 
 		SamplifyMainMenu();
+		~SamplifyMainMenu() override;
+		
 		//Menu Bar Model Functions
 		StringArray getMenuBarNames() override;
 		PopupMenu getMenuForIndex(int topLevelMenuIndex, const String& menuName) override;
 		void menuItemSelected(int menuItemID, int topLevelMenuIndex) override;
+
+		//==================================================================
+		// ThemeManager::Listener interface
+		void themeChanged(ThemeManager::Theme newTheme) override;
+		void colorChanged(ThemeManager::ColorRole role, Colour newColor) override;
 
 	private:
 		std::unique_ptr<AlertWindow> mVolumeWindow;

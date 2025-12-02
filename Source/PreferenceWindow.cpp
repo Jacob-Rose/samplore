@@ -174,8 +174,17 @@ PreferenceWindow::View::View()
     mCloseButton.addListener(this);
     addAndMakeVisible(mCloseButton);
 
-
+    // Initialize all component colors
+    updateAllComponentColors();
     updateColorButtons();
+    
+    // Register with ThemeManager
+    ThemeManager::getInstance().addListener(this);
+}
+
+PreferenceWindow::View::~View()
+{
+    ThemeManager::getInstance().removeListener(this);
 }
 
 void PreferenceWindow::View::buttonClicked(Button* button)
@@ -480,4 +489,71 @@ void PreferenceWindow::View::resized()
     // ===== CLOSE BUTTON =====
     y += sectionSpacing;
     mCloseButton.setBounds(getWidth() - margin - 120, y, 120, controlHeight);
+}
+
+void PreferenceWindow::View::updateAllComponentColors()
+{
+    auto& theme = ThemeManager::getInstance();
+    
+    // Update all labels
+    mThemeLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+    mColorCustomizationLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+    mPrimaryColorLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
+    mAccentColorLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
+    mColorPresetsLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+    mAppearanceLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+    mTileSizeLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
+    mThumbnailLinesLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
+    mThumbnailLinesPlayerLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
+    
+    // Update text editors
+    mSampleMinSizeValue.setColour(TextEditor::backgroundColourId, theme.getColorForRole(ThemeManager::ColorRole::Surface));
+    mSampleMinSizeValue.setColour(TextEditor::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+    mSampleMinSizeValue.setColour(TextEditor::outlineColourId, theme.getColorForRole(ThemeManager::ColorRole::Border));
+    mSampleMinSizeValue.applyColourToAllText(theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+    mSampleMinSizeValue.repaint();
+    
+    mThumbnailLineCount.setColour(TextEditor::backgroundColourId, theme.getColorForRole(ThemeManager::ColorRole::Surface));
+    mThumbnailLineCount.setColour(TextEditor::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+    mThumbnailLineCount.setColour(TextEditor::outlineColourId, theme.getColorForRole(ThemeManager::ColorRole::Border));
+    mThumbnailLineCount.applyColourToAllText(theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+    mThumbnailLineCount.repaint();
+    
+    mThumbnailLineCountPlayer.setColour(TextEditor::backgroundColourId, theme.getColorForRole(ThemeManager::ColorRole::Surface));
+    mThumbnailLineCountPlayer.setColour(TextEditor::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+    mThumbnailLineCountPlayer.setColour(TextEditor::outlineColourId, theme.getColorForRole(ThemeManager::ColorRole::Border));
+    mThumbnailLineCountPlayer.applyColourToAllText(theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+    mThumbnailLineCountPlayer.repaint();
+    
+    // Update combo box
+    mThemeSelector.setColour(ComboBox::backgroundColourId, theme.getColorForRole(ThemeManager::ColorRole::Surface));
+    mThemeSelector.setColour(ComboBox::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+    mThemeSelector.setColour(ComboBox::outlineColourId, theme.getColorForRole(ThemeManager::ColorRole::Border));
+    mThemeSelector.setColour(ComboBox::arrowColourId, theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
+    mThemeSelector.repaint();
+}
+
+//==============================================================================
+// ThemeManager::Listener implementation
+void PreferenceWindow::View::themeChanged(ThemeManager::Theme newTheme)
+{
+    // Update all component colors
+    updateAllComponentColors();
+    
+    // Update theme selector dropdown
+    mThemeSelector.setSelectedId(
+        newTheme == ThemeManager::Theme::Dark ? 1 : 2,
+        dontSendNotification
+    );
+    
+    updateColorButtons();
+    repaint();
+}
+
+void PreferenceWindow::View::colorChanged(ThemeManager::ColorRole role, Colour newColor)
+{
+    // Update all component colors when any color changes
+    updateAllComponentColors();
+    updateColorButtons();
+    repaint();
 }

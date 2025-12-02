@@ -11,10 +11,14 @@ TagTile::TagTile(juce::String tag, Font& font)
 	mTag = tag;
 	mFont = &font;
 	setRepaintsOnMouseActivity(true);
+	
+	// Register with ThemeManager
+	ThemeManager::getInstance().addListener(this);
 }
 
 TagTile::~TagTile()
 {
+	ThemeManager::getInstance().removeListener(this);
 }
 
 void TagTile::setTag(juce::String tag)
@@ -126,6 +130,18 @@ void TagTile::mouseEnter(const MouseEvent& e)
 }
 
 void TagTile::mouseExit(const MouseEvent& e)
+{
+	repaint();
+}
+
+//==============================================================================
+// ThemeManager::Listener implementation
+void TagTile::themeChanged(ThemeManager::Theme newTheme)
+{
+	repaint();
+}
+
+void TagTile::colorChanged(ThemeManager::ColorRole role, Colour newColor)
 {
 	repaint();
 }

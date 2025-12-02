@@ -13,10 +13,11 @@
 
 #include "JuceHeader.h"
 #include "Animation/AnimationManager.h"
+#include "ThemeManager.h"
 
 namespace samplore
 {
-	class TagTile : public Component, public DragAndDropContainer, private AnimatedComponent
+	class TagTile : public Component, public DragAndDropContainer, private AnimatedComponent, public ThemeManager::Listener
 	{
 	public:
 		//==================================================
@@ -34,6 +35,10 @@ namespace samplore
 		//==================================================
 		void setTag(juce::String tag);
 		juce::String getTag() { return mTag; }
+		//==================================================
+		// ThemeManager::Listener interface
+		void themeChanged(ThemeManager::Theme newTheme) override;
+		void colorChanged(ThemeManager::ColorRole role, Colour newColor) override;
 
 	protected:
 		// AnimatedComponent interface

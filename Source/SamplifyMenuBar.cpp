@@ -2,10 +2,19 @@
 #include "SamplifyProperties.h"
 #include "PreferenceWindow.h"
 #include "InfoWindow.h"
+#include "SamplifyMainComponent.h"
 
 using namespace samplore;
 
-SamplifyMainMenu::SamplifyMainMenu() {}
+SamplifyMainMenu::SamplifyMainMenu()
+{
+	ThemeManager::getInstance().addListener(this);
+}
+
+SamplifyMainMenu::~SamplifyMainMenu()
+{
+	ThemeManager::getInstance().removeListener(this);
+}
 
 StringArray SamplifyMainMenu::getMenuBarNames()
 {
@@ -149,6 +158,23 @@ PopupMenu SamplifyMainMenu::getMenuForIndex(int menuIndex, const String& menuNam
 	//menu.addSeparator();
 	return menu;
 }
+
+//==============================================================================
+// ThemeManager::Listener implementation
+void SamplifyMainMenu::themeChanged(ThemeManager::Theme newTheme)
+{
+	// The MainWindow will update the LookAndFeel
+	// We just need to notify JUCE that menu needs redrawing
+	menuItemsChanged();
+}
+
+void SamplifyMainMenu::colorChanged(ThemeManager::ColorRole role, Colour newColor)
+{
+	// The MainWindow will update the LookAndFeel
+	// We just need to notify JUCE that menu needs redrawing
+	menuItemsChanged();
+}
+
 /*
 void SamplifyMainMenu::DeleteSamplifyFilesThread::run()
 {
