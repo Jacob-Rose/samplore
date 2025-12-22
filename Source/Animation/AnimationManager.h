@@ -15,9 +15,12 @@
 #include <functional>
 #include <vector>
 
+// TODO get this logic out of the header, make cpp
+
 namespace samplore
 {
     // ====== Easing Functions ======
+    // TODO just get easing.hpp from library
     namespace Easing
     {
         inline float linear(float t) { return t; }

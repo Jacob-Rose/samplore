@@ -18,6 +18,7 @@
 
 namespace samplore
 {
+	// TODO rename SampleTileScrollView
 	class SampleContainer : public Component
 	{
 	public:

@@ -44,7 +44,8 @@ fi
 # Install desktop entry
 if [ -f "$INSTALL_DIR/samplore.desktop" ]; then
     echo "Installing desktop entry..."
-    cp "$INSTALL_DIR/samplore.desktop" "$HOME/.local/share/applications/samplore.desktop"
+    # Update Exec path to use absolute path
+    sed "s|^Exec=samplore|Exec=$HOME/.local/bin/samplore|g" "$INSTALL_DIR/samplore.desktop" > "$HOME/.local/share/applications/samplore.desktop"
     chmod +x "$HOME/.local/share/applications/samplore.desktop"
     echo -e "${GREEN}✓${NC} Desktop entry installed"
 fi
