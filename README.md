@@ -154,6 +154,8 @@ Contributions are welcome! Please feel free to:
 
 Originally developed as "Samplify" as a personal project and learning experience with JUCE. Now open source and renamed to "Samplore" to avoid trademark conflicts.
 
+This technically was the first tool program with an Advanced GUI I had made. This original WPF version was finished in 2018, also where I learned git. in 2018. https://github.com/Jacob-Rose/Samplify-WPF 
+
 ![Concept Screenshot](https://i.imgur.com/TEacSr6.png)
 
 ## License
