@@ -17,7 +17,9 @@
 
 namespace samplore
 {
-	class DirectoryExplorer : public Viewport, public ChangeListener
+	class DirectoryExplorer 
+		: public Viewport
+		, public ChangeListener
 	{
 	public:
 		//============================================================

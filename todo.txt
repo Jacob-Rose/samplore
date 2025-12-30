@@ -32,4 +32,5 @@ In no real order from there, but with prio:
     [ ] (P3) Possibly take up space with the audioplayer, take over the main sample selection menu, but the selected sample in the extended editor does not need to be the one that was just playing
 [ ] (P1) Add Active Audio Player Box with controls like stop, time bar. make it optional
 [ ] (P3) Add tutorial / intro overlay guided experience.
+[ ] (P1) Make Sample title scroll or reveal itself in some fashion when shortened.
 
