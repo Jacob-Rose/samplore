@@ -28,6 +28,13 @@ void SamplifyMainMenu::menuItemSelected(int menuItemID, int topLevelMenuIndex)
 	{
 		SamplifyProperties::getInstance()->getSampleLibrary()->refreshDirectories();
 	}
+	else if (menuItemID == openImportWizard)
+	{
+		if (auto* mainComponent = SamplifyMainComponent::getInstance())
+		{
+			mainComponent->showImportWizard();
+		}
+	}
 	else if (menuItemID == setVolume)
 	{
 		mVolumeWindow = std::make_unique<AlertWindow>("Set Gain", "", MessageBoxIconType::NoIcon);
@@ -52,11 +59,10 @@ void SamplifyMainMenu::menuItemSelected(int menuItemID, int topLevelMenuIndex)
 	}
 	else if (menuItemID == setPreferences)
 	{
-		auto* window = new PreferenceWindow();
-		window->enterModalState(true, ModalCallbackFunction::create([window](int)
+		if (auto* mainComponent = SamplifyMainComponent::getInstance())
 		{
-			delete window;
-		}), true);
+			mainComponent->showPreferences();
+		}
 	}
 	else if (menuItemID == exitApplication)
 	{
@@ -84,6 +90,7 @@ PopupMenu SamplifyMainMenu::getMenuForIndex(int menuIndex, const String& menuNam
 	if (menuIndex == 0) //File
 	{
 		menu.addItem(refreshDirectories, "Refresh Directories", true, false);
+		menu.addItem(openImportWizard, "Import Wizard", true, false);
 		menu.addSeparator();
 		menu.addItem(setPreferences, "Preferences", true, false);
 		menu.addItem(exitApplication, "Exit Application", true, false);

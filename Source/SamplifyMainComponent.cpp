@@ -36,6 +36,24 @@ SamplifyMainComponent::SamplifyMainComponent() :
 	addAndMakeVisible(mSampleExplorer);
 	addAndMakeVisible(mFilterExplorer);
 	addAndMakeVisible(mSamplePlayerComponent);
+	
+	// Setup import wizard overlay
+	addChildComponent(mImportWizard);
+	mImportWizard.onSpliceImport = [this]() {
+		DBG("Splice Import selected");
+		// TODO: Implement Splice Import
+	};
+	mImportWizard.onGeneralImport = [this]() {
+		DBG("General Import selected");
+		// TODO: Implement General Import
+	};
+	mImportWizard.onManualImport = [this]() {
+		DBG("Manual Import selected");
+		// TODO: Implement Manual Import
+	};
+	
+	// Setup preference window overlay
+	addChildComponent(mPreferenceWindow);
 
 	//addAndMakeVisible(unlockForm);
     
@@ -102,18 +120,7 @@ bool SamplifyMainComponent::keyPressed(const KeyPress& key, Component* originati
 	}
 	else if (keyManager.matchesAction(key, KeyBindingManager::Action::OpenPreferences))
 	{
-		// Launch preferences window
-		DialogWindow::LaunchOptions options;
-		auto* prefs = new PreferenceWindow::View();
-		options.content.setOwned(prefs);
-		options.dialogTitle = "Preferences";
-		options.dialogBackgroundColour = ThemeManager::getInstance().getColorForRole(ThemeManager::ColorRole::Background);
-		options.escapeKeyTriggersCloseButton = true;
-		options.useNativeTitleBar = false;
-		options.resizable = false;
-		
-		auto* dialog = options.launchAsync();
-		dialog->centreWithSize(600, 800);
+		showPreferences();
 		return true;
 	}
 	else if (keyManager.matchesAction(key, KeyBindingManager::Action::ExitApplication))
@@ -247,6 +254,10 @@ void SamplifyMainComponent::resized()
 	
 	mSampleExplorer.setBounds(lWidth, 0, getWidth() - (rWidth + lWidth), getHeight() - bHeight);
 	
+	// Overlay panels cover the entire component
+	mImportWizard.setBounds(getLocalBounds());
+	mPreferenceWindow.setBounds(getLocalBounds());
+	
 	mResizableEdgeDirectoryExplorerBounds.setMaximumWidth(getWidth() - (rWidth));
 	mResizableEdgeFilterExplorerBounds.setMaximumWidth(getWidth() - (lWidth));
 }
@@ -270,6 +281,16 @@ void SamplifyMainComponent::timerCallback()
 void SamplifyMainComponent::mouseDrag(const MouseEvent& e)
 {
 	resized();
+}
+
+void SamplifyMainComponent::showImportWizard()
+{
+	mImportWizard.show();
+}
+
+void SamplifyMainComponent::showPreferences()
+{
+	mPreferenceWindow.show();
 }
 
 //==============================================================================

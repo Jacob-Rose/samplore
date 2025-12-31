@@ -16,48 +16,130 @@
 
 using namespace samplore;
 
-PreferenceWindow::PreferenceWindow() : DialogWindow("Preferences", AppValues::getInstance().MAIN_BACKGROUND_COLOR, true)
+PreferenceWindow::PreferenceWindow()
 {
-    // Set initial size for view
-    mView.setSize(600, 1000); // Initial size, will be updated in resized()
+    // Setup title label
+    mTitleLabel.setText("Preferences", dontSendNotification);
+    mTitleLabel.setFont(Font(28.0f, Font::bold));
+    mTitleLabel.setJustificationType(Justification::centred);
+    addAndMakeVisible(mTitleLabel);
+    
+    // Setup close button
+    mCloseButton.setButtonText("Close");
+    mCloseButton.onClick = [this]() {
+        hide();
+        if (onClose)
+            onClose();
+    };
+    addAndMakeVisible(mCloseButton);
+    
+    // Set initial size for view content
+    mView.setSize(600, 1000);
     
     // Wrap view in viewport for scrolling
     mViewport.setViewedComponent(&mView, false);
     mViewport.setScrollBarsShown(true, false, true, false);
+    addAndMakeVisible(mViewport);
     
-    setContentNonOwned(&mViewport, true);
-    setSize(600, 600); // Smaller window height, content scrolls
-    setWantsKeyboardFocus(true);
-    setResizable(false, false);
-    setUsingNativeTitleBar(false);
-    setTitleBarButtonsRequired(closeButton, false);
+    // Register with theme manager
+    ThemeManager::getInstance().addListener(this);
+    updateColors();
+    
+    // Start hidden
+    setVisible(false);
 }
 
-void PreferenceWindow::closeButtonPressed()
+PreferenceWindow::~PreferenceWindow()
 {
-    exitModalState(0);
+    ThemeManager::getInstance().removeListener(this);
 }
 
-
-bool PreferenceWindow::keyPressed(const KeyPress& key)
+void PreferenceWindow::paint(Graphics& g)
 {
-    // Handle Escape, Ctrl+W, or Ctrl+Q to close the preferences window
-    // Use ctrlModifier on Linux/Windows, commandModifier on Mac
-#if JUCE_MAC
-    auto modifier = ModifierKeys::commandModifier;
-#else
-    auto modifier = ModifierKeys::ctrlModifier;
-#endif
+    // Draw semi-transparent dark overlay background
+    g.fillAll(Colour(0, 0, 0).withAlpha(0.75f));
+    
+    // Calculate the content panel bounds (with more padding)
+    auto bounds = getLocalBounds();
+    auto padding = 80;
+    auto panelBounds = bounds.reduced(padding);
+    
+    // Draw shadow effect for depth
+    g.setColour(Colours::black.withAlpha(0.3f));
+    g.fillRoundedRectangle(panelBounds.toFloat().translated(0, 4), 12.0f);
+    
+    // Draw the main panel background (brighter)
+    auto bgColor = ThemeManager::getInstance().getColorForRole(ThemeManager::ColorRole::BackgroundSecondary);
+    g.setColour(bgColor.brighter(0.1f));
+    g.fillRoundedRectangle(panelBounds.toFloat(), 12.0f);
+    
+    // Draw subtle panel border
+    g.setColour(ThemeManager::getInstance().getColorForRole(ThemeManager::ColorRole::Border).brighter(0.2f));
+    g.drawRoundedRectangle(panelBounds.toFloat(), 12.0f, 1.0f);
+}
 
-    if (key == KeyPress::escapeKey ||
-        key == KeyPress('w', modifier, 0) ||
-        key == KeyPress('q', modifier, 0))
-    {
-        exitModalState(0);
-        return true;  // Consume the key press
-    }
+void PreferenceWindow::resized()
+{
+    auto bounds = getLocalBounds();
+    auto padding = 80;
+    auto panelBounds = bounds.reduced(padding);
+    
+    auto contentBounds = panelBounds.reduced(30);
+    
+    // Title at the top
+    mTitleLabel.setBounds(contentBounds.removeFromTop(50));
+    
+    contentBounds.removeFromTop(20); // spacing
+    
+    // Close button at the bottom
+    auto closeButtonBounds = contentBounds.removeFromBottom(40);
+    contentBounds.removeFromBottom(10); // spacing
+    mCloseButton.setBounds(closeButtonBounds);
+    
+    // Viewport fills remaining space
+    mViewport.setBounds(contentBounds);
+    
+    // Update view content width to match viewport
+    mView.setSize(contentBounds.getWidth(), mView.getHeight());
+}
 
-    return DialogWindow::keyPressed(key);
+void PreferenceWindow::show()
+{
+    setVisible(true);
+    toFront(true);
+}
+
+void PreferenceWindow::hide()
+{
+    setVisible(false);
+}
+
+void PreferenceWindow::themeChanged(ThemeManager::Theme newTheme)
+{
+    updateColors();
+    repaint();
+}
+
+void PreferenceWindow::colorChanged(ThemeManager::ColorRole role, Colour newColor)
+{
+    updateColors();
+    repaint();
+}
+
+void PreferenceWindow::updateColors()
+{
+    auto& tm = ThemeManager::getInstance();
+    
+    // Update title color
+    mTitleLabel.setColour(Label::textColourId, tm.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+    
+    // Update close button colors
+    auto primaryColor = tm.getColorForRole(ThemeManager::ColorRole::AccentPrimary);
+    auto textColor = tm.getColorForRole(ThemeManager::ColorRole::TextPrimary);
+    
+    mCloseButton.setColour(TextButton::buttonColourId, primaryColor);
+    mCloseButton.setColour(TextButton::textColourOffId, textColor);
+    mCloseButton.setColour(TextButton::textColourOnId, textColor);
 }
 
 PreferenceWindow::View::View()
@@ -203,12 +285,6 @@ PreferenceWindow::View::View()
     addAndMakeVisible(mDirectoryViewport);
     mDirectoryViewport.setViewedComponent(&mDirectoryListContainer, false);
     mDirectoryViewport.setScrollBarsShown(true, false, true, false);
-    
-    // ===== CLOSE BUTTON =====
-    mCloseButton.setName("Close");
-    mCloseButton.setButtonText("Close");
-    mCloseButton.addListener(this);
-    addAndMakeVisible(mCloseButton);
 
     // Initialize all component colors
     updateAllComponentColors();
@@ -577,9 +653,6 @@ void PreferenceWindow::View::resized()
 
     // ===== CLOSE BUTTON =====
     y += sectionSpacing;
-    mCloseButton.setBounds(getWidth() - margin - 120, y, 120, controlHeight);
-    y += controlHeight + margin;
-    
     // Set the total height of the view (enables scrolling)
     setSize(getWidth(), y);
 }

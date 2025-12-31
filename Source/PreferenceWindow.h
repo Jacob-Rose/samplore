@@ -17,14 +17,31 @@
 
 namespace samplore
 {
-    class PreferenceWindow : public DialogWindow
+    /// Overlay panel for application preferences
+    class PreferenceWindow : public Component, public ThemeManager::Listener
     {
     public:
         //==============================================================================
 
         PreferenceWindow();
-        void closeButtonPressed() override;
-        bool keyPressed(const KeyPress& key) override;
+        ~PreferenceWindow() override;
+        
+        void paint(Graphics& g) override;
+        void resized() override;
+        
+        /// Shows the preferences overlay
+        void show();
+        
+        /// Hides the preferences overlay
+        void hide();
+        
+        /// Callback when close is requested
+        std::function<void()> onClose;
+        
+        //==================================================================
+        // ThemeManager::Listener interface
+        void themeChanged(ThemeManager::Theme newTheme) override;
+        void colorChanged(ThemeManager::ColorRole role, Colour newColor) override;
 
         class View : public Component, public Button::Listener, public TextEditor::Listener, public ChangeListener, public ComboBox::Listener, public ThemeManager::Listener
         {
@@ -73,7 +90,6 @@ namespace samplore
             Label mThumbnailLinesPlayerLabel;
             TextEditor mThumbnailLineCountPlayer;
             TextEditor mThumbnailLineCount;
-            TextButton mCloseButton;
 
             // Key bindings section
             Label mKeyBindingsLabel;
@@ -112,8 +128,12 @@ namespace samplore
             ColorEditMode mColorEditMode = ColorEditMode::Primary;
         };
     private:
+        Label mTitleLabel;
+        TextButton mCloseButton;
         Viewport mViewport;
         View mView;
+        
+        void updateColors();
 
     };
 }
