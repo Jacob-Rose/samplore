@@ -38,6 +38,3 @@ In no real order from there, but with prio:
 [ ] (P2) Add tutorial / intro overlay guided experience.
     [ ] Make generalized named component binding system so we can generically reference hyper-specific components for tutorial or really any advanced changed ui action.
     [ ] Add ability to redo tutorial in info tab
-
-[ ] 
-
