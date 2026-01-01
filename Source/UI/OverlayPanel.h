@@ -12,11 +12,12 @@
 #define OVERLAYPANEL_H
 #include "JuceHeader.h"
 #include "../ThemeManager.h"
+#include "IOverlayPanelContent.h"
 
 namespace samplore
 {
-    /// Reusable overlay panel with semi-transparent background, centered content area,
-    /// scrollable viewport, title label, and close button
+    /// Reusable overlay panel with semi-transparent background, title, and centered content
+    /// Queries content via IOverlayPanelContent interface for title and back button state
     class OverlayPanel : public Component, public ThemeManager::Listener
     {
     public:
@@ -37,27 +38,25 @@ namespace samplore
         /// Hides the overlay panel
         void hide();
         
-        /// Sets the title text
-        void setTitle(const String& title);
-        
         /// Sets the content component that will be shown in the scrollable viewport
-        /// The panel takes ownership of the component
         void setContentComponent(Component* content, bool deleteOnDestroy = true);
+        
+        /// Refreshes the title and back button from content interface
+        void refreshChrome();
         
         /// Returns the viewport for direct access if needed
         Viewport& getViewport() { return mViewport; }
-        
-        /// Returns the close button for custom configuration if needed
-        TextButton& getCloseButton() { return mCloseButton; }
         
         /// Callback when close is requested
         std::function<void()> onClose;
         
     private:
         Label mTitleLabel;
+        TextButton mBackButton;
         TextButton mCloseButton;
         Viewport mViewport;
         Component::SafePointer<Component> mContentComponent;
+        IOverlayPanelContent* mOverlayContentInterface = nullptr;
         bool mDeleteContentOnDestroy;
         
         void updateColors();

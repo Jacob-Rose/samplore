@@ -13,13 +13,14 @@
 #include "SamplifyMainComponent.h"
 #include "ThemeManager.h"
 #include "SampleDirectory.h"
+#include "UI/OverlayPanel.h"
 
 using namespace samplore;
 
 PreferencePanel::PreferencePanel()
 {
     auto& theme = ThemeManager::getInstance();
-
+    
     // ===== THEME SECTION =====
     mThemeLabel.setText("Theme", dontSendNotification);
     mThemeLabel.setFont(FontOptions(18.0f, Font::bold));
@@ -414,51 +415,54 @@ void PreferencePanel::paint(Graphics& g)
 
 void PreferencePanel::resized()
 {
+    auto bounds = getLocalBounds();
+    
     const int margin = 16;
     const int labelHeight = 24;
     const int controlHeight = 36;
     const int sectionSpacing = 24;
     const int itemSpacing = 8;
 
-    int y = margin;
+    int y = bounds.getY() + margin;
+    int componentWidth = bounds.getWidth();
 
     // ===== THEME SECTION =====
-    mThemeLabel.setBounds(margin, y, getWidth() - 2 * margin, labelHeight);
+    mThemeLabel.setBounds(margin, y, componentWidth - 2 * margin, labelHeight);
     y += labelHeight + itemSpacing;
 
-    mThemeSelector.setBounds(margin, y, getWidth() - 2 * margin, controlHeight);
+    mThemeSelector.setBounds(margin, y, componentWidth - 2 * margin, controlHeight);
     y += controlHeight + sectionSpacing;
 
     // Separator line drawn in paint()
     y += itemSpacing;
 
     // ===== COLOR CUSTOMIZATION SECTION =====
-    mColorCustomizationLabel.setBounds(margin, y, getWidth() - 2 * margin, labelHeight);
+    mColorCustomizationLabel.setBounds(margin, y, componentWidth - 2 * margin, labelHeight);
     y += labelHeight + itemSpacing;
 
     // Primary color row
     mPrimaryColorLabel.setBounds(margin, y, 120, controlHeight);
-    mPrimaryColorButton.setBounds(margin + 130, y, getWidth() - margin - 130 - margin, controlHeight);
+    mPrimaryColorButton.setBounds(margin + 130, y, componentWidth - margin - 130 - margin, controlHeight);
     y += controlHeight + itemSpacing;
 
     // Accent color row
     mAccentColorLabel.setBounds(margin, y, 120, controlHeight);
-    mAccentColorButton.setBounds(margin + 130, y, getWidth() - margin - 130 - margin, controlHeight);
+    mAccentColorButton.setBounds(margin + 130, y, componentWidth - margin - 130 - margin, controlHeight);
     y += controlHeight + itemSpacing;
 
     // Reset button
-    mResetColorsButton.setBounds(margin, y, getWidth() - 2 * margin, controlHeight);
+    mResetColorsButton.setBounds(margin, y, componentWidth - 2 * margin, controlHeight);
     y += controlHeight + sectionSpacing;
 
     // Separator line drawn in paint()
     y += itemSpacing;
 
     // ===== COLOR PRESETS SECTION =====
-    mColorPresetsLabel.setBounds(margin, y, getWidth() - 2 * margin, labelHeight);
+    mColorPresetsLabel.setBounds(margin, y, componentWidth - 2 * margin, labelHeight);
     y += labelHeight + itemSpacing;
 
     // Preset buttons in a grid (2 columns)
-    int presetWidth = (getWidth() - 3 * margin) / 2;
+    int presetWidth = (componentWidth - 3 * margin) / 2;
     mPresetStudioDark.setBounds(margin, y, presetWidth, controlHeight);
     mPresetStudioLight.setBounds(margin + presetWidth + margin, y, presetWidth, controlHeight);
     y += controlHeight + itemSpacing;
@@ -467,14 +471,14 @@ void PreferencePanel::resized()
     mPresetProTools.setBounds(margin + presetWidth + margin, y, presetWidth, controlHeight);
     y += controlHeight + itemSpacing;
 
-    mPresetHighContrast.setBounds(margin, y, getWidth() - 2 * margin, controlHeight);
+    mPresetHighContrast.setBounds(margin, y, componentWidth - 2 * margin, controlHeight);
     y += controlHeight + sectionSpacing;
 
     // Separator line drawn in paint()
     y += itemSpacing;
 
     // ===== APPEARANCE SECTION =====
-    mAppearanceLabel.setBounds(margin, y, getWidth() - 2 * margin, labelHeight);
+    mAppearanceLabel.setBounds(margin, y, componentWidth - 2 * margin, labelHeight);
     y += labelHeight + itemSpacing;
 
     // Tile size row
@@ -496,31 +500,30 @@ void PreferencePanel::resized()
     y += itemSpacing;
 
     // ===== KEY BINDINGS SECTION =====
-    mKeyBindingsLabel.setBounds(margin, y, getWidth() - 2 * margin, labelHeight);
+    mKeyBindingsLabel.setBounds(margin, y, componentWidth - 2 * margin, labelHeight);
     y += labelHeight + itemSpacing;
     
-    mEditKeyBindingsButton.setBounds(margin, y, getWidth() - 2 * margin, controlHeight);
+    mEditKeyBindingsButton.setBounds(margin, y, componentWidth - 2 * margin, controlHeight);
     y += controlHeight + sectionSpacing;
     
     // Separator line drawn in paint()
     y += itemSpacing;
 
     // ===== DIRECTORY MANAGEMENT SECTION =====
-    mDirectoryManagementLabel.setBounds(margin, y, getWidth() - 2 * margin, labelHeight);
+    mDirectoryManagementLabel.setBounds(margin, y, componentWidth - 2 * margin, labelHeight);
     y += labelHeight + itemSpacing;
     
-    mAddDirectoryButton.setBounds(margin, y, getWidth() - 2 * margin, controlHeight);
+    mAddDirectoryButton.setBounds(margin, y, componentWidth - 2 * margin, controlHeight);
     y += controlHeight + itemSpacing;
     
     // Directory list viewport
     int listHeight = 120; // Fixed height for directory list
-    mDirectoryViewport.setBounds(margin, y, getWidth() - 2 * margin, listHeight);
+    mDirectoryViewport.setBounds(margin, y, componentWidth - 2 * margin, listHeight);
     y += listHeight + itemSpacing;
 
-    // ===== CLOSE BUTTON =====
+    // Total height for scrolling
     y += sectionSpacing;
-    // Set the total height of the view (enables scrolling)
-    setSize(getWidth(), y);
+    setSize(componentWidth, y);
 }
 
 void PreferencePanel::updateAllComponentColors()

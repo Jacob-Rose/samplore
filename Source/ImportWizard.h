@@ -13,12 +13,16 @@
 #include "JuceHeader.h"
 #include "ThemeManager.h"
 #include "SpliceImportDialog.h"
+#include "UI/IOverlayPanelContent.h"
 
 namespace samplore
 {
     /// Content view for importing samples with multiple import methods
-    /// Manages different import mode views similar to how OverlayPanel works
-    class ImportWizard : public Component, public Button::Listener, public ThemeManager::Listener
+    /// Implements IOverlayPanelContent to provide title and back button state
+    class ImportWizard : public Component, 
+                         public Button::Listener, 
+                         public ThemeManager::Listener,
+                         public IOverlayPanelContent
     {
     public:
         ImportWizard();
@@ -34,6 +38,13 @@ namespace samplore
         /// Resets to the main menu view
         void showMainMenu();
         
+        //==================================================================
+        // IOverlayPanelContent interface
+        String getOverlayTitle() const override;
+        bool shouldShowBackButton() const override;
+        void onOverlayBackButton() override;
+        void setParentOverlay(OverlayPanel* parent) override;
+        
     private:
         enum class View
         {
@@ -43,18 +54,24 @@ namespace samplore
             ManualImport
         };
         
+        /// Returns the title for a given view
+        String getTitleForView(View view) const;
+        
         void showView(View view);
         void updateColors();
         
         View mCurrentView = View::MainMenu;
         
+        // View titles (stored in a map for easy access)
+        static const std::map<View, String> sViewTitles;
+        
+        // Parent overlay panel (for requesting chrome refresh)
+        OverlayPanel* mParentOverlay = nullptr;
+        
         // Main menu components
         TextButton mSpliceImportButton;
         TextButton mGeneralImportButton;
         TextButton mManualImportButton;
-        
-        // Back button (shown in sub-views)
-        TextButton mBackButton;
         
         // Import mode views
         SpliceImportDialog mSpliceImportView;

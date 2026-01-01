@@ -15,14 +15,22 @@ namespace samplore
     OverlayPanel::OverlayPanel()
         : mDeleteContentOnDestroy(true)
     {
-        // Setup title label
+        // Setup title label (always shown, centered)
         mTitleLabel.setText("", dontSendNotification);
         mTitleLabel.setFont(Font(28.0f, Font::bold));
         mTitleLabel.setJustificationType(Justification::centred);
         addAndMakeVisible(mTitleLabel);
         
-        // Setup close button
-        mCloseButton.setButtonText("Close");
+        // Setup back button (shown based on interface)
+        mBackButton.setButtonText("< Back");
+        mBackButton.onClick = [this]() {
+            if (mOverlayContentInterface)
+                mOverlayContentInterface->onOverlayBackButton();
+        };
+        addChildComponent(mBackButton);
+        
+        // Setup close button (always shown)
+        mCloseButton.setButtonText("X");
         mCloseButton.onClick = [this]() {
             hide();
             if (onClose)
@@ -86,15 +94,26 @@ namespace samplore
         
         auto contentBounds = panelBounds.reduced(30);
         
-        // Title at the top
-        mTitleLabel.setBounds(contentBounds.removeFromTop(50));
+        // Title row with back button (left) and close button (right)
+        auto titleRow = contentBounds.removeFromTop(50);
         
-        contentBounds.removeFromTop(20); // spacing
+        // Title always centered in full width
+        mTitleLabel.setBounds(titleRow);
         
-        // Close button at the bottom
-        auto closeButtonBounds = contentBounds.removeFromBottom(40);
-        contentBounds.removeFromBottom(10); // spacing
+        // Back button on left (overlays title when visible)
+        if (mBackButton.isVisible())
+        {
+            mBackButton.setBounds(titleRow.removeFromLeft(100).reduced(0, 5));
+        }
+        
+        // Close button (X) in top right corner (overlays title)
+        auto closeSize = 40;
+        auto closeButtonBounds = titleRow.withLeft(titleRow.getRight() - closeSize)
+                                         .withHeight(closeSize)
+                                         .withY(titleRow.getY() + (titleRow.getHeight() - closeSize) / 2);
         mCloseButton.setBounds(closeButtonBounds);
+        
+        contentBounds.removeFromTop(20); // spacing after title
         
         // Viewport fills remaining space
         mViewport.setBounds(contentBounds);
@@ -117,11 +136,6 @@ namespace samplore
         setVisible(false);
     }
     
-    void OverlayPanel::setTitle(const String& title)
-    {
-        mTitleLabel.setText(title, dontSendNotification);
-    }
-    
     void OverlayPanel::setContentComponent(Component* content, bool deleteOnDestroy)
     {
         // Clean up old content if we own it
@@ -133,12 +147,46 @@ namespace samplore
         
         mContentComponent = content;
         mDeleteContentOnDestroy = deleteOnDestroy;
+        mOverlayContentInterface = nullptr;
         
         if (content != nullptr)
         {
             mViewport.setViewedComponent(content, false);
             
+            // Try to cast to interface
+            mOverlayContentInterface = dynamic_cast<IOverlayPanelContent*>(content);
+            
+            if (mOverlayContentInterface)
+            {
+                // Set parent overlay so content can request refresh
+                mOverlayContentInterface->setParentOverlay(this);
+                
+                // Update chrome from interface
+                refreshChrome();
+            }
+            else
+            {
+                // No interface - hide title and back button
+                mTitleLabel.setText("", dontSendNotification);
+                mBackButton.setVisible(false);
+            }
+            
             // Trigger initial resize to set content width
+            resized();
+        }
+    }
+    
+    void OverlayPanel::refreshChrome()
+    {
+        if (mOverlayContentInterface)
+        {
+            // Update title from interface
+            mTitleLabel.setText(mOverlayContentInterface->getOverlayTitle(), dontSendNotification);
+            
+            // Update back button visibility from interface
+            mBackButton.setVisible(mOverlayContentInterface->shouldShowBackButton());
+            
+            // Re-layout
             resized();
         }
     }
@@ -162,9 +210,13 @@ namespace samplore
         // Update title color
         mTitleLabel.setColour(Label::textColourId, tm.getColorForRole(ThemeManager::ColorRole::TextPrimary));
         
-        // Update close button colors
+        // Update button colors
         auto primaryColor = tm.getColorForRole(ThemeManager::ColorRole::AccentPrimary);
         auto textColor = tm.getColorForRole(ThemeManager::ColorRole::TextPrimary);
+        
+        mBackButton.setColour(TextButton::buttonColourId, primaryColor);
+        mBackButton.setColour(TextButton::textColourOffId, textColor);
+        mBackButton.setColour(TextButton::textColourOnId, textColor);
         
         mCloseButton.setColour(TextButton::buttonColourId, primaryColor);
         mCloseButton.setColour(TextButton::textColourOffId, textColor);

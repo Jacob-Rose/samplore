@@ -39,11 +39,6 @@ SamplifyMainComponent::SamplifyMainComponent() :
 	
 	// Setup central overlay panel
 	addChildComponent(mOverlayPanel);
-	mOverlayPanel.onClose = [this]() {
-		mOverlayPanel.hide();
-		// Reset import wizard to main menu when overlay closes
-		mImportWizard.showMainMenu();
-	};
 
 	//addAndMakeVisible(unlockForm);
     
@@ -296,15 +291,14 @@ void SamplifyMainComponent::mouseDrag(const MouseEvent& e)
 
 void SamplifyMainComponent::showImportWizard()
 {
-	mOverlayPanel.setTitle("Import Wizard");
+	mImportWizard.showMainMenu(); // Reset to main menu
 	mOverlayPanel.setContentComponent(&mImportWizard, false);
 	mOverlayPanel.show();
 }
 
 void SamplifyMainComponent::showPreferences()
 {
-	mOverlayPanel.setTitle("Preferences");
-	mPreferencePanel.setSize(600, 1000);
+	mPreferencePanel.setSize(600, 1070); // 50px header + 20px spacing + 1000px content
 	mOverlayPanel.setContentComponent(&mPreferencePanel, false);
 	mOverlayPanel.show();
 }

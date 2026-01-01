@@ -14,11 +14,22 @@
 #include "ThemeManager.h"
 #include "KeyBindingEditor.h"
 #include "SampleLibrary.h"
+#include "UI/IOverlayPanelContent.h"
 
 namespace samplore
 {
+    // Forward declaration
+    class OverlayPanel;
+    
     /// Content panel for application preferences (used with OverlayPanel)
-    class PreferencePanel : public Component, public Button::Listener, public TextEditor::Listener, public ChangeListener, public ComboBox::Listener, public ThemeManager::Listener
+    /// Implements IOverlayPanelContent to provide title
+    class PreferencePanel : public Component, 
+                            public Button::Listener, 
+                            public TextEditor::Listener, 
+                            public ChangeListener, 
+                            public ComboBox::Listener, 
+                            public ThemeManager::Listener,
+                            public IOverlayPanelContent
     {
     public:
         PreferencePanel();
@@ -36,7 +47,18 @@ namespace samplore
         // ThemeManager::Listener interface
         void themeChanged(ThemeManager::Theme newTheme) override;
         void colorChanged(ThemeManager::ColorRole role, Colour newColor) override;
+        
+        //==================================================================
+        // IOverlayPanelContent interface
+        String getOverlayTitle() const override { return "Preferences"; }
+        bool shouldShowBackButton() const override { return false; }
+        void onOverlayBackButton() override {}
+        void setParentOverlay(OverlayPanel* parent) override { mParentOverlay = parent; }
 
+    private:
+        // Parent overlay panel (for requesting chrome refresh if needed)
+        OverlayPanel* mParentOverlay = nullptr;
+        
         // Theme section
         Label mThemeLabel;
         ComboBox mThemeSelector;

@@ -17,12 +17,6 @@ namespace samplore
     SpliceImportDialog::SpliceImportDialog()
         : mProgressBar(mProgressValue)
     {
-        // Title
-        mTitleLabel.setText("Splice Import", dontSendNotification);
-        mTitleLabel.setFont(Font(24.0f, Font::bold));
-        mTitleLabel.setJustificationType(Justification::centred);
-        addAndMakeVisible(mTitleLabel);
-        
         // Instructions
         mInstructionsLabel.setText(
             "To find sounds.db: Open Splice > Preferences > Utilities > Download Logs.\n"
@@ -120,11 +114,7 @@ namespace samplore
     void SpliceImportDialog::resized()
     {
         auto bounds = getLocalBounds();
-        auto contentBounds = bounds.reduced(20); // Less padding since we're in ImportWizard
-        
-        // Title
-        mTitleLabel.setBounds(contentBounds.removeFromTop(40));
-        contentBounds.removeFromTop(10);
+        auto contentBounds = bounds.reduced(20); // Padding for content
         
         // Instructions
         mInstructionsLabel.setBounds(contentBounds.removeFromTop(35));
@@ -435,7 +425,6 @@ namespace samplore
         auto textColor = tm.getColorForRole(ThemeManager::ColorRole::TextPrimary);
         auto primaryColor = tm.getColorForRole(ThemeManager::ColorRole::AccentPrimary);
         
-        mTitleLabel.setColour(Label::textColourId, textColor);
         mInstructionsLabel.setColour(Label::textColourId, textColor.withAlpha(0.7f));
         mDatabaseLabel.setColour(Label::textColourId, textColor);
         mDatabasePathLabel.setColour(Label::textColourId, textColor.withAlpha(0.8f));

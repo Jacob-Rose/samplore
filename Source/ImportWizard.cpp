@@ -9,9 +9,17 @@
 */
 
 #include "ImportWizard.h"
+#include "UI/OverlayPanel.h"
 
 namespace samplore
 {
+    // Define view titles in a centralized map
+    const std::map<ImportWizard::View, String> ImportWizard::sViewTitles = {
+        {View::MainMenu, "Import Wizard"},
+        {View::SpliceImport, "Splice Import"},
+        {View::GeneralImport, "General Import"},
+        {View::ManualImport, "Manual Import"}
+    };
     ImportWizard::ImportWizard()
         : mGeneralImportView("General Import")
         , mManualImportView("Manual Import")
@@ -30,11 +38,6 @@ namespace samplore
         mManualImportButton.addListener(this);
         mManualImportButton.setEnabled(false);
         addAndMakeVisible(mManualImportButton);
-        
-        // Setup back button
-        mBackButton.setButtonText("< Back");
-        mBackButton.addListener(this);
-        addChildComponent(mBackButton);
         
         // Setup import views (hidden initially)
         addChildComponent(mSpliceImportView);
@@ -93,14 +96,7 @@ namespace samplore
         }
         else
         {
-            // Back button at top
-            auto backBounds = bounds.removeFromTop(40);
-            backBounds = backBounds.withWidth(100).withX(10);
-            mBackButton.setBounds(backBounds);
-            
             // Content view fills remaining space
-            bounds.removeFromTop(10); // spacing
-            
             switch (mCurrentView)
             {
                 case View::SpliceImport:
@@ -132,15 +128,19 @@ namespace samplore
         {
             showView(View::ManualImport);
         }
-        else if (button == &mBackButton)
-        {
-            showMainMenu();
-        }
     }
     
     void ImportWizard::showMainMenu()
     {
         showView(View::MainMenu);
+    }
+    
+    String ImportWizard::getTitleForView(View view) const
+    {
+        auto it = sViewTitles.find(view);
+        if (it != sViewTitles.end())
+            return it->second;
+        return "Import Wizard";
     }
     
     void ImportWizard::showView(View view)
@@ -151,7 +151,6 @@ namespace samplore
         mSpliceImportButton.setVisible(false);
         mGeneralImportButton.setVisible(false);
         mManualImportButton.setVisible(false);
-        mBackButton.setVisible(false);
         mSpliceImportView.setVisible(false);
         mGeneralImportView.setVisible(false);
         mManualImportView.setVisible(false);
@@ -166,8 +165,6 @@ namespace samplore
         }
         else
         {
-            mBackButton.setVisible(true);
-            
             switch (view)
             {
                 case View::SpliceImport:
@@ -191,9 +188,35 @@ namespace samplore
         resized();
         repaint();
         
+        // Request parent overlay to refresh chrome (title and back button)
+        if (mParentOverlay)
+            mParentOverlay->refreshChrome();
+        
         // Notify parent (OverlayPanel's viewport) to update
         if (auto* parent = getParentComponent())
             parent->resized();
+    }
+    
+    //==================================================================
+    // IOverlayPanelContent interface implementation
+    String ImportWizard::getOverlayTitle() const
+    {
+        return getTitleForView(mCurrentView);
+    }
+    
+    bool ImportWizard::shouldShowBackButton() const
+    {
+        return mCurrentView != View::MainMenu;
+    }
+    
+    void ImportWizard::onOverlayBackButton()
+    {
+        showMainMenu();
+    }
+    
+    void ImportWizard::setParentOverlay(OverlayPanel* parent)
+    {
+        mParentOverlay = parent;
     }
     
     void ImportWizard::themeChanged(ThemeManager::Theme newTheme)
@@ -217,7 +240,7 @@ namespace samplore
         auto textColor = tm.getColorForRole(ThemeManager::ColorRole::TextPrimary);
         auto disabledColor = tm.getColorForRole(ThemeManager::ColorRole::TextSecondary);
         
-        for (auto* button : {&mSpliceImportButton, &mGeneralImportButton, &mManualImportButton, &mBackButton})
+        for (auto* button : {&mSpliceImportButton, &mGeneralImportButton, &mManualImportButton})
         {
             button->setColour(TextButton::buttonColourId, primaryColor);
             button->setColour(TextButton::textColourOffId, textColor);

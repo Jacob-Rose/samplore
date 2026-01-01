@@ -68,7 +68,6 @@ namespace samplore
         
         State mState = State::Configuring;
         
-        Label mTitleLabel;
         Label mInstructionsLabel;
         Label mDatabaseLabel;
         Label mDatabasePathLabel;
