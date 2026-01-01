@@ -34,6 +34,10 @@
         <FILE id="KEYBIND003" name="KeyBindingEditor.h" compile="0" resource="0" file="Source/KeyBindingEditor.h" />
         <FILE id="KEYBIND004" name="KeyBindingEditor.cpp" compile="1" resource="0" file="Source/KeyBindingEditor.cpp" />
       <FILE id="THEME001" name="ThemeManager.h" compile="0" resource="0" file="Source/ThemeManager.h" /><FILE id="THEME002" name="ThemeManager.cpp" compile="1" resource="0" file="Source/ThemeManager.cpp" /></GROUP>
+      <GROUP id="{THIRDPARTY001}" name="ThirdParty">
+        <FILE id="SQLITE001" name="sqlite3.h" compile="0" resource="0" file="Source/ThirdParty/sqlite3.h" />
+        <FILE id="SQLITE002" name="sqlite3.c" compile="1" resource="0" file="Source/ThirdParty/sqlite3.c" />
+      </GROUP>
       <GROUP id="{79C14502-3025-0432-3989-D402AD2C61DB}" name="Windows">
         <FILE id="nN5T4u" name="PreferenceWindow.cpp" compile="1" resource="0" file="Source/PreferenceWindow.cpp" />
         <FILE id="y8uCea" name="PreferenceWindow.h" compile="0" resource="0" file="Source/PreferenceWindow.h" />

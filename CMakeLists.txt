@@ -38,7 +38,10 @@ target_sources(Samplore
         ${ANIMATION_SOURCES}
 )
 
-# Link JUCE modules
+# Find SQLite3
+find_package(SQLite3 REQUIRED)
+
+# Link JUCE modules and SQLite
 target_link_libraries(Samplore
     PRIVATE
         juce::juce_core
@@ -51,6 +54,7 @@ target_link_libraries(Samplore
         juce::juce_audio_formats
         juce::juce_audio_processors
         juce::juce_audio_utils
+        SQLite::SQLite3
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags

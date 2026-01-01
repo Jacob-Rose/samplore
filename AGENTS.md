@@ -2,7 +2,7 @@
 
 Quick reference for AI coding agents working in this repository. See CLAUDE.md for detailed project documentation.
 
-## Build Commands
+## Useful Commands
 
 ```bash
 # Setup (first time only)
