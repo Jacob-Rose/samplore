@@ -41,57 +41,8 @@ SamplifyMainComponent::SamplifyMainComponent() :
 	addChildComponent(mOverlayPanel);
 	mOverlayPanel.onClose = [this]() {
 		mOverlayPanel.hide();
-	};
-	
-	addChildComponent(mSpliceImportDialog);
-	
-	// Setup Splice import dialog callbacks
-	mSpliceImportDialog.onImportComplete = [this](bool success, int samplesImported) {
-		if (success)
-		{
-			DBG("Splice import completed successfully: " + String(samplesImported) + " samples");
-		}
-		else
-		{
-			DBG("Splice import failed or was cancelled");
-		}
-	};
-	
-	// Setup import wizard callbacks
-	mImportWizard.onSpliceImport = [this]() {
-		DBG("Splice Import selected");
-		mOverlayPanel.hide();
-		mSpliceImportDialog.show();
-	};
-	mImportWizard.onGeneralImport = [this]() {
-		DBG("General Import selected");
-		mOverlayPanel.hide();
-		// TODO: Implement General Import
-	};
-	mImportWizard.onManualImport = [this]() {
-		DBG("Manual Import selected");
-		mOverlayPanel.hide();
-		
-		// Show directory chooser for manual import
-		auto chooser = std::make_shared<FileChooser>("Select directory to import...",
-			File::getSpecialLocation(File::userMusicDirectory),
-			"",
-			true);
-		
-		auto chooserFlags = FileBrowserComponent::openMode | FileBrowserComponent::canSelectDirectories;
-		
-		chooser->launchAsync(chooserFlags, [this, chooser](const FileChooser&) {
-			File selectedDir = chooser->getResult();
-			if (selectedDir.isDirectory())
-			{
-				auto library = SamplifyProperties::getInstance()->getSampleLibrary();
-				if (library)
-				{
-					library->addDirectory(selectedDir);
-					DBG("Added directory: " + selectedDir.getFullPathName());
-				}
-			}
-		});
+		// Reset import wizard to main menu when overlay closes
+		mImportWizard.showMainMenu();
 	};
 
 	//addAndMakeVisible(unlockForm);
@@ -315,9 +266,8 @@ void SamplifyMainComponent::resized()
 	
 	mSampleExplorer.setBounds(lWidth, 0, getWidth() - (rWidth + lWidth), getHeight() - bHeight);
 	
-	// Overlay panels cover the entire component
+	// Overlay panel covers the entire component
 	mOverlayPanel.setBounds(getLocalBounds());
-	mSpliceImportDialog.setBounds(getLocalBounds());
 	
 	mResizableEdgeDirectoryExplorerBounds.setMaximumWidth(getWidth() - (rWidth));
 	mResizableEdgeFilterExplorerBounds.setMaximumWidth(getWidth() - (lWidth));
@@ -354,8 +304,8 @@ void SamplifyMainComponent::showImportWizard()
 void SamplifyMainComponent::showPreferences()
 {
 	mOverlayPanel.setTitle("Preferences");
-	mPreferenceView.setSize(600, 1000);
-	mOverlayPanel.setContentComponent(&mPreferenceView, false);
+	mPreferencePanel.setSize(600, 1000);
+	mOverlayPanel.setContentComponent(&mPreferencePanel, false);
 	mOverlayPanel.show();
 }
 

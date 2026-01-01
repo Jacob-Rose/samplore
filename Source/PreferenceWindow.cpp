@@ -16,133 +16,7 @@
 
 using namespace samplore;
 
-PreferenceWindow::PreferenceWindow()
-{
-    // Setup title label
-    mTitleLabel.setText("Preferences", dontSendNotification);
-    mTitleLabel.setFont(Font(28.0f, Font::bold));
-    mTitleLabel.setJustificationType(Justification::centred);
-    addAndMakeVisible(mTitleLabel);
-    
-    // Setup close button
-    mCloseButton.setButtonText("Close");
-    mCloseButton.onClick = [this]() {
-        hide();
-        if (onClose)
-            onClose();
-    };
-    addAndMakeVisible(mCloseButton);
-    
-    // Set initial size for view content
-    mView.setSize(600, 1000);
-    
-    // Wrap view in viewport for scrolling
-    mViewport.setViewedComponent(&mView, false);
-    mViewport.setScrollBarsShown(true, false, true, false);
-    addAndMakeVisible(mViewport);
-    
-    // Register with theme manager
-    ThemeManager::getInstance().addListener(this);
-    updateColors();
-    
-    // Start hidden
-    setVisible(false);
-}
-
-PreferenceWindow::~PreferenceWindow()
-{
-    ThemeManager::getInstance().removeListener(this);
-}
-
-void PreferenceWindow::paint(Graphics& g)
-{
-    // Draw semi-transparent dark overlay background
-    g.fillAll(Colour(0, 0, 0).withAlpha(0.75f));
-    
-    // Calculate the content panel bounds (with more padding)
-    auto bounds = getLocalBounds();
-    auto padding = 80;
-    auto panelBounds = bounds.reduced(padding);
-    
-    // Draw shadow effect for depth
-    g.setColour(Colours::black.withAlpha(0.3f));
-    g.fillRoundedRectangle(panelBounds.toFloat().translated(0, 4), 12.0f);
-    
-    // Draw the main panel background (brighter)
-    auto bgColor = ThemeManager::getInstance().getColorForRole(ThemeManager::ColorRole::BackgroundSecondary);
-    g.setColour(bgColor.brighter(0.1f));
-    g.fillRoundedRectangle(panelBounds.toFloat(), 12.0f);
-    
-    // Draw subtle panel border
-    g.setColour(ThemeManager::getInstance().getColorForRole(ThemeManager::ColorRole::Border).brighter(0.2f));
-    g.drawRoundedRectangle(panelBounds.toFloat(), 12.0f, 1.0f);
-}
-
-void PreferenceWindow::resized()
-{
-    auto bounds = getLocalBounds();
-    auto padding = 80;
-    auto panelBounds = bounds.reduced(padding);
-    
-    auto contentBounds = panelBounds.reduced(30);
-    
-    // Title at the top
-    mTitleLabel.setBounds(contentBounds.removeFromTop(50));
-    
-    contentBounds.removeFromTop(20); // spacing
-    
-    // Close button at the bottom
-    auto closeButtonBounds = contentBounds.removeFromBottom(40);
-    contentBounds.removeFromBottom(10); // spacing
-    mCloseButton.setBounds(closeButtonBounds);
-    
-    // Viewport fills remaining space
-    mViewport.setBounds(contentBounds);
-    
-    // Update view content width to match viewport
-    mView.setSize(contentBounds.getWidth(), mView.getHeight());
-}
-
-void PreferenceWindow::show()
-{
-    setVisible(true);
-    toFront(true);
-}
-
-void PreferenceWindow::hide()
-{
-    setVisible(false);
-}
-
-void PreferenceWindow::themeChanged(ThemeManager::Theme newTheme)
-{
-    updateColors();
-    repaint();
-}
-
-void PreferenceWindow::colorChanged(ThemeManager::ColorRole role, Colour newColor)
-{
-    updateColors();
-    repaint();
-}
-
-void PreferenceWindow::updateColors()
-{
-    auto& tm = ThemeManager::getInstance();
-    
-    // Update title color
-    mTitleLabel.setColour(Label::textColourId, tm.getColorForRole(ThemeManager::ColorRole::TextPrimary));
-    
-    // Update close button colors
-    auto primaryColor = tm.getColorForRole(ThemeManager::ColorRole::AccentPrimary);
-    auto textColor = tm.getColorForRole(ThemeManager::ColorRole::TextPrimary);
-    
-    mCloseButton.setColour(TextButton::buttonColourId, primaryColor);
-    mCloseButton.setColour(TextButton::textColourOffId, textColor);
-    mCloseButton.setColour(TextButton::textColourOnId, textColor);
-}
-
-PreferenceWindow::View::View()
+PreferencePanel::PreferencePanel()
 {
     auto& theme = ThemeManager::getInstance();
 
@@ -295,12 +169,12 @@ PreferenceWindow::View::View()
     ThemeManager::getInstance().addListener(this);
 }
 
-PreferenceWindow::View::~View()
+PreferencePanel::~PreferencePanel()
 {
     ThemeManager::getInstance().removeListener(this);
 }
 
-void PreferenceWindow::View::buttonClicked(Button* button)
+void PreferencePanel::buttonClicked(Button* button)
 {
     auto& theme = ThemeManager::getInstance();
     String buttonName = button->getName();
@@ -382,17 +256,9 @@ void PreferenceWindow::View::buttonClicked(Button* button)
             }
         });
     }
-    else if (buttonName == "Close")
-    {
-        // Find parent PreferenceWindow and close it
-        if (auto* parentWindow = findParentComponentOfClass<PreferenceWindow>())
-        {
-            parentWindow->exitModalState(0);
-        }
-    }
 }
 
-void PreferenceWindow::View::changeListenerCallback(ChangeBroadcaster* source)
+void PreferencePanel::changeListenerCallback(ChangeBroadcaster* source)
 {
     if (auto* selector = dynamic_cast<ColourSelector*>(source))
     {
@@ -422,7 +288,7 @@ void PreferenceWindow::View::changeListenerCallback(ChangeBroadcaster* source)
     }
 }
 
-void PreferenceWindow::View::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
+void PreferencePanel::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
 {
     if (comboBoxThatHasChanged == &mThemeSelector)
     {
@@ -443,7 +309,7 @@ void PreferenceWindow::View::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
     }
 }
 
-void PreferenceWindow::View::textEditorTextChanged(TextEditor& editor)
+void PreferencePanel::textEditorTextChanged(TextEditor& editor)
 {
     if (editor.getName() == "Tile Size")
     {
@@ -467,7 +333,7 @@ void PreferenceWindow::View::textEditorTextChanged(TextEditor& editor)
         }
     }
 }
-void PreferenceWindow::View::updateColorButtons()
+void PreferencePanel::updateColorButtons()
 {
     auto& theme = ThemeManager::getInstance();
 
@@ -482,7 +348,7 @@ void PreferenceWindow::View::updateColorButtons()
         accentColor.getPerceivedBrightness() > 0.5f ? Colours::black : Colours::white);
 }
 
-void PreferenceWindow::View::applyColorPreset(const String& presetName)
+void PreferencePanel::applyColorPreset(const String& presetName)
 {
     auto& theme = ThemeManager::getInstance();
 
@@ -532,7 +398,7 @@ void PreferenceWindow::View::applyColorPreset(const String& presetName)
     repaint();
 }
 
-void PreferenceWindow::View::paint(Graphics& g)
+void PreferencePanel::paint(Graphics& g)
 {
     auto& theme = ThemeManager::getInstance();
     g.fillAll(theme.getColorForRole(ThemeManager::ColorRole::Background));
@@ -546,7 +412,7 @@ void PreferenceWindow::View::paint(Graphics& g)
     g.drawLine(16, 730, getWidth() - 16, 730, 1.0f);   // After key bindings section
 }
 
-void PreferenceWindow::View::resized()
+void PreferencePanel::resized()
 {
     const int margin = 16;
     const int labelHeight = 24;
@@ -657,7 +523,7 @@ void PreferenceWindow::View::resized()
     setSize(getWidth(), y);
 }
 
-void PreferenceWindow::View::updateAllComponentColors()
+void PreferencePanel::updateAllComponentColors()
 {
     auto& theme = ThemeManager::getInstance();
     
@@ -712,7 +578,7 @@ void PreferenceWindow::View::updateAllComponentColors()
 
 //==============================================================================
 // ThemeManager::Listener implementation
-void PreferenceWindow::View::themeChanged(ThemeManager::Theme newTheme)
+void PreferencePanel::themeChanged(ThemeManager::Theme newTheme)
 {
     // Update all component colors
     updateAllComponentColors();
@@ -728,7 +594,7 @@ void PreferenceWindow::View::themeChanged(ThemeManager::Theme newTheme)
     repaint();
 }
 
-void PreferenceWindow::View::colorChanged(ThemeManager::ColorRole role, Colour newColor)
+void PreferencePanel::colorChanged(ThemeManager::ColorRole role, Colour newColor)
 {
     // Update all component colors when any color changes
     updateAllComponentColors();
@@ -737,7 +603,7 @@ void PreferenceWindow::View::colorChanged(ThemeManager::ColorRole role, Colour n
     repaint();
 }
 
-void PreferenceWindow::View::updateDirectoryList()
+void PreferencePanel::updateDirectoryList()
 {
     // Clear existing list items
     mDirectoryListContainer.removeAllChildren();
@@ -762,7 +628,7 @@ void PreferenceWindow::View::updateDirectoryList()
 }
 
 // DirectoryListItem implementation
-PreferenceWindow::View::DirectoryListItem::DirectoryListItem(std::shared_ptr<SampleDirectory> dir, bool isActive, View* parent)
+PreferencePanel::DirectoryListItem::DirectoryListItem(std::shared_ptr<SampleDirectory> dir, bool isActive, PreferencePanel* parent)
     : mDirectory(dir), mParentView(parent)
 {
     addAndMakeVisible(mActiveCheckbox);
@@ -774,13 +640,13 @@ PreferenceWindow::View::DirectoryListItem::DirectoryListItem(std::shared_ptr<Sam
     mDeleteButton.addListener(this);
 }
 
-PreferenceWindow::View::DirectoryListItem::~DirectoryListItem()
+PreferencePanel::DirectoryListItem::~DirectoryListItem()
 {
     mActiveCheckbox.removeListener(this);
     mDeleteButton.removeListener(this);
 }
 
-void PreferenceWindow::View::DirectoryListItem::paint(Graphics& g)
+void PreferencePanel::DirectoryListItem::paint(Graphics& g)
 {
     auto& theme = ThemeManager::getInstance();
     g.fillAll(theme.getColorForRole(ThemeManager::ColorRole::Surface));
@@ -800,13 +666,13 @@ void PreferenceWindow::View::DirectoryListItem::paint(Graphics& g)
     }
 }
 
-void PreferenceWindow::View::DirectoryListItem::resized()
+void PreferencePanel::DirectoryListItem::resized()
 {
     mActiveCheckbox.setBounds(5, (getHeight() - 20) / 2, 20, 20);
     mDeleteButton.setBounds(getWidth() - 30, (getHeight() - 25) / 2, 25, 25);
 }
 
-void PreferenceWindow::View::DirectoryListItem::buttonClicked(Button* button)
+void PreferencePanel::DirectoryListItem::buttonClicked(Button* button)
 {
     if (button == &mDeleteButton)
     {

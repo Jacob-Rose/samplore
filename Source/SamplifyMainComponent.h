@@ -23,8 +23,6 @@
 #include "PreferenceWindow.h"
 #include "ThemeManager.h"
 #include "ImportWizard.h"
-#include "SpliceImporter.h"
-#include "SpliceImportDialog.h"
 #include "PerformanceProfiler.h"
 #include "UI/OverlayPanel.h"
 
@@ -92,10 +90,7 @@ namespace samplore
 	
 	// Content views for overlay
 	ImportWizard mImportWizard;
-	PreferenceWindow::View mPreferenceView;
-	
-	SpliceImporter mSpliceImporter;
-	SpliceImportDialog mSpliceImportDialog;
+	PreferencePanel mPreferencePanel;
 
 	static SamplifyMainComponent* mInstance;
 

@@ -13,21 +13,39 @@
 namespace samplore
 {
     ImportWizard::ImportWizard()
+        : mGeneralImportView("General Import")
+        , mManualImportView("Manual Import")
     {
-        // Setup Splice Import button
+        // Setup main menu buttons
         mSpliceImportButton.setButtonText("Splice Import");
         mSpliceImportButton.addListener(this);
         addAndMakeVisible(mSpliceImportButton);
         
-        // Setup General Import button
-        mGeneralImportButton.setButtonText("General Import");
+        mGeneralImportButton.setButtonText("General Import [In Progress]");
         mGeneralImportButton.addListener(this);
+        mGeneralImportButton.setEnabled(false);
         addAndMakeVisible(mGeneralImportButton);
         
-        // Setup Manual Import button
-        mManualImportButton.setButtonText("Manual Import");
+        mManualImportButton.setButtonText("Manual Import [In Progress]");
         mManualImportButton.addListener(this);
+        mManualImportButton.setEnabled(false);
         addAndMakeVisible(mManualImportButton);
+        
+        // Setup back button
+        mBackButton.setButtonText("< Back");
+        mBackButton.addListener(this);
+        addChildComponent(mBackButton);
+        
+        // Setup import views (hidden initially)
+        addChildComponent(mSpliceImportView);
+        addChildComponent(mGeneralImportView);
+        addChildComponent(mManualImportView);
+        
+        // Setup splice import completion callback
+        mSpliceImportView.onImportComplete = [this](bool success, int samplesImported) {
+            // Auto-return to main menu after import completes
+            showMainMenu();
+        };
         
         // Register with theme manager
         ThemeManager::getInstance().addListener(this);
@@ -35,6 +53,7 @@ namespace samplore
         
         // Set initial content height
         setSize(600, 300);
+        showMainMenu();
     }
     
     ImportWizard::~ImportWizard()
@@ -45,46 +64,136 @@ namespace samplore
     void ImportWizard::paint(Graphics& g)
     {
         // Content background is handled by OverlayPanel
+        auto& tm = ThemeManager::getInstance();
+        g.fillAll(tm.getColorForRole(ThemeManager::ColorRole::Background));
     }
     
     void ImportWizard::resized()
     {
         auto bounds = getLocalBounds();
-        const int buttonHeight = 60;
-        const int buttonSpacing = 20;
         
-        // Center the buttons vertically in available space
-        auto totalButtonHeight = (buttonHeight * 3) + (buttonSpacing * 2);
-        auto buttonStartY = (bounds.getHeight() - totalButtonHeight) / 2;
-        bounds.removeFromTop(buttonStartY);
-        
-        // Add buttons with spacing
-        mSpliceImportButton.setBounds(bounds.removeFromTop(buttonHeight));
-        bounds.removeFromTop(buttonSpacing);
-        
-        mGeneralImportButton.setBounds(bounds.removeFromTop(buttonHeight));
-        bounds.removeFromTop(buttonSpacing);
-        
-        mManualImportButton.setBounds(bounds.removeFromTop(buttonHeight));
+        if (mCurrentView == View::MainMenu)
+        {
+            const int buttonHeight = 60;
+            const int buttonSpacing = 20;
+            
+            // Center the buttons vertically in available space
+            auto totalButtonHeight = (buttonHeight * 3) + (buttonSpacing * 2);
+            auto buttonStartY = (bounds.getHeight() - totalButtonHeight) / 2;
+            bounds.removeFromTop(buttonStartY);
+            
+            // Add buttons with spacing
+            mSpliceImportButton.setBounds(bounds.removeFromTop(buttonHeight));
+            bounds.removeFromTop(buttonSpacing);
+            
+            mGeneralImportButton.setBounds(bounds.removeFromTop(buttonHeight));
+            bounds.removeFromTop(buttonSpacing);
+            
+            mManualImportButton.setBounds(bounds.removeFromTop(buttonHeight));
+        }
+        else
+        {
+            // Back button at top
+            auto backBounds = bounds.removeFromTop(40);
+            backBounds = backBounds.withWidth(100).withX(10);
+            mBackButton.setBounds(backBounds);
+            
+            // Content view fills remaining space
+            bounds.removeFromTop(10); // spacing
+            
+            switch (mCurrentView)
+            {
+                case View::SpliceImport:
+                    mSpliceImportView.setBounds(bounds);
+                    break;
+                case View::GeneralImport:
+                    mGeneralImportView.setBounds(bounds);
+                    break;
+                case View::ManualImport:
+                    mManualImportView.setBounds(bounds);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
     
     void ImportWizard::buttonClicked(Button* button)
     {
         if (button == &mSpliceImportButton)
         {
-            if (onSpliceImport)
-                onSpliceImport();
+            showView(View::SpliceImport);
         }
         else if (button == &mGeneralImportButton)
         {
-            if (onGeneralImport)
-                onGeneralImport();
+            showView(View::GeneralImport);
         }
         else if (button == &mManualImportButton)
         {
-            if (onManualImport)
-                onManualImport();
+            showView(View::ManualImport);
         }
+        else if (button == &mBackButton)
+        {
+            showMainMenu();
+        }
+    }
+    
+    void ImportWizard::showMainMenu()
+    {
+        showView(View::MainMenu);
+    }
+    
+    void ImportWizard::showView(View view)
+    {
+        mCurrentView = view;
+        
+        // Hide all views
+        mSpliceImportButton.setVisible(false);
+        mGeneralImportButton.setVisible(false);
+        mManualImportButton.setVisible(false);
+        mBackButton.setVisible(false);
+        mSpliceImportView.setVisible(false);
+        mGeneralImportView.setVisible(false);
+        mManualImportView.setVisible(false);
+        
+        // Show current view
+        if (view == View::MainMenu)
+        {
+            mSpliceImportButton.setVisible(true);
+            mGeneralImportButton.setVisible(true);
+            mManualImportButton.setVisible(true);
+            setSize(getWidth(), 300);
+        }
+        else
+        {
+            mBackButton.setVisible(true);
+            
+            switch (view)
+            {
+                case View::SpliceImport:
+                    mSpliceImportView.setVisible(true);
+                    mSpliceImportView.show(); // Initialize the view
+                    setSize(getWidth(), 550);
+                    break;
+                case View::GeneralImport:
+                    mGeneralImportView.setVisible(true);
+                    setSize(getWidth(), 400);
+                    break;
+                case View::ManualImport:
+                    mManualImportView.setVisible(true);
+                    setSize(getWidth(), 400);
+                    break;
+                default:
+                    break;
+            }
+        }
+        
+        resized();
+        repaint();
+        
+        // Notify parent (OverlayPanel's viewport) to update
+        if (auto* parent = getParentComponent())
+            parent->resized();
     }
     
     void ImportWizard::themeChanged(ThemeManager::Theme newTheme)
@@ -106,12 +215,20 @@ namespace samplore
         // Update button colors
         auto primaryColor = tm.getColorForRole(ThemeManager::ColorRole::AccentPrimary);
         auto textColor = tm.getColorForRole(ThemeManager::ColorRole::TextPrimary);
+        auto disabledColor = tm.getColorForRole(ThemeManager::ColorRole::TextSecondary);
         
-        for (auto* button : {&mSpliceImportButton, &mGeneralImportButton, &mManualImportButton})
+        for (auto* button : {&mSpliceImportButton, &mGeneralImportButton, &mManualImportButton, &mBackButton})
         {
             button->setColour(TextButton::buttonColourId, primaryColor);
             button->setColour(TextButton::textColourOffId, textColor);
             button->setColour(TextButton::textColourOnId, textColor);
         }
+        
+        // Disabled buttons get dimmed appearance
+        mGeneralImportButton.setColour(TextButton::buttonColourId, primaryColor.withAlpha(0.3f));
+        mGeneralImportButton.setColour(TextButton::textColourOffId, disabledColor);
+        
+        mManualImportButton.setColour(TextButton::buttonColourId, primaryColor.withAlpha(0.3f));
+        mManualImportButton.setColour(TextButton::textColourOffId, disabledColor);
     }
 }

@@ -112,30 +112,15 @@ namespace samplore
     
     void SpliceImportDialog::paint(Graphics& g)
     {
-        g.fillAll(Colour(0, 0, 0).withAlpha(0.75f));
-        
-        auto bounds = getLocalBounds();
-        auto padding = 60;
-        auto panelBounds = bounds.reduced(padding);
-        
-        g.setColour(Colours::black.withAlpha(0.3f));
-        g.fillRoundedRectangle(panelBounds.toFloat().translated(0, 4), 12.0f);
-        
+        // Background is now handled by ImportWizard/OverlayPanel
         auto& tm = ThemeManager::getInstance();
-        auto bgColor = tm.getColorForRole(ThemeManager::ColorRole::BackgroundSecondary);
-        g.setColour(bgColor.brighter(0.1f));
-        g.fillRoundedRectangle(panelBounds.toFloat(), 12.0f);
-        
-        g.setColour(tm.getColorForRole(ThemeManager::ColorRole::Border).brighter(0.2f));
-        g.drawRoundedRectangle(panelBounds.toFloat(), 12.0f, 1.0f);
+        g.fillAll(tm.getColorForRole(ThemeManager::ColorRole::Background));
     }
     
     void SpliceImportDialog::resized()
     {
         auto bounds = getLocalBounds();
-        auto padding = 60;
-        auto panelBounds = bounds.reduced(padding);
-        auto contentBounds = panelBounds.reduced(30);
+        auto contentBounds = bounds.reduced(20); // Less padding since we're in ImportWizard
         
         // Title
         mTitleLabel.setBounds(contentBounds.removeFromTop(40));
