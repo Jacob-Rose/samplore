@@ -147,11 +147,17 @@ void SampleTile::paint (Graphics& g)
 		bool isCurrentlyPlaying = (auxPlayer->getSampleReference() == mSample) && 
 		                          (auxPlayer->getState() == AudioPlayer::TransportState::Playing);
 		
-		// Dynamic buffering: disable when playing, enable when stopped
+		// Dynamic buffering: toggle after paint completes (can't change during paint)
 		if (isCurrentlyPlaying != mIsPlaying)
 		{
 			mIsPlaying = isCurrentlyPlaying;
-			setBufferedToImage(!mIsPlaying);  // Buffer when NOT playing
+			// Defer buffering change until after paint() completes to avoid crash
+			// Use SafePointer to ensure component still exists
+			Component::SafePointer<SampleTile> safeThis(this);
+			MessageManager::callAsync([safeThis, shouldBuffer = !mIsPlaying]() {
+				if (safeThis != nullptr)
+					safeThis->setBufferedToImage(shouldBuffer);
+			});
 		}
 		
 		if (auxPlayer->getSampleReference() == mSample)
