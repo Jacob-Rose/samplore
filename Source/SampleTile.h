@@ -100,6 +100,13 @@ namespace samplore
 		const int INFO_ICON_PADDING = 4;
 
 		std::unique_ptr<FileChooser> mFileChooser;
+		
+		// Cached fonts for performance
+		static Font getTitleFont();
+		static Font getTimeFont();
+		
+		// Track if this tile is currently playing (for dynamic buffering)
+		bool mIsPlaying = false;
 
 		//Rectangle<float> m_FavoriteButtonRect;
 		//Rectangle<float> m_SaveForLaterRect;

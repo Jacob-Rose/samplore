@@ -91,6 +91,8 @@ void SamplifyProperties::loadPropertiesFile()
 				if (dir.exists())
 				{
 					mSampleLibrary->addDirectory(dir);
+					// Preload tags after adding the first directory
+					mSampleLibrary->preloadAllTags();
 				}
 			});
 		}
@@ -100,6 +102,8 @@ void SamplifyProperties::loadPropertiesFile()
 			{
 				mSampleLibrary->addDirectory(File(propFile->getValue("directory " + String(i))));
 			}
+			// After loading all directories, preload tags from all samples
+			mSampleLibrary->preloadAllTags();
 		}
 		
 		//load tags
@@ -132,6 +136,8 @@ void SamplifyProperties::loadPropertiesFile()
 			if (dir.exists())
 			{
 				mSampleLibrary->addDirectory(dir);
+				// Preload tags after adding the first directory
+				mSampleLibrary->preloadAllTags();
 			}
 		});
 	}

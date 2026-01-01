@@ -87,10 +87,18 @@ namespace samplore
 		Sample::List getAllSamplesInDirectories(juce::String query, bool ignoreCheckSystem);
 		std::future<Sample::List> getAllSamplesInDirectories_Async(juce::String query = "", bool ignoreCheckSystem = false);
 
+		/// Preload all sample files and extract their tags asynchronously
+		void preloadAllTags();
+		bool isPreloadingTags() const { return mPreloadingTags; }
+
 	private:
+		void preloadTagsAsync();
+		
 		std::future<Sample::List> mUpdateSampleFuture;
+		std::future<void> mPreloadTagsFuture;
 		bool mUpdatingSamples = false;
 		bool mCancelUpdating = false;
+		bool mPreloadingTags = false;
 		Sample::List mCurrentSamples;
 		String mCurrentQuery;
 

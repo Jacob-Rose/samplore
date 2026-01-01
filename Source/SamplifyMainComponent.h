@@ -25,6 +25,7 @@
 #include "ImportWizard.h"
 #include "SpliceImporter.h"
 #include "SpliceImportDialog.h"
+#include "PerformanceProfiler.h"
 
 namespace samplore
 {

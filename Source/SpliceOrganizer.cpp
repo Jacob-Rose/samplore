@@ -118,6 +118,16 @@ namespace samplore
             return samples;
         }
         
+        // Sanitize tag - remove any null characters or invalid characters
+        String cleanTag = tag.removeCharacters(String::fromUTF8("\0", 1));
+        cleanTag = cleanTag.trim();
+        
+        if (cleanTag.isEmpty())
+        {
+            DBG("Empty tag after sanitization, skipping");
+            return samples;
+        }
+        
         // Use LIKE query to find samples with this tag
         String queryStr = "SELECT local_path FROM samples WHERE tags LIKE ? AND local_path IS NOT NULL";
         sqlite3_stmt* stmt;
@@ -130,8 +140,11 @@ namespace samplore
             return samples;
         }
         
+        // Escape SQL LIKE special characters in the tag
+        String escapedTag = cleanTag.replace("%", "\\%").replace("_", "\\_");
+        
         // Bind the tag parameter with wildcards
-        String searchPattern = "%" + tag + "%";
+        String searchPattern = "%" + escapedTag + "%";
         sqlite3_bind_text(stmt, 1, searchPattern.toRawUTF8(), -1, SQLITE_TRANSIENT);
         
         while (sqlite3_step(stmt) == SQLITE_ROW)
@@ -139,10 +152,40 @@ namespace samplore
             const char* path = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
             if (path)
             {
-                File sampleFile(path);
+                // Create string from path, handling potential encoding issues
+                String pathStr = String::fromUTF8(path);
+                
+                // Skip if path is empty or contains null characters
+                if (pathStr.isEmpty() || pathStr.containsChar('\0'))
+                {
+                    continue;
+                }
+                
+                File sampleFile(pathStr);
                 if (sampleFile.existsAsFile())
                 {
                     samples.add(sampleFile);
+                }
+                else
+                {
+                    // Try to find the file with different encoding if original doesn't exist
+                    // This handles cases where database has encoding issues
+                    String fileName = sampleFile.getFileName();
+                    File parentDir = sampleFile.getParentDirectory();
+                    
+                    if (parentDir.exists())
+                    {
+                        // Search for a file with similar name (case-insensitive)
+                        auto iter = RangedDirectoryIterator(parentDir, false, "*", File::findFiles);
+                        for (const auto& entry : iter)
+                        {
+                            if (entry.getFile().getFileName().equalsIgnoreCase(fileName))
+                            {
+                                samples.add(entry.getFile());
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -152,17 +195,108 @@ namespace samplore
         return samples;
     }
     
+    std::map<String, StringArray> SpliceOrganizer::getAllSamplesWithTags()
+    {
+        std::map<String, StringArray> sampleToTags;
+        
+        if (!mDatabase)
+        {
+            DBG("Database not open");
+            return sampleToTags;
+        }
+        
+        // Get all samples with their tags in one query
+        const char* query = "SELECT local_path, tags FROM samples WHERE local_path IS NOT NULL AND tags IS NOT NULL";
+        sqlite3_stmt* stmt;
+        
+        int rc = sqlite3_prepare_v2(mDatabase, query, -1, &stmt, nullptr);
+        
+        if (rc != SQLITE_OK)
+        {
+            DBG("Failed to prepare query: " + String(sqlite3_errmsg(mDatabase)));
+            return sampleToTags;
+        }
+        
+        int rowCount = 0;
+        int encodingErrorCount = 0;
+        
+        while (sqlite3_step(stmt) == SQLITE_ROW)
+        {
+            const char* path = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+            const char* tagsText = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+            
+            if (path && tagsText)
+            {
+                // Create string from path, handling potential encoding issues
+                String pathStr = String::fromUTF8(path);
+                
+                // Skip if path is empty or contains null characters
+                if (pathStr.isEmpty() || pathStr.containsChar('\0'))
+                {
+                    encodingErrorCount++;
+                    continue;
+                }
+                
+                File sampleFile(pathStr);
+                
+                // Only include if file exists on disk
+                if (sampleFile.existsAsFile())
+                {
+                    String samplePath = sampleFile.getFullPathName();
+                    String tagsString = String::fromUTF8(tagsText);
+                    
+                    StringArray tags;
+                    tags.addTokens(tagsString, ",", "\"");
+                    
+                    // Trim whitespace and remove invalid tags
+                    StringArray cleanTags;
+                    for (int i = 0; i < tags.size(); ++i)
+                    {
+                        String cleanTag = tags[i].trim();
+                        cleanTag = cleanTag.removeCharacters(String::fromUTF8("\0", 1));
+                        
+                        if (cleanTag.isNotEmpty())
+                        {
+                            cleanTags.add(cleanTag);
+                        }
+                    }
+                    
+                    if (cleanTags.size() > 0)
+                    {
+                        sampleToTags[samplePath] = cleanTags;
+                        rowCount++;
+                    }
+                }
+            }
+        }
+        
+        if (encodingErrorCount > 0)
+        {
+            DBG("Skipped " + String(encodingErrorCount) + " samples with encoding errors");
+        }
+        
+        sqlite3_finalize(stmt);
+        
+        DBG("getAllSamplesWithTags: Found " + String(rowCount) + " samples with tags");
+        
+        return sampleToTags;
+    }
+    
     String SpliceOrganizer::sanitizeFilename(const String& filename)
     {
-        String safe = filename;
+        // Use JUCE's built-in legal filename creator
+        // This removes invalid characters: " # @ , ; : < > * ^ | ? \ /
+        // and handles long filenames (max 128 chars)
+        String safe = File::createLegalFileName(filename);
         
-        // Replace invalid characters with underscore
-        safe = safe.replaceCharacters("<>:\"|?*", "________");
-        
-        // Remove leading/trailing dots and spaces
+        // Additional cleanup: remove leading/trailing dots and spaces
         safe = safe.trim();
         while (safe.startsWith("."))
             safe = safe.substring(1);
+        
+        // Ensure we have something if the filename became empty
+        if (safe.isEmpty())
+            safe = "unnamed";
         
         return safe;
     }
@@ -174,10 +308,10 @@ namespace samplore
             // Remove all existing content
             if (outputDir.exists())
             {
-                DirectoryIterator iter(outputDir, false, "*", File::findFilesAndDirectories);
-                while (iter.next())
+                auto iter = RangedDirectoryIterator(outputDir, false, "*", File::findFilesAndDirectories);
+                for (const auto& entry : iter)
                 {
-                    File item = iter.getFile();
+                    File item = entry.getFile();
                     if (item.isDirectory())
                         item.deleteRecursively();
                     else
@@ -266,15 +400,8 @@ namespace samplore
         // Create tag directories
         createTagDirectories(outputDir, tags, !appendMode);
         
-        // LIMIT: Only process first 50 tags to avoid overwhelming the system
-        const int MAX_TAGS_TO_PROCESS = 50;
-        int tagsToProcess = jmin(tags.size(), MAX_TAGS_TO_PROCESS);
-        
-        if (tags.size() > MAX_TAGS_TO_PROCESS)
-        {
-            DBG("WARNING: Limiting to first " + String(MAX_TAGS_TO_PROCESS) + " tags to avoid system overload");
-        }
-        
+        // Process ALL tags (no limits)
+        int tagsToProcess = tags.size();
         result.tagsTotal = tagsToProcess;
         
         // Process each tag
@@ -284,16 +411,16 @@ namespace samplore
             File tagDir = outputDir.getChildFile(tag);
             Array<File> samples = getSamplesForTag(tag);
             
-            // LIMIT: Only process first 100 samples per tag
-            const int MAX_SAMPLES_PER_TAG = 100;
-            int samplesToProcess = jmin(samples.size(), MAX_SAMPLES_PER_TAG);
+            // Process ALL samples per tag (no limits)
+            int samplesToProcess = samples.size();
             
             // Report progress
             String status = "Processing tag '" + tag + "' (" + String(tagIdx + 1) + "/" + String(tagsToProcess) + ")";
             if (mProgressCallback)
             {
-                int totalShortcuts = tagsToProcess * samplesToProcess;
-                int currentShortcut = tagIdx * samplesToProcess;
+                // Estimate total shortcuts (rough calculation)
+                int totalShortcuts = tagsToProcess * 100; // Rough estimate
+                int currentShortcut = tagIdx * 100;
                 mProgressCallback->onProgress(currentShortcut, totalShortcuts, status);
                 
                 if (mProgressCallback->shouldCancel())
@@ -304,7 +431,7 @@ namespace samplore
                 }
             }
             
-            DBG(status + " - " + String(samplesToProcess) + " of " + String(samples.size()) + " samples");
+            DBG(status + " - " + String(samplesToProcess) + " samples");
             
             for (int sampleIdx = 0; sampleIdx < samplesToProcess; ++sampleIdx)
             {
@@ -350,6 +477,53 @@ namespace samplore
         return result;
     }
     
+    StringArray SpliceOrganizer::getTagsForSampleFromDatabase(const File& sampleFile)
+    {
+        StringArray tags;
+        
+        if (!mDatabase)
+        {
+            DBG("Database not open");
+            return tags;
+        }
+        
+        // Query the database for this specific sample's tags
+        String queryStr = "SELECT tags FROM samples WHERE local_path = ?";
+        sqlite3_stmt* stmt;
+        
+        int rc = sqlite3_prepare_v2(mDatabase, queryStr.toRawUTF8(), -1, &stmt, nullptr);
+        
+        if (rc != SQLITE_OK)
+        {
+            DBG("Failed to prepare query: " + String(sqlite3_errmsg(mDatabase)));
+            return tags;
+        }
+        
+        // Bind the sample path
+        String samplePath = sampleFile.getFullPathName();
+        sqlite3_bind_text(stmt, 1, samplePath.toRawUTF8(), -1, SQLITE_TRANSIENT);
+        
+        if (sqlite3_step(stmt) == SQLITE_ROW)
+        {
+            const char* tagsText = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+            if (tagsText)
+            {
+                String tagsString(tagsText);
+                tags.addTokens(tagsString, ",", "\"");
+                
+                // Trim whitespace from each tag
+                for (int i = 0; i < tags.size(); ++i)
+                {
+                    tags.set(i, tags[i].trim());
+                }
+            }
+        }
+        
+        sqlite3_finalize(stmt);
+        
+        return tags;
+    }
+    
     StringArray SpliceOrganizer::getTagsForSample(const File& organizerOutputDir, const File& sampleFile)
     {
         StringArray tags;
@@ -358,11 +532,11 @@ namespace samplore
             return tags;
         
         // Scan all tag directories
-        DirectoryIterator dirIter(organizerOutputDir, false, "*", File::findDirectories);
+        auto dirIter = RangedDirectoryIterator(organizerOutputDir, false, "*", File::findDirectories);
         
-        while (dirIter.next())
+        for (const auto& dirEntry : dirIter)
         {
-            File tagDir = dirIter.getFile();
+            File tagDir = dirEntry.getFile();
             String tagName = tagDir.getFileName();
             
             // Skip special directories
@@ -370,11 +544,11 @@ namespace samplore
                 continue;
             
             // Check if this tag directory contains a shortcut to our sample
-            DirectoryIterator fileIter(tagDir, false, "*", File::findFiles);
+            auto fileIter = RangedDirectoryIterator(tagDir, false, "*", File::findFiles);
             
-            while (fileIter.next())
+            for (const auto& fileEntry : fileIter)
             {
-                File shortcutFile = fileIter.getFile();
+                File shortcutFile = fileEntry.getFile();
                 
                 // Try to resolve the shortcut/symlink
                 File targetFile = resolveShortcut(shortcutFile);

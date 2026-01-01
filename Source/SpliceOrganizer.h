@@ -16,6 +16,7 @@
 
 #include "JuceHeader.h"
 #include "ThirdParty/sqlite3.h"
+#include <map>
 
 namespace samplore
 {
@@ -62,6 +63,10 @@ namespace samplore
         /// Returns array of File objects for sample paths
         Array<File> getSamplesForTag(const String& tag);
         
+        /// Gets all samples from the database with their tags
+        /// Returns map of sample path -> tags array
+        std::map<String, StringArray> getAllSamplesWithTags();
+        
         /// Creates tag-based directory structure with shortcuts
         /// If appendMode is true, preserves existing shortcuts
         OrganizeResult organize(const File& outputDir, bool appendMode = false);
@@ -74,6 +79,9 @@ namespace samplore
         
         /// Gets tags for a specific sample file by scanning organized directory
         StringArray getTagsForSample(const File& organizerOutputDir, const File& sampleFile);
+        
+        /// Gets tags for a specific sample file directly from the database
+        StringArray getTagsForSampleFromDatabase(const File& sampleFile);
         
     private:
         sqlite3* mDatabase = nullptr;

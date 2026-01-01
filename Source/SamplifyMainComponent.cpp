@@ -112,6 +112,12 @@ SamplifyMainComponent::SamplifyMainComponent() :
 	
 	// Register with ThemeManager
 	ThemeManager::getInstance().addListener(this);
+	
+	// Enable performance profiling in debug builds
+	#if JUCE_DEBUG
+		PerformanceProfiler::getInstance().setEnabled(true);
+		DBG("Performance profiling enabled. Press F5 to view stats, F6 to reset.");
+	#endif
 }
 
 SamplifyMainComponent::~SamplifyMainComponent()
@@ -134,6 +140,21 @@ SamplifyMainComponent::~SamplifyMainComponent()
 bool SamplifyMainComponent::keyPressed(const KeyPress& key, Component* originatingComponent)
 {
 	auto& keyManager = KeyBindingManager::getInstance();
+	
+	// Performance profiling shortcuts (debug only)
+	#if JUCE_DEBUG
+		if (key == KeyPress::F5Key)
+		{
+			PerformanceProfiler::getInstance().printStatistics();
+			return true;
+		}
+		else if (key == KeyPress::F6Key)
+		{
+			PerformanceProfiler::getInstance().reset();
+			DBG("Performance statistics reset");
+			return true;
+		}
+	#endif
 	
 	if (keyManager.matchesAction(key, KeyBindingManager::Action::PlayAudio))
 	{
@@ -268,6 +289,7 @@ void samplore::SamplifyMainComponent::setupLookAndFeel(LookAndFeel& laf)
 //==============================================================================
 void SamplifyMainComponent::paint (Graphics& g)
 {
+	PROFILE_PAINT("SamplifyMainComponent::paint");
     g.fillAll (getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
 }
 const int edgeSize = 8;

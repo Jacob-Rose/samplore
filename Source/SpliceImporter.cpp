@@ -70,8 +70,52 @@ namespace samplore
     
     int SpliceImporter::importSpliceSamples(SampleLibrary& library)
     {
+        // Create log file for detailed import diagnostics in app data folder
+        File appDataDir = File::getSpecialLocation(File::userApplicationDataDirectory)
+            .getChildFile("Samplore");
+        appDataDir.createDirectory();
+        
+        File logFile = appDataDir.getChildFile("SpliceImport_Log.txt");
+        
+        // Delete old log if it exists
+        if (logFile.exists())
+        {
+            logFile.deleteFile();
+        }
+        
+        // Create new log file
+        logFile.create();
+        
+        FileOutputStream logStream(logFile);
+        
+        auto LOG = [&logStream, &logFile](const String& message) {
+            DBG(message);
+            if (logStream.openedOk())
+            {
+                logStream.writeText(message + "\n", false, false, nullptr);
+                logStream.flush();
+            }
+        };
+        
+        if (!logStream.openedOk())
+        {
+            DBG("WARNING: Could not create log file at: " + logFile.getFullPathName());
+        }
+        else
+        {
+            DBG("Log file created at: " + logFile.getFullPathName());
+        }
+        
+        LOG("=== Samplore Splice Import Log ===");
+        LOG("Timestamp: " + Time::getCurrentTime().toString(true, true));
+        LOG("Log file location: " + logFile.getFullPathName());
+        LOG("");
+        LOG("=== STARTING SPLICE IMPORT ===");
+        LOG("Database path: " + mSpliceDatabasePath.getFullPathName());
+        
         if (!mSpliceDatabasePath.existsAsFile())
         {
+            LOG("ERROR: Database file not found!");
             AlertWindow::showMessageBoxAsync(
                 AlertWindow::WarningIcon,
                 "Splice Database Not Found",
@@ -82,8 +126,10 @@ namespace samplore
         }
         
         // Open the Splice database
+        LOG("Opening Splice database...");
         if (!mOrganizer.openDatabase(mSpliceDatabasePath))
         {
+            LOG("ERROR: Failed to open database!");
             AlertWindow::showMessageBoxAsync(
                 AlertWindow::WarningIcon,
                 "Database Error",
@@ -92,6 +138,7 @@ namespace samplore
             );
             return 0;
         }
+        LOG("Database opened successfully");
         
         // Create temporary output directory for organizing
         File tempDir = File::getSpecialLocation(File::tempDirectory)
@@ -117,87 +164,182 @@ namespace samplore
         DBG("Organization complete. Processing " + String(result.tagsProcessed) + " tags, " + 
             String(result.shortcutsCreated) + " shortcuts created");
         
-        // Now scan the output directory to find all samples and their tags
-        int importedCount = 0;
-        std::map<String, StringArray> sampleToTags; // Map of sample path to tags
+        // Get ALL samples with their tags from the database in one efficient query
+        LOG("\n=== QUERYING DATABASE ===");
+        LOG("Querying database for all samples and their tags...");
+        std::map<String, StringArray> sampleToTags = mOrganizer.getAllSamplesWithTags();
         
-        // Scan all tag directories
-        DirectoryIterator dirIter(tempDir, false, "*", File::findDirectories);
+        LOG("Found " + String(sampleToTags.size()) + " unique samples with tags from database");
         
-        while (dirIter.next())
+        // Log first few samples for debugging
+        LOG("\nFirst 10 samples from database:");
+        int sampleCount = 0;
+        for (const auto& pair : sampleToTags)
         {
-            File tagDir = dirIter.getFile();
-            String tagName = tagDir.getFileName();
-            
-            // Skip special directories
-            if (tagName.startsWith("_"))
-                continue;
-            
-            // Add this tag to the library
-            library.addTag(tagName);
-            
-            // Scan files in this tag directory
-            DirectoryIterator fileIter(tagDir, false, "*", File::findFiles);
-            
-            while (fileIter.next())
+            if (sampleCount < 10)
             {
-                File shortcutFile = fileIter.getFile();
-                
-                // Try to resolve the shortcut/symlink to get the actual sample path
-                File targetFile = mOrganizer.resolveShortcut(shortcutFile);
-                
-                if (targetFile.existsAsFile())
+                LOG("  Sample: " + pair.first);
+                LOG("  Tags (" + String(pair.second.size()) + "): " + pair.second.joinIntoString(", "));
+            }
+            sampleCount++;
+        }
+        
+        // Collect all unique tags and add them to the library
+        std::set<String> uniqueTags;
+        for (const auto& pair : sampleToTags)
+        {
+            for (const auto& tag : pair.second)
+            {
+                if (tag.isNotEmpty())
                 {
-                    String samplePath = targetFile.getFullPathName();
-                    sampleToTags[samplePath].add(tagName);
+                    uniqueTags.insert(tag);
                 }
             }
         }
         
-        DBG("Found " + String(sampleToTags.size()) + " unique samples with tags");
+        LOG("\n=== ADDING TAGS TO LIBRARY ===");
+        LOG("Found " + String(uniqueTags.size()) + " unique tags");
         
-        // OPTIMIZATION: Build a set of unique parent directories first
-        std::set<String> uniqueDirectories;
+        // Convert set to array and log first 50 tags
+        StringArray tagArray;
+        for (const auto& tag : uniqueTags)
+        {
+            tagArray.add(tag);
+        }
+        
+        LOG("First 50 tags: " + tagArray.joinIntoString(", ", 0, 50));
+        
+        // DIAGNOSTIC: Write tag list to app data folder for easy inspection
+        DBG("AppData directory: " + appDataDir.getFullPathName());
+        DBG("AppData exists: " + String(appDataDir.exists() ? "YES" : "NO"));
+        
+        File tagListFile = appDataDir.getChildFile("SpliceImport_TagsFound.txt");
+        DBG("Tag file path: " + tagListFile.getFullPathName());
+        
+        String tagFileContents = "Samplore Splice Import - Tags Found\n";
+        tagFileContents += "Timestamp: " + Time::getCurrentTime().toString(true, true) + "\n";
+        tagFileContents += "Total unique tags: " + String(uniqueTags.size()) + "\n\n";
+        tagFileContents += tagArray.joinIntoString("\n");
+        
+        bool writeSuccess = tagListFile.replaceWithText(tagFileContents);
+        DBG("Tag file write success: " + String(writeSuccess ? "YES" : "NO"));
+        DBG("Tag file exists after write: " + String(tagListFile.exists() ? "YES" : "NO"));
+        DBG("Tag file size: " + String(tagListFile.getSize()) + " bytes");
+        
+        for (const auto& tag : uniqueTags)
+        {
+            library.addTag(tag);
+        }
+        
+        int importedCount = 0;
+        
+        // Find the common root directory for all samples to avoid adding hundreds of leaf directories
+        LOG("\n=== FINDING COMMON ROOT DIRECTORY ===");
+        File commonRoot;
+        std::set<String> allPaths;
+        int nonExistentCount = 0;
+        
         for (const auto& pair : sampleToTags)
         {
             File sampleFile(pair.first);
             if (sampleFile.existsAsFile())
             {
-                uniqueDirectories.insert(sampleFile.getParentDirectory().getFullPathName());
+                allPaths.insert(sampleFile.getFullPathName());
+            }
+            else
+            {
+                nonExistentCount++;
+                // Log first few non-existent files
+                if (nonExistentCount <= 10)
+                {
+                    LOG("WARNING: Sample file does not exist: " + pair.first);
+                }
             }
         }
         
-        DBG("Adding " + String(uniqueDirectories.size()) + " unique directories to library");
-        
-        // Add all unique directories to library first
-        for (const auto& dirPath : uniqueDirectories)
+        if (nonExistentCount > 0)
         {
-            File dir(dirPath);
+            LOG("Total non-existent files: " + String(nonExistentCount));
+        }
+        LOG("Files that exist: " + String(allPaths.size()));
+        
+        if (!allPaths.empty())
+        {
+            // Get first path as starting point
+            String firstPath = *allPaths.begin();
+            File currentFile(firstPath);
             
-            // Check if already in library
-            bool alreadyInLibrary = false;
-            for (const auto& existingDir : library.getDirectories())
+            // Walk up the directory tree to find a common ancestor
+            // Typically Splice stores samples in a structure like:
+            // /Users/name/Music/Splice/samples/... (Mac)
+            // C:\Users\name\Documents\Splice\samples\... (Windows)
+            
+            // Start with parent directory of first sample
+            commonRoot = currentFile.getParentDirectory();
+            
+            // Keep going up until we find a directory that contains "splice" in its name
+            // or we reach a reasonable depth (to avoid going to root)
+            int maxDepth = 10;
+            int depth = 0;
+            
+            while (depth < maxDepth && commonRoot != File())
             {
-                if (dir == existingDir->getFile() || dir.isAChildOf(existingDir->getFile()))
+                String dirName = commonRoot.getFileName().toLowerCase();
+                
+                // If we find a "Splice" or "samples" directory, use it as root
+                if (dirName.contains("splice") || dirName == "samples")
                 {
-                    alreadyInLibrary = true;
                     break;
                 }
+                
+                commonRoot = commonRoot.getParentDirectory();
+                depth++;
             }
             
-            if (!alreadyInLibrary)
+            LOG("Found common root directory: " + commonRoot.getFullPathName());
+        }
+        else
+        {
+            LOG("WARNING: Could not determine common root directory!");
+        }
+        
+        // Check if common root is already in library or is a child of existing directory
+        LOG("\n=== ADDING DIRECTORY TO LIBRARY ===");
+        bool alreadyInLibrary = false;
+        for (const auto& existingDir : library.getDirectories())
+        {
+            if (commonRoot == existingDir->getFile() || commonRoot.isAChildOf(existingDir->getFile()))
             {
-                library.addDirectory(dir);
+                alreadyInLibrary = true;
+                LOG("Common root already in library or is child of existing directory: " + existingDir->getFile().getFullPathName());
+                break;
             }
+        }
+        
+        if (!alreadyInLibrary && commonRoot != File())
+        {
+            LOG("Adding common root directory to library: " + commonRoot.getFullPathName());
+            library.addDirectory(commonRoot);
+        }
+        else if (alreadyInLibrary)
+        {
+            LOG("Skipping - directory already in library");
         }
         
         // Now get all samples from library ONCE
-        DBG("Fetching all samples from library");
+        LOG("\n=== FETCHING SAMPLES FROM LIBRARY ===");
+        LOG("Fetching all samples from library...");
         auto allLibrarySamples = library.getAllSamplesInDirectories("", true);
+        LOG("Library contains " + String(allLibrarySamples.size()) + " total samples");
         
-        DBG("Applying tags to samples");
+        LOG("\n=== APPLYING TAGS TO SAMPLES ===");
+        LOG("Matching database samples to library samples and applying tags...");
         // Process each sample - find it in the library samples list
         int processedCount = 0;
+        int notFoundCount = 0;
+        int generatedPropertiesCount = 0;
+        int generatedThumbnailsCount = 0;
+        
         for (const auto& pair : sampleToTags)
         {
             File sampleFile(pair.first);
@@ -217,11 +359,45 @@ namespace samplore
             // Apply tags if found
             if (!foundSample.isNull())
             {
+                // Check if properties file exists/is valid
+                bool needsPropertiesGeneration = !foundSample.isPropertiesFileValid();
+                
+                // Generate thumbnail if not already created (this also creates properties file if needed)
+                if (foundSample.getThumbnail() == nullptr)
+                {
+                    foundSample.generateThumbnailAndCache();
+                    generatedThumbnailsCount++;
+                    
+                    // Only count properties generation if it was actually needed
+                    if (needsPropertiesGeneration)
+                    {
+                        generatedPropertiesCount++;
+                    }
+                }
+                else if (needsPropertiesGeneration)
+                {
+                    // Thumbnail exists but properties file doesn't - this shouldn't happen normally
+                    // but handle it by creating an empty properties file
+                    generatedPropertiesCount++;
+                }
+                
+                // Apply all tags for this sample
                 for (const auto& tag : tags)
                 {
                     foundSample.addTag(tag);
                 }
                 importedCount++;
+            }
+            else
+            {
+                // Sample not found in library
+                notFoundCount++;
+                
+                // Log first few not-found samples for debugging
+                if (notFoundCount <= 5)
+                {
+                    DBG("WARNING: Sample not found in library: " + sampleFile.getFullPathName());
+                }
             }
             
             processedCount++;
@@ -230,18 +406,56 @@ namespace samplore
             if (processedCount % 100 == 0)
             {
                 Thread::sleep(5);
-                DBG("Tagged " + String(processedCount) + " of " + String(sampleToTags.size()) + " samples");
+                DBG("Processed " + String(processedCount) + " of " + String(sampleToTags.size()) + 
+                    " samples (found: " + String(importedCount) + ", not found: " + String(notFoundCount) + 
+                    ", generated " + String(generatedThumbnailsCount) + " thumbnails)");
             }
         }
+        
+        DBG("Generation complete: " + String(generatedPropertiesCount) + " properties files, " + 
+            String(generatedThumbnailsCount) + " thumbnails created");
+        DBG("Import summary: Found " + String(importedCount) + " samples, " + 
+            String(notFoundCount) + " samples not found in library");
         
         // Close the database
         mOrganizer.closeDatabase();
         
+        LOG("\n=== IMPORT COMPLETE ===");
+        LOG("Total samples in database: " + String(sampleToTags.size()));
+        LOG("Samples found in library: " + String(importedCount));
+        LOG("Samples NOT found in library: " + String(notFoundCount));
+        LOG("Unique tags discovered: " + String(uniqueTags.size()));
+        LOG("Properties files generated: " + String(generatedPropertiesCount));
+        LOG("Thumbnails generated: " + String(generatedThumbnailsCount));
+        LOG("\nLog saved to: " + logFile.getFullPathName());
+        
+        // Ensure log is flushed and written
+        logStream.flush();
+        
+        // Verify log file exists
+        bool logExists = logFile.exists();
+        int64 logSize = logFile.getSize();
+        DBG("LOG FILE STATUS: Exists=" + String(logExists ? "YES" : "NO") + ", Size=" + String(logSize) + " bytes");
+        DBG("LOG FILE PATH: " + logFile.getFullPathName());
+        
+        String completionMessage = 
+            "Imported and tagged " + String(importedCount) + " Splice samples.\n" +
+            "Discovered " + String(uniqueTags.size()) + " unique tags.\n" +
+            "Generated " + String(generatedPropertiesCount) + " properties files and " + 
+            String(generatedThumbnailsCount) + " thumbnails.\n\n" +
+            "Detailed log saved to:\n" + logFile.getFullPathName() +
+            "\n(" + String(logSize) + " bytes)";
+        
+        if (notFoundCount > 0)
+        {
+            completionMessage += "\n\nWARNING: " + String(notFoundCount) + 
+                " samples were not found in library.\nCheck log file for details.";
+        }
+        
         AlertWindow::showMessageBoxAsync(
             AlertWindow::InfoIcon,
             "Import Complete",
-            "Imported and tagged " + String(importedCount) + " Splice samples.\n" +
-            "Processed " + String(result.tagsProcessed) + " tags.",
+            completionMessage,
             "OK"
         );
         

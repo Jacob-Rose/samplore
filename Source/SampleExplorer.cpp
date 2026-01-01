@@ -4,6 +4,7 @@
 #include "SamplifyMainComponent.h"
 #include "SamplifyLookAndFeel.h"
 #include "ThemeManager.h"
+#include "PerformanceProfiler.h"
 
 using namespace samplore;
 
@@ -42,6 +43,8 @@ SampleExplorer::~SampleExplorer()
 
 void SampleExplorer::paint (Graphics& g)
 {
+	PROFILE_PAINT("SampleExplorer::paint");
+	
 	auto& theme = ThemeManager::getInstance();
 	auto sampleLib = SamplifyProperties::getInstance()->getSampleLibrary();
 	
@@ -110,7 +113,7 @@ void SampleExplorer::paint (Graphics& g)
 		// Draw icon/emoji at top
 		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
 		g.setFont(48.0f);
-		g.drawText("🔍", messageBox.removeFromTop(80), Justification::centred);
+		g.drawText(",0", messageBox.removeFromTop(80), Justification::centred);
 		
 		// Draw title
 		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));

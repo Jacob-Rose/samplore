@@ -245,6 +245,16 @@ void Sample::Reference::removeTag(juce::String tag)
 		}
 	}
 }
+
+bool Sample::Reference::isPropertiesFileValid() const
+{
+	if (!isNull())
+	{
+		return mSample.lock()->isPropertiesFileValid();
+	}
+	return false;
+}
+
 void Sample::Reference::generateThumbnailAndCache()
 {
 	std::shared_ptr<Sample> sample = mSample.lock();
@@ -261,6 +271,9 @@ void Sample::Reference::generateThumbnailAndCache()
 			sample->mLength = (float)reader->lengthInSamples / reader->sampleRate;
 		}
 		delete reader;
+		
+		// Save properties file after generating thumbnail (creates file if it doesn't exist)
+		sample->savePropertiesFile();
 	}
 	
 }

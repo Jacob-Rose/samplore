@@ -53,7 +53,8 @@ namespace samplore
 			StringArray getTags() const;
 			void addTag(juce::String tag);
 			void removeTag(juce::String tag);
-			 
+			
+			bool isPropertiesFileValid() const;
 			void generateThumbnailAndCache();
 			float getValueForSortType(SortingMethod method) const { return mSample.lock()->getValueForSortType(method); }
 		
