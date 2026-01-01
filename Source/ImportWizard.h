@@ -15,7 +15,7 @@
 
 namespace samplore
 {
-    /// Overlay panel for importing samples with multiple import methods
+    /// Content view for importing samples with multiple import methods
     class ImportWizard : public Component, public Button::Listener, public ThemeManager::Listener
     {
     public:
@@ -26,19 +26,8 @@ namespace samplore
         void resized() override;
         void buttonClicked(Button* button) override;
         
-        //==================================================================
-        // ThemeManager::Listener interface
         void themeChanged(ThemeManager::Theme newTheme) override;
         void colorChanged(ThemeManager::ColorRole role, Colour newColor) override;
-        
-        /// Shows the import wizard overlay
-        void show();
-        
-        /// Hides the import wizard overlay
-        void hide();
-        
-        /// Callback when close is requested
-        std::function<void()> onClose;
         
         /// Callback when Splice Import is selected
         std::function<void()> onSpliceImport;
@@ -50,11 +39,9 @@ namespace samplore
         std::function<void()> onManualImport;
         
     private:
-        Label mTitleLabel;
         TextButton mSpliceImportButton;
         TextButton mGeneralImportButton;
         TextButton mManualImportButton;
-        TextButton mCloseButton;
         
         void updateColors();
     };

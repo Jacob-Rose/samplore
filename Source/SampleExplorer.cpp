@@ -22,6 +22,14 @@ SampleExplorer::SampleExplorer() : mViewport(&mSampleContainer)
 	mViewport.addAndMakeVisible(mSampleContainer);
 	mViewport.setViewedComponent(&mSampleContainer);
 	mViewport.setScrollBarsShown(true, false, true, false);
+	
+	// Enable smooth scrolling (not chunky)
+	mViewport.setScrollOnDragMode(Viewport::ScrollOnDragMode::nonHover);
+	// Ultra-small step size for smoothest possible scrolling
+	// Mouse wheel delta ~120, so 0.08 * 120 = ~10 pixels per tick
+	mViewport.getVerticalScrollBar().setSingleStepSize(0.008);
+	mViewport.setScrollBarThickness(12);
+	
 	mSearchBar.addListener(this);
 	mFilter.addListener(this);
 	

@@ -37,8 +37,12 @@ SamplifyMainComponent::SamplifyMainComponent() :
 	addAndMakeVisible(mFilterExplorer);
 	addAndMakeVisible(mSamplePlayerComponent);
 	
-	// Setup import wizard overlay
-	addChildComponent(mImportWizard);
+	// Setup central overlay panel
+	addChildComponent(mOverlayPanel);
+	mOverlayPanel.onClose = [this]() {
+		mOverlayPanel.hide();
+	};
+	
 	addChildComponent(mSpliceImportDialog);
 	
 	// Setup Splice import dialog callbacks
@@ -53,19 +57,20 @@ SamplifyMainComponent::SamplifyMainComponent() :
 		}
 	};
 	
+	// Setup import wizard callbacks
 	mImportWizard.onSpliceImport = [this]() {
 		DBG("Splice Import selected");
-		mImportWizard.hide();
+		mOverlayPanel.hide();
 		mSpliceImportDialog.show();
 	};
 	mImportWizard.onGeneralImport = [this]() {
 		DBG("General Import selected");
-		mImportWizard.hide();
+		mOverlayPanel.hide();
 		// TODO: Implement General Import
 	};
 	mImportWizard.onManualImport = [this]() {
 		DBG("Manual Import selected");
-		mImportWizard.hide();
+		mOverlayPanel.hide();
 		
 		// Show directory chooser for manual import
 		auto chooser = std::make_shared<FileChooser>("Select directory to import...",
@@ -88,9 +93,6 @@ SamplifyMainComponent::SamplifyMainComponent() :
 			}
 		});
 	};
-	
-	// Setup preference window overlay
-	addChildComponent(mPreferenceWindow);
 
 	//addAndMakeVisible(unlockForm);
     
@@ -314,8 +316,7 @@ void SamplifyMainComponent::resized()
 	mSampleExplorer.setBounds(lWidth, 0, getWidth() - (rWidth + lWidth), getHeight() - bHeight);
 	
 	// Overlay panels cover the entire component
-	mImportWizard.setBounds(getLocalBounds());
-	mPreferenceWindow.setBounds(getLocalBounds());
+	mOverlayPanel.setBounds(getLocalBounds());
 	mSpliceImportDialog.setBounds(getLocalBounds());
 	
 	mResizableEdgeDirectoryExplorerBounds.setMaximumWidth(getWidth() - (rWidth));
@@ -345,12 +346,17 @@ void SamplifyMainComponent::mouseDrag(const MouseEvent& e)
 
 void SamplifyMainComponent::showImportWizard()
 {
-	mImportWizard.show();
+	mOverlayPanel.setTitle("Import Wizard");
+	mOverlayPanel.setContentComponent(&mImportWizard, false);
+	mOverlayPanel.show();
 }
 
 void SamplifyMainComponent::showPreferences()
 {
-	mPreferenceWindow.show();
+	mOverlayPanel.setTitle("Preferences");
+	mPreferenceView.setSize(600, 1000);
+	mOverlayPanel.setContentComponent(&mPreferenceView, false);
+	mOverlayPanel.show();
 }
 
 //==============================================================================

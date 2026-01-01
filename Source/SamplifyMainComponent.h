@@ -26,6 +26,7 @@
 #include "SpliceImporter.h"
 #include "SpliceImportDialog.h"
 #include "PerformanceProfiler.h"
+#include "UI/OverlayPanel.h"
 
 namespace samplore
 {
@@ -86,8 +87,13 @@ namespace samplore
 	std::shared_ptr<AudioPlayer> mAudioPlayer;
 	juce::SharedResourcePointer<TooltipWindow> mTooltip;
 	
+	// Central overlay panel for modal views
+	OverlayPanel mOverlayPanel;
+	
+	// Content views for overlay
 	ImportWizard mImportWizard;
-	PreferenceWindow mPreferenceWindow;
+	PreferenceWindow::View mPreferenceView;
+	
 	SpliceImporter mSpliceImporter;
 	SpliceImportDialog mSpliceImportDialog;
 

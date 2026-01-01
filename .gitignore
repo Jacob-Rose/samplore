@@ -14,6 +14,12 @@ dist/*.tar.gz
 Samplore_VS2022.sln
 Samplore_VS2019.sln
 
+# rider
+.idea/
+
+# custom build directory now builds in root. lil muddy but worth it easily and well contained
+x64
+
 # OpenCode temporary files
 .opencodetmp
 opencodetmp

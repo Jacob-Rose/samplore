@@ -97,7 +97,13 @@
           <FILE id="srHuQY" name="ServerAuthUnlockComponent.cpp" compile="1" resource="0" file="Source/ServerAuthUnlockComponent.cpp" />
           <FILE id="Zgd6Gf" name="ServerAuthUnlockComponent.h" compile="0" resource="0" file="Source/ServerAuthUnlockComponent.h" />
           <FILE id="RolRvl" name="ServerAuthStatus.cpp" compile="1" resource="0" file="Source/ServerAuthStatus.cpp" />
-        <FILE id="ICON001" name="IconLibrary.h" compile="0" resource="0" file="Source/UI/IconLibrary.h" /><FILE id="ICON002" name="IconLibrary.cpp" compile="1" resource="0" file="Source/UI/IconLibrary.cpp" /></GROUP>
+        </GROUP>
+        <GROUP id="{UI001}" name="UI">
+          <FILE id="ICON001" name="IconLibrary.h" compile="0" resource="0" file="Source/UI/IconLibrary.h" />
+          <FILE id="ICON002" name="IconLibrary.cpp" compile="1" resource="0" file="Source/UI/IconLibrary.cpp" />
+          <FILE id="OVLY001" name="OverlayPanel.h" compile="0" resource="0" file="Source/UI/OverlayPanel.h" />
+          <FILE id="OVLY002" name="OverlayPanel.cpp" compile="1" resource="0" file="Source/UI/OverlayPanel.cpp" />
+        </GROUP>
       </GROUP>
     </GROUP>
   </MAINGROUP>
