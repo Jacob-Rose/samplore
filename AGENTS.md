@@ -14,6 +14,9 @@ python3 scripts/setup.py              # Interactive setup with .env configuratio
 # Configure (generate build files from .jucer)
 python3 scripts/configure.py          # Configures JUCE paths and generates build files
                                       # Will auto-build Projucer if not found
+                                      # Windows: Creates wrapper .sln files in project root:
+                                      #   Samplore_VS2022.sln
+                                      #   Samplore_VS2019.sln
 
 # VSCode IntelliSense (optional - auto-syncs with .env + .jucer)
 python3 scripts/setup_vscode.py       # Generate c_cpp_properties.json

@@ -10,6 +10,10 @@ dist/*.tar.gz
 # Environment configuration (local paths)
 .env
 
+# Generated wrapper solution files (Windows)
+Samplore_VS2022.sln
+Samplore_VS2019.sln
+
 # OpenCode temporary files
 .opencodetmp
 opencodetmp

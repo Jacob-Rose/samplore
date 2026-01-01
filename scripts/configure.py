@@ -372,6 +372,75 @@ def generate_build_files(jucer_path, juce_path, plat):
         return False
 
 
+def create_solution_wrappers(plat):
+    """Create wrapper solution files in project root that reference the actual build solutions."""
+    if plat != "windows":
+        return  # Only needed for Windows
+    
+    print("\nCreating wrapper solution files for Visual Studio...")
+    
+    # VS2022 and VS2019 configurations
+    sln_configs = [
+        {
+            "build_dir": "Builds/VisualStudio2022",
+            "wrapper_name": "Samplore_VS2022.sln",
+            "vcxproj": "Samplore_App.vcxproj",
+            "guid": "{DF43A76E-4FCC-2CBD-4318-D132DA83F6C8}",
+            "version": "17"
+        },
+        {
+            "build_dir": "Builds/VisualStudio2019",
+            "wrapper_name": "Samplore_VS2019.sln",
+            "vcxproj": "Samplore_App.vcxproj",
+            "guid": "{DF43A76E-4FCC-2CBD-4318-D132DA83F6C8}",
+            "version": "16"
+        },
+    ]
+    
+    for config in sln_configs:
+        build_dir = PROJECT_ROOT / config["build_dir"]
+        wrapper_path = PROJECT_ROOT / config["wrapper_name"]
+        
+        # Check if the build directory exists
+        if not build_dir.exists():
+            continue  # Skip if build files don't exist
+        
+        # Create wrapper solution file content
+        # Use forward slashes for paths (Visual Studio handles both)
+        vcxproj_path = f"{config['build_dir']}/{config['vcxproj']}"
+        
+        wrapper_content = f"""
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio Version {config['version']}
+
+Project("{{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}}") = "Samplore - App", "{vcxproj_path}", "{config['guid']}"
+EndProject
+Global
+\tGlobalSection(SolutionConfigurationPlatforms) = preSolution
+\t\tDebug|x64 = Debug|x64
+\t\tRelease|x64 = Release|x64
+\tEndGlobalSection
+\tGlobalSection(ProjectConfigurationPlatforms) = postSolution
+\t\t{config['guid']}.Debug|x64.ActiveCfg = Debug|x64
+\t\t{config['guid']}.Debug|x64.Build.0 = Debug|x64
+\t\t{config['guid']}.Release|x64.ActiveCfg = Release|x64
+\t\t{config['guid']}.Release|x64.Build.0 = Release|x64
+\tEndGlobalSection
+\tGlobalSection(SolutionProperties) = preSolution
+\t\tHideSolutionNode = FALSE
+\tEndGlobalSection
+EndGlobal
+""".lstrip()
+        
+        # Write wrapper solution file
+        try:
+            with open(wrapper_path, 'w', newline='\r\n') as f:  # Windows line endings
+                f.write(wrapper_content)
+            print(f"  [OK] Created {config['wrapper_name']}")
+        except Exception as e:
+            print(f"  [ERROR] Failed to create {config['wrapper_name']}: {e}")
+
+
 def check_dependencies(plat):
     """Check if platform-specific build dependencies are installed."""
     if plat == "linux":
@@ -519,6 +588,9 @@ Examples:
         if not success:
             print("\nContinuing without generated build files...")
             print("You'll need to generate them manually using Projucer.")
+        else:
+            # Create wrapper solution files (Windows only)
+            create_solution_wrappers(plat)
     
     print()
     print("=" * 70)
@@ -529,6 +601,10 @@ Examples:
     if args.no_generate:
         print("  1. Open Projucer and load Samplore.jucer")
         print("  2. Save the project to regenerate platform-specific build files")
+    if plat == "windows":
+        print("  - Open Visual Studio solution from project root:")
+        print("      Samplore_VS2022.sln (recommended)")
+        print("      Samplore_VS2019.sln")
     print("  - Build the project:")
     print("      ./scripts/build.sh")
     print("  - Or use Python build script:")
