@@ -42,32 +42,15 @@ SamplifyMainComponent::SamplifyMainComponent() :
 	addChildComponent(mSpliceImportDialog);
 	
 	// Setup Splice import dialog callbacks
-	mSpliceImportDialog.onConfirm = [this](const SpliceImportConfig& config) {
-		DBG("Splice import confirmed");
-		
-		// Set the paths from user selection
-		mSpliceImporter.setSpliceDatabasePath(config.spliceDatabasePath);
-		
-		// Optionally add Splice directory to library
-		auto library = SamplifyProperties::getInstance()->getSampleLibrary();
-		if (library && config.addToDirectoryList && config.spliceInstallDirectory.isDirectory())
+	mSpliceImportDialog.onImportComplete = [this](bool success, int samplesImported) {
+		if (success)
 		{
-			library->addDirectory(config.spliceInstallDirectory);
+			DBG("Splice import completed successfully: " + String(samplesImported) + " samples");
 		}
-		
-		// Run Splice import on background thread
-		Thread::launch([this]() {
-			auto library = SamplifyProperties::getInstance()->getSampleLibrary();
-			if (library)
-			{
-				int importedCount = mSpliceImporter.importSpliceSamples(*library);
-				DBG("Imported " + String(importedCount) + " Splice samples");
-			}
-		});
-	};
-	
-	mSpliceImportDialog.onCancel = [this]() {
-		DBG("Splice import cancelled");
+		else
+		{
+			DBG("Splice import failed or was cancelled");
+		}
 	};
 	
 	mImportWizard.onSpliceImport = [this]() {

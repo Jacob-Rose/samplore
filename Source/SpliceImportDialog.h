@@ -5,7 +5,7 @@
     Created: 31 Dec 2025
     Author:  OpenCode
     
-    Summary: Dialog for configuring Splice import settings
+    Summary: Dialog for configuring Splice import settings with progress
 
   ==============================================================================
 */
@@ -15,20 +15,15 @@
 
 #include "JuceHeader.h"
 #include "ThemeManager.h"
+#include "SpliceImportTask.h"
+#include "SpliceImportConfig.h"
 
 namespace samplore
 {
-    /// Configuration for Splice import
-    struct SpliceImportConfig
-    {
-        File spliceDatabasePath;
-        File spliceInstallDirectory;
-        bool addToDirectoryList = false;
-    };
-    
     /// Dialog for configuring Splice import settings
     class SpliceImportDialog : public Component, 
                                public Button::Listener,
+                               public Timer,
                                public ThemeManager::Listener
     {
     public:
@@ -38,6 +33,9 @@ namespace samplore
         void paint(Graphics& g) override;
         void resized() override;
         void buttonClicked(Button* button) override;
+        
+        // Timer for updating progress
+        void timerCallback() override;
         
         //==================================================================
         // ThemeManager::Listener interface
@@ -50,35 +48,49 @@ namespace samplore
         /// Hides the dialog
         void hide();
         
-        /// Callback when user confirms import
-        std::function<void(const SpliceImportConfig&)> onConfirm;
-        
-        /// Callback when user cancels
-        std::function<void()> onCancel;
+        /// Callback when import is complete (success, samplesImported)
+        std::function<void(bool, int)> onImportComplete;
         
     private:
-        Label mTitleLabel;
+        enum class State
+        {
+            Configuring,
+            Importing,
+            Complete
+        };
         
+        void updateState(State newState);
+        void startImport();
+        void findDefaultPaths();
+        File findSpliceDatabaseFile();
+        File findSpliceInstallDirectory();
+        void applyColorScheme();
+        
+        State mState = State::Configuring;
+        
+        Label mTitleLabel;
+        Label mInstructionsLabel;
         Label mDatabaseLabel;
         Label mDatabasePathLabel;
         TextButton mBrowseDatabaseButton;
-        
         Label mInstallDirLabel;
         Label mInstallDirPathLabel;
         TextButton mBrowseInstallDirButton;
-        
         ToggleButton mAddToLibraryCheckbox;
+        
+        double mProgressValue = 0.0;
+        ProgressBar mProgressBar;
+        Label mProgressLabel;
+        Label mProgressStatusLabel;
         
         TextButton mImportButton;
         TextButton mCancelButton;
+        TextButton mCloseButton;
         
         File mSelectedDatabasePath;
         File mSelectedInstallDir;
         
-        void updateColors();
-        void findDefaultPaths();
-        File findSpliceDatabaseFile();
-        File findSpliceInstallDirectory();
+        std::unique_ptr<SpliceImportTask> mImportTask;
         
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SpliceImportDialog)
     };

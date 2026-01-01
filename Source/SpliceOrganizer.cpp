@@ -275,6 +275,8 @@ namespace samplore
             DBG("WARNING: Limiting to first " + String(MAX_TAGS_TO_PROCESS) + " tags to avoid system overload");
         }
         
+        result.tagsTotal = tagsToProcess;
+        
         // Process each tag
         for (int tagIdx = 0; tagIdx < tagsToProcess; ++tagIdx)
         {
@@ -286,8 +288,23 @@ namespace samplore
             const int MAX_SAMPLES_PER_TAG = 100;
             int samplesToProcess = jmin(samples.size(), MAX_SAMPLES_PER_TAG);
             
-            DBG("Processing tag '" + tag + "' - " + String(samplesToProcess) + " of " + 
-                String(samples.size()) + " samples");
+            // Report progress
+            String status = "Processing tag '" + tag + "' (" + String(tagIdx + 1) + "/" + String(tagsToProcess) + ")";
+            if (mProgressCallback)
+            {
+                int totalShortcuts = tagsToProcess * samplesToProcess;
+                int currentShortcut = tagIdx * samplesToProcess;
+                mProgressCallback->onProgress(currentShortcut, totalShortcuts, status);
+                
+                if (mProgressCallback->shouldCancel())
+                {
+                    result.cancelled = true;
+                    result.success = true;
+                    return result;
+                }
+            }
+            
+            DBG(status + " - " + String(samplesToProcess) + " of " + String(samples.size()) + " samples");
             
             for (int sampleIdx = 0; sampleIdx < samplesToProcess; ++sampleIdx)
             {
@@ -318,6 +335,12 @@ namespace samplore
             }
             
             result.tagsProcessed++;
+        }
+        
+        // Final progress report
+        if (mProgressCallback)
+        {
+            mProgressCallback->onProgress(result.shortcutsCreated, result.shortcutsCreated, "Complete!");
         }
         
         result.success = true;

@@ -9,10 +9,10 @@ SamplifyProperties* SamplifyProperties::smAppProperties = nullptr;
 SamplifyProperties::SamplifyProperties()
 {
 	PropertiesFile::Options propFileOptions = PropertiesFile::Options();
-	propFileOptions.applicationName = "SamplifyPlus";
+	propFileOptions.applicationName = "Samplore";
 	propFileOptions.commonToAllUsers = false;
 	propFileOptions.filenameSuffix = ".settings";
-    propFileOptions.osxLibrarySubFolder = "Application Support/SamplifyPlus";
+    propFileOptions.osxLibrarySubFolder = "Application Support/Samplore";
 	propFileOptions.ignoreCaseOfKeyNames = true;
 	propFileOptions.storageFormat = PropertiesFile::StorageFormat::storeAsXML;
 	setStorageParameters(propFileOptions);

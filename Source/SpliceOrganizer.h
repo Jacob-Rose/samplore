@@ -23,9 +23,21 @@ namespace samplore
     struct OrganizeResult
     {
         int tagsProcessed = 0;
+        int tagsTotal = 0;
         int shortcutsCreated = 0;
+        int shortcutsTotal = 0;
         bool success = false;
         String errorMessage;
+        bool cancelled = false;
+    };
+    
+    /// Progress callback for long-running operations
+    class OrganizeProgressCallback
+    {
+    public:
+        virtual ~OrganizeProgressCallback() = default;
+        virtual void onProgress(int current, int total, const String& status) = 0;
+        virtual bool shouldCancel() = 0;
     };
     
     /// Manages organization of Splice samples into tag-based directory structure
@@ -34,6 +46,8 @@ namespace samplore
     public:
         SpliceOrganizer();
         ~SpliceOrganizer();
+        
+        void setProgressCallback(OrganizeProgressCallback* callback) { mProgressCallback = callback; }
         
         /// Opens the Splice database file
         bool openDatabase(const File& dbPath);
@@ -63,6 +77,7 @@ namespace samplore
         
     private:
         sqlite3* mDatabase = nullptr;
+        OrganizeProgressCallback* mProgressCallback = nullptr;
         
         /// Sanitizes a filename for safe use on filesystem
         String sanitizeFilename(const String& filename);

@@ -43,8 +43,11 @@
         <FILE id="SPLORG002" name="SpliceOrganizer.cpp" compile="1" resource="0" file="Source/SpliceOrganizer.cpp" />
         <FILE id="SPLIMP001" name="SpliceImporter.h" compile="0" resource="0" file="Source/SpliceImporter.h" />
         <FILE id="SPLIMP002" name="SpliceImporter.cpp" compile="1" resource="0" file="Source/SpliceImporter.cpp" />
+        <FILE id="SPLCFG001" name="SpliceImportConfig.h" compile="0" resource="0" file="Source/SpliceImportConfig.h" />
         <FILE id="SPLDLG001" name="SpliceImportDialog.h" compile="0" resource="0" file="Source/SpliceImportDialog.h" />
         <FILE id="SPLDLG002" name="SpliceImportDialog.cpp" compile="1" resource="0" file="Source/SpliceImportDialog.cpp" />
+        <FILE id="SPLTSK001" name="SpliceImportTask.h" compile="0" resource="0" file="Source/SpliceImportTask.h" />
+        <FILE id="SPLTSK002" name="SpliceImportTask.cpp" compile="1" resource="0" file="Source/SpliceImportTask.cpp" />
       </GROUP>
       <GROUP id="{79C14502-3025-0432-3989-D402AD2C61DB}" name="Windows">
         <FILE id="nN5T4u" name="PreferenceWindow.cpp" compile="1" resource="0" file="Source/PreferenceWindow.cpp" />
