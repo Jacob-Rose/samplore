@@ -253,11 +253,11 @@ void SampleLibrary::preloadAllTags()
 	if (!mPreloadingTags)
 	{
 		mPreloadingTags = true;
-		mPreloadTagsFuture = std::async(std::launch::async, &SampleLibrary::preloadTagsAsync, this);
+		mPreloadTagsFuture = std::async(std::launch::async, &SampleLibrary::preloadTags_Worker, this);
 	}
 }
 
-void SampleLibrary::preloadTagsAsync()
+void SampleLibrary::preloadTags_Worker()
 {
 	DBG("Starting tag preload from all sample files...");
 	

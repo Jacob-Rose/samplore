@@ -92,7 +92,7 @@ namespace samplore
 		bool isPreloadingTags() const { return mPreloadingTags; }
 
 	private:
-		void preloadTagsAsync();
+		void preloadTags_Worker();
 		
 		std::future<Sample::List> mUpdateSampleFuture;
 		std::future<void> mPreloadTagsFuture;
