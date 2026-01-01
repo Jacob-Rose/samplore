@@ -39,17 +39,71 @@ SamplifyMainComponent::SamplifyMainComponent() :
 	
 	// Setup import wizard overlay
 	addChildComponent(mImportWizard);
+	addChildComponent(mSpliceImportDialog);
+	
+	// Setup Splice import dialog callbacks
+	mSpliceImportDialog.onConfirm = [this](const SpliceImportConfig& config) {
+		DBG("Splice import confirmed");
+		
+		// Set the paths from user selection
+		mSpliceImporter.setSpliceDatabasePath(config.spliceDatabasePath);
+		
+		// Optionally add Splice directory to library
+		auto library = SamplifyProperties::getInstance()->getSampleLibrary();
+		if (library && config.addToDirectoryList && config.spliceInstallDirectory.isDirectory())
+		{
+			library->addDirectory(config.spliceInstallDirectory);
+		}
+		
+		// Run Splice import on background thread
+		Thread::launch([this]() {
+			auto library = SamplifyProperties::getInstance()->getSampleLibrary();
+			if (library)
+			{
+				int importedCount = mSpliceImporter.importSpliceSamples(*library);
+				DBG("Imported " + String(importedCount) + " Splice samples");
+			}
+		});
+	};
+	
+	mSpliceImportDialog.onCancel = [this]() {
+		DBG("Splice import cancelled");
+	};
+	
 	mImportWizard.onSpliceImport = [this]() {
 		DBG("Splice Import selected");
-		// TODO: Implement Splice Import
+		mImportWizard.hide();
+		mSpliceImportDialog.show();
 	};
 	mImportWizard.onGeneralImport = [this]() {
 		DBG("General Import selected");
+		mImportWizard.hide();
 		// TODO: Implement General Import
 	};
 	mImportWizard.onManualImport = [this]() {
 		DBG("Manual Import selected");
-		// TODO: Implement Manual Import
+		mImportWizard.hide();
+		
+		// Show directory chooser for manual import
+		auto chooser = std::make_shared<FileChooser>("Select directory to import...",
+			File::getSpecialLocation(File::userMusicDirectory),
+			"",
+			true);
+		
+		auto chooserFlags = FileBrowserComponent::openMode | FileBrowserComponent::canSelectDirectories;
+		
+		chooser->launchAsync(chooserFlags, [this, chooser](const FileChooser&) {
+			File selectedDir = chooser->getResult();
+			if (selectedDir.isDirectory())
+			{
+				auto library = SamplifyProperties::getInstance()->getSampleLibrary();
+				if (library)
+				{
+					library->addDirectory(selectedDir);
+					DBG("Added directory: " + selectedDir.getFullPathName());
+				}
+			}
+		});
 	};
 	
 	// Setup preference window overlay
@@ -257,6 +311,7 @@ void SamplifyMainComponent::resized()
 	// Overlay panels cover the entire component
 	mImportWizard.setBounds(getLocalBounds());
 	mPreferenceWindow.setBounds(getLocalBounds());
+	mSpliceImportDialog.setBounds(getLocalBounds());
 	
 	mResizableEdgeDirectoryExplorerBounds.setMaximumWidth(getWidth() - (rWidth));
 	mResizableEdgeFilterExplorerBounds.setMaximumWidth(getWidth() - (lWidth));

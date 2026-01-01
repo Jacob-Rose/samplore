@@ -23,6 +23,8 @@
 #include "PreferenceWindow.h"
 #include "ThemeManager.h"
 #include "ImportWizard.h"
+#include "SpliceImporter.h"
+#include "SpliceImportDialog.h"
 
 namespace samplore
 {
@@ -85,6 +87,8 @@ namespace samplore
 	
 	ImportWizard mImportWizard;
 	PreferenceWindow mPreferenceWindow;
+	SpliceImporter mSpliceImporter;
+	SpliceImportDialog mSpliceImportDialog;
 
 	static SamplifyMainComponent* mInstance;
 

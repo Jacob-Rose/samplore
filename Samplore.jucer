@@ -38,6 +38,14 @@
         <FILE id="SQLITE001" name="sqlite3.h" compile="0" resource="0" file="Source/ThirdParty/sqlite3.h" />
         <FILE id="SQLITE002" name="sqlite3.c" compile="1" resource="0" file="Source/ThirdParty/sqlite3.c" />
       </GROUP>
+      <GROUP id="{SPLICE001}" name="Splice">
+        <FILE id="SPLORG001" name="SpliceOrganizer.h" compile="0" resource="0" file="Source/SpliceOrganizer.h" />
+        <FILE id="SPLORG002" name="SpliceOrganizer.cpp" compile="1" resource="0" file="Source/SpliceOrganizer.cpp" />
+        <FILE id="SPLIMP001" name="SpliceImporter.h" compile="0" resource="0" file="Source/SpliceImporter.h" />
+        <FILE id="SPLIMP002" name="SpliceImporter.cpp" compile="1" resource="0" file="Source/SpliceImporter.cpp" />
+        <FILE id="SPLDLG001" name="SpliceImportDialog.h" compile="0" resource="0" file="Source/SpliceImportDialog.h" />
+        <FILE id="SPLDLG002" name="SpliceImportDialog.cpp" compile="1" resource="0" file="Source/SpliceImportDialog.cpp" />
+      </GROUP>
       <GROUP id="{79C14502-3025-0432-3989-D402AD2C61DB}" name="Windows">
         <FILE id="nN5T4u" name="PreferenceWindow.cpp" compile="1" resource="0" file="Source/PreferenceWindow.cpp" />
         <FILE id="y8uCea" name="PreferenceWindow.h" compile="0" resource="0" file="Source/PreferenceWindow.h" />
