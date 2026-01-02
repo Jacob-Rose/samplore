@@ -4,6 +4,7 @@
 #include "SamplifyMainComponent.h"
 #include "SamplifyLookAndFeel.h"
 #include "ThemeManager.h"
+#include "PerformanceProfiler.h"
 
 using namespace samplore;
 
@@ -21,6 +22,14 @@ SampleExplorer::SampleExplorer() : mViewport(&mSampleContainer)
 	mViewport.addAndMakeVisible(mSampleContainer);
 	mViewport.setViewedComponent(&mSampleContainer);
 	mViewport.setScrollBarsShown(true, false, true, false);
+	
+	// Enable smooth scrolling (not chunky)
+	mViewport.setScrollOnDragMode(Viewport::ScrollOnDragMode::nonHover);
+	// Ultra-small step size for smoothest possible scrolling
+	// Mouse wheel delta ~120, so 0.08 * 120 = ~10 pixels per tick
+	mViewport.getVerticalScrollBar().setSingleStepSize(0.08);
+	mViewport.setScrollBarThickness(12);
+	
 	mSearchBar.addListener(this);
 	mFilter.addListener(this);
 	
@@ -42,6 +51,8 @@ SampleExplorer::~SampleExplorer()
 
 void SampleExplorer::paint (Graphics& g)
 {
+	PROFILE_PAINT("SampleExplorer::paint");
+	
 	auto& theme = ThemeManager::getInstance();
 	auto sampleLib = SamplifyProperties::getInstance()->getSampleLibrary();
 	
@@ -110,7 +121,7 @@ void SampleExplorer::paint (Graphics& g)
 		// Draw icon/emoji at top
 		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
 		g.setFont(48.0f);
-		g.drawText("🔍", messageBox.removeFromTop(80), Justification::centred);
+		g.drawText(",0", messageBox.removeFromTop(80), Justification::centred);
 		
 		// Draw title
 		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));

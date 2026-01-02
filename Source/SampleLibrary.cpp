@@ -18,6 +18,9 @@ SampleLibrary::~SampleLibrary()
 			dir->removeChangeListener(this);
 		}
 	}
+	
+	// Explicitly clear all directories to release Sample objects
+	mDirectories.clear();
 }
 
 void SampleLibrary::updateCurrentSamples(String query)
@@ -58,6 +61,10 @@ void SampleLibrary::addDirectory(const File& dir)
 	
 	// Rescan all samples to include new directory
 	refreshCurrentSamples();
+	
+	// Preload all tags from all samples asynchronously
+	launchPreloadAllTags();
+	
 	sendChangeMessage();
 }
 
@@ -242,4 +249,70 @@ std::future<Sample::List> SampleLibrary::getAllSamplesInDirectories_Async(juce::
 	std::future<Sample::List> asfunc = std::async(std::launch::async, &SampleLibrary::getAllSamplesInDirectories, this, query, ignoreCheckSystem);
 	startTimer(300);
 	return asfunc;
+}
+
+void SampleLibrary::launchPreloadAllTags()
+{
+	if (!mPreloadingTags)
+	{
+		mPreloadingTags = true;
+		mPreloadTagsFuture = std::async(std::launch::async, &SampleLibrary::preloadTags_Worker, this);
+	}
+}
+
+void SampleLibrary::preloadTags_Worker()
+{
+	DBG("Starting tag preload from all sample files...");
+	
+	// Get all samples without filtering (empty query, ignore check system)
+	Sample::List allSamples = getAllSamplesInDirectories("", true);
+	
+	// Iterate through all samples and load their properties/tags
+	int sampleCount = allSamples.size();
+	int processedCount = 0;
+	
+	for (int i = 0; i < sampleCount; i++)
+	{
+		Sample::Reference sampleRef = allSamples[i];
+		if (!sampleRef.isNull())
+		{
+			// Access tags which will trigger loading from properties file
+			StringArray tags = sampleRef.getTags();
+			
+			// Add any new tags to the library with auto-generated colors
+			for (const auto& tag : tags)
+			{
+				// Check if tag already exists in mTags
+				bool tagExists = false;
+				for (const auto& existingTag : mTags)
+				{
+					if (existingTag.mTitle == tag)
+					{
+						tagExists = true;
+						break;
+					}
+				}
+				
+				// If tag doesn't exist, add it (this will auto-generate a color)
+				if (!tagExists && tag.isNotEmpty())
+				{
+					addTag(tag);
+				}
+			}
+			
+			processedCount++;
+			
+			// Log progress every 100 samples
+			if (processedCount % 100 == 0)
+			{
+				DBG("Preloaded tags from " + String(processedCount) + "/" + String(sampleCount) + " samples");
+			}
+		}
+	}
+	
+	DBG("Tag preload complete! Processed " + String(processedCount) + " samples");
+	mPreloadingTags = false;
+	
+	// Notify listeners that tags have been updated
+	sendChangeMessage();
 }

@@ -13,57 +13,14 @@
 #include "SamplifyMainComponent.h"
 #include "ThemeManager.h"
 #include "SampleDirectory.h"
+#include "UI/OverlayPanel.h"
 
 using namespace samplore;
 
-PreferenceWindow::PreferenceWindow() : DialogWindow("Preferences", AppValues::getInstance().MAIN_BACKGROUND_COLOR, true)
-{
-    // Set initial size for view
-    mView.setSize(600, 1000); // Initial size, will be updated in resized()
-    
-    // Wrap view in viewport for scrolling
-    mViewport.setViewedComponent(&mView, false);
-    mViewport.setScrollBarsShown(true, false, true, false);
-    
-    setContentNonOwned(&mViewport, true);
-    setSize(600, 600); // Smaller window height, content scrolls
-    setWantsKeyboardFocus(true);
-    setResizable(false, false);
-    setUsingNativeTitleBar(false);
-    setTitleBarButtonsRequired(closeButton, false);
-}
-
-void PreferenceWindow::closeButtonPressed()
-{
-    exitModalState(0);
-}
-
-
-bool PreferenceWindow::keyPressed(const KeyPress& key)
-{
-    // Handle Escape, Ctrl+W, or Ctrl+Q to close the preferences window
-    // Use ctrlModifier on Linux/Windows, commandModifier on Mac
-#if JUCE_MAC
-    auto modifier = ModifierKeys::commandModifier;
-#else
-    auto modifier = ModifierKeys::ctrlModifier;
-#endif
-
-    if (key == KeyPress::escapeKey ||
-        key == KeyPress('w', modifier, 0) ||
-        key == KeyPress('q', modifier, 0))
-    {
-        exitModalState(0);
-        return true;  // Consume the key press
-    }
-
-    return DialogWindow::keyPressed(key);
-}
-
-PreferenceWindow::View::View()
+PreferencePanel::PreferencePanel()
 {
     auto& theme = ThemeManager::getInstance();
-
+    
     // ===== THEME SECTION =====
     mThemeLabel.setText("Theme", dontSendNotification);
     mThemeLabel.setFont(FontOptions(18.0f, Font::bold));
@@ -203,12 +160,6 @@ PreferenceWindow::View::View()
     addAndMakeVisible(mDirectoryViewport);
     mDirectoryViewport.setViewedComponent(&mDirectoryListContainer, false);
     mDirectoryViewport.setScrollBarsShown(true, false, true, false);
-    
-    // ===== CLOSE BUTTON =====
-    mCloseButton.setName("Close");
-    mCloseButton.setButtonText("Close");
-    mCloseButton.addListener(this);
-    addAndMakeVisible(mCloseButton);
 
     // Initialize all component colors
     updateAllComponentColors();
@@ -219,12 +170,15 @@ PreferenceWindow::View::View()
     ThemeManager::getInstance().addListener(this);
 }
 
-PreferenceWindow::View::~View()
+PreferencePanel::~PreferencePanel()
 {
+    // Explicitly delete all directory list items to release SampleDirectory shared_ptrs
+    mDirectoryListContainer.deleteAllChildren();
+    
     ThemeManager::getInstance().removeListener(this);
 }
 
-void PreferenceWindow::View::buttonClicked(Button* button)
+void PreferencePanel::buttonClicked(Button* button)
 {
     auto& theme = ThemeManager::getInstance();
     String buttonName = button->getName();
@@ -306,17 +260,9 @@ void PreferenceWindow::View::buttonClicked(Button* button)
             }
         });
     }
-    else if (buttonName == "Close")
-    {
-        // Find parent PreferenceWindow and close it
-        if (auto* parentWindow = findParentComponentOfClass<PreferenceWindow>())
-        {
-            parentWindow->exitModalState(0);
-        }
-    }
 }
 
-void PreferenceWindow::View::changeListenerCallback(ChangeBroadcaster* source)
+void PreferencePanel::changeListenerCallback(ChangeBroadcaster* source)
 {
     if (auto* selector = dynamic_cast<ColourSelector*>(source))
     {
@@ -346,7 +292,7 @@ void PreferenceWindow::View::changeListenerCallback(ChangeBroadcaster* source)
     }
 }
 
-void PreferenceWindow::View::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
+void PreferencePanel::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
 {
     if (comboBoxThatHasChanged == &mThemeSelector)
     {
@@ -367,7 +313,7 @@ void PreferenceWindow::View::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
     }
 }
 
-void PreferenceWindow::View::textEditorTextChanged(TextEditor& editor)
+void PreferencePanel::textEditorTextChanged(TextEditor& editor)
 {
     if (editor.getName() == "Tile Size")
     {
@@ -391,7 +337,7 @@ void PreferenceWindow::View::textEditorTextChanged(TextEditor& editor)
         }
     }
 }
-void PreferenceWindow::View::updateColorButtons()
+void PreferencePanel::updateColorButtons()
 {
     auto& theme = ThemeManager::getInstance();
 
@@ -406,7 +352,7 @@ void PreferenceWindow::View::updateColorButtons()
         accentColor.getPerceivedBrightness() > 0.5f ? Colours::black : Colours::white);
 }
 
-void PreferenceWindow::View::applyColorPreset(const String& presetName)
+void PreferencePanel::applyColorPreset(const String& presetName)
 {
     auto& theme = ThemeManager::getInstance();
 
@@ -456,7 +402,7 @@ void PreferenceWindow::View::applyColorPreset(const String& presetName)
     repaint();
 }
 
-void PreferenceWindow::View::paint(Graphics& g)
+void PreferencePanel::paint(Graphics& g)
 {
     auto& theme = ThemeManager::getInstance();
     g.fillAll(theme.getColorForRole(ThemeManager::ColorRole::Background));
@@ -470,53 +416,56 @@ void PreferenceWindow::View::paint(Graphics& g)
     g.drawLine(16, 730, getWidth() - 16, 730, 1.0f);   // After key bindings section
 }
 
-void PreferenceWindow::View::resized()
+void PreferencePanel::resized()
 {
+    auto bounds = getLocalBounds();
+    
     const int margin = 16;
     const int labelHeight = 24;
     const int controlHeight = 36;
     const int sectionSpacing = 24;
     const int itemSpacing = 8;
 
-    int y = margin;
+    int y = bounds.getY() + margin;
+    int componentWidth = bounds.getWidth();
 
     // ===== THEME SECTION =====
-    mThemeLabel.setBounds(margin, y, getWidth() - 2 * margin, labelHeight);
+    mThemeLabel.setBounds(margin, y, componentWidth - 2 * margin, labelHeight);
     y += labelHeight + itemSpacing;
 
-    mThemeSelector.setBounds(margin, y, getWidth() - 2 * margin, controlHeight);
+    mThemeSelector.setBounds(margin, y, componentWidth - 2 * margin, controlHeight);
     y += controlHeight + sectionSpacing;
 
     // Separator line drawn in paint()
     y += itemSpacing;
 
     // ===== COLOR CUSTOMIZATION SECTION =====
-    mColorCustomizationLabel.setBounds(margin, y, getWidth() - 2 * margin, labelHeight);
+    mColorCustomizationLabel.setBounds(margin, y, componentWidth - 2 * margin, labelHeight);
     y += labelHeight + itemSpacing;
 
     // Primary color row
     mPrimaryColorLabel.setBounds(margin, y, 120, controlHeight);
-    mPrimaryColorButton.setBounds(margin + 130, y, getWidth() - margin - 130 - margin, controlHeight);
+    mPrimaryColorButton.setBounds(margin + 130, y, componentWidth - margin - 130 - margin, controlHeight);
     y += controlHeight + itemSpacing;
 
     // Accent color row
     mAccentColorLabel.setBounds(margin, y, 120, controlHeight);
-    mAccentColorButton.setBounds(margin + 130, y, getWidth() - margin - 130 - margin, controlHeight);
+    mAccentColorButton.setBounds(margin + 130, y, componentWidth - margin - 130 - margin, controlHeight);
     y += controlHeight + itemSpacing;
 
     // Reset button
-    mResetColorsButton.setBounds(margin, y, getWidth() - 2 * margin, controlHeight);
+    mResetColorsButton.setBounds(margin, y, componentWidth - 2 * margin, controlHeight);
     y += controlHeight + sectionSpacing;
 
     // Separator line drawn in paint()
     y += itemSpacing;
 
     // ===== COLOR PRESETS SECTION =====
-    mColorPresetsLabel.setBounds(margin, y, getWidth() - 2 * margin, labelHeight);
+    mColorPresetsLabel.setBounds(margin, y, componentWidth - 2 * margin, labelHeight);
     y += labelHeight + itemSpacing;
 
     // Preset buttons in a grid (2 columns)
-    int presetWidth = (getWidth() - 3 * margin) / 2;
+    int presetWidth = (componentWidth - 3 * margin) / 2;
     mPresetStudioDark.setBounds(margin, y, presetWidth, controlHeight);
     mPresetStudioLight.setBounds(margin + presetWidth + margin, y, presetWidth, controlHeight);
     y += controlHeight + itemSpacing;
@@ -525,14 +474,14 @@ void PreferenceWindow::View::resized()
     mPresetProTools.setBounds(margin + presetWidth + margin, y, presetWidth, controlHeight);
     y += controlHeight + itemSpacing;
 
-    mPresetHighContrast.setBounds(margin, y, getWidth() - 2 * margin, controlHeight);
+    mPresetHighContrast.setBounds(margin, y, componentWidth - 2 * margin, controlHeight);
     y += controlHeight + sectionSpacing;
 
     // Separator line drawn in paint()
     y += itemSpacing;
 
     // ===== APPEARANCE SECTION =====
-    mAppearanceLabel.setBounds(margin, y, getWidth() - 2 * margin, labelHeight);
+    mAppearanceLabel.setBounds(margin, y, componentWidth - 2 * margin, labelHeight);
     y += labelHeight + itemSpacing;
 
     // Tile size row
@@ -554,37 +503,33 @@ void PreferenceWindow::View::resized()
     y += itemSpacing;
 
     // ===== KEY BINDINGS SECTION =====
-    mKeyBindingsLabel.setBounds(margin, y, getWidth() - 2 * margin, labelHeight);
+    mKeyBindingsLabel.setBounds(margin, y, componentWidth - 2 * margin, labelHeight);
     y += labelHeight + itemSpacing;
     
-    mEditKeyBindingsButton.setBounds(margin, y, getWidth() - 2 * margin, controlHeight);
+    mEditKeyBindingsButton.setBounds(margin, y, componentWidth - 2 * margin, controlHeight);
     y += controlHeight + sectionSpacing;
     
     // Separator line drawn in paint()
     y += itemSpacing;
 
     // ===== DIRECTORY MANAGEMENT SECTION =====
-    mDirectoryManagementLabel.setBounds(margin, y, getWidth() - 2 * margin, labelHeight);
+    mDirectoryManagementLabel.setBounds(margin, y, componentWidth - 2 * margin, labelHeight);
     y += labelHeight + itemSpacing;
     
-    mAddDirectoryButton.setBounds(margin, y, getWidth() - 2 * margin, controlHeight);
+    mAddDirectoryButton.setBounds(margin, y, componentWidth - 2 * margin, controlHeight);
     y += controlHeight + itemSpacing;
     
     // Directory list viewport
     int listHeight = 120; // Fixed height for directory list
-    mDirectoryViewport.setBounds(margin, y, getWidth() - 2 * margin, listHeight);
+    mDirectoryViewport.setBounds(margin, y, componentWidth - 2 * margin, listHeight);
     y += listHeight + itemSpacing;
 
-    // ===== CLOSE BUTTON =====
+    // Total height for scrolling
     y += sectionSpacing;
-    mCloseButton.setBounds(getWidth() - margin - 120, y, 120, controlHeight);
-    y += controlHeight + margin;
-    
-    // Set the total height of the view (enables scrolling)
-    setSize(getWidth(), y);
+    setSize(componentWidth, y);
 }
 
-void PreferenceWindow::View::updateAllComponentColors()
+void PreferencePanel::updateAllComponentColors()
 {
     auto& theme = ThemeManager::getInstance();
     
@@ -639,7 +584,7 @@ void PreferenceWindow::View::updateAllComponentColors()
 
 //==============================================================================
 // ThemeManager::Listener implementation
-void PreferenceWindow::View::themeChanged(ThemeManager::Theme newTheme)
+void PreferencePanel::themeChanged(ThemeManager::Theme newTheme)
 {
     // Update all component colors
     updateAllComponentColors();
@@ -655,7 +600,7 @@ void PreferenceWindow::View::themeChanged(ThemeManager::Theme newTheme)
     repaint();
 }
 
-void PreferenceWindow::View::colorChanged(ThemeManager::ColorRole role, Colour newColor)
+void PreferencePanel::colorChanged(ThemeManager::ColorRole role, Colour newColor)
 {
     // Update all component colors when any color changes
     updateAllComponentColors();
@@ -664,12 +609,12 @@ void PreferenceWindow::View::colorChanged(ThemeManager::ColorRole role, Colour n
     repaint();
 }
 
-void PreferenceWindow::View::updateDirectoryList()
+void PreferencePanel::updateDirectoryList()
 {
-    // Clear existing list items
-    mDirectoryListContainer.removeAllChildren();
+    // Clear existing list items (deleteChildComponents = true to actually delete them)
+    mDirectoryListContainer.deleteAllChildren();
     
-    auto dirs = SamplifyProperties::getInstance()->getSampleLibrary()->getDirectories();
+    const auto& dirs = SamplifyProperties::getInstance()->getSampleLibrary()->getDirectories();
     int y = 0;
     const int itemHeight = 40;
     int width = 550; // Fixed width based on viewport
@@ -689,7 +634,7 @@ void PreferenceWindow::View::updateDirectoryList()
 }
 
 // DirectoryListItem implementation
-PreferenceWindow::View::DirectoryListItem::DirectoryListItem(std::shared_ptr<SampleDirectory> dir, bool isActive, View* parent)
+PreferencePanel::DirectoryListItem::DirectoryListItem(std::shared_ptr<SampleDirectory> dir, bool isActive, PreferencePanel* parent)
     : mDirectory(dir), mParentView(parent)
 {
     addAndMakeVisible(mActiveCheckbox);
@@ -701,13 +646,13 @@ PreferenceWindow::View::DirectoryListItem::DirectoryListItem(std::shared_ptr<Sam
     mDeleteButton.addListener(this);
 }
 
-PreferenceWindow::View::DirectoryListItem::~DirectoryListItem()
+PreferencePanel::DirectoryListItem::~DirectoryListItem()
 {
     mActiveCheckbox.removeListener(this);
     mDeleteButton.removeListener(this);
 }
 
-void PreferenceWindow::View::DirectoryListItem::paint(Graphics& g)
+void PreferencePanel::DirectoryListItem::paint(Graphics& g)
 {
     auto& theme = ThemeManager::getInstance();
     g.fillAll(theme.getColorForRole(ThemeManager::ColorRole::Surface));
@@ -727,13 +672,13 @@ void PreferenceWindow::View::DirectoryListItem::paint(Graphics& g)
     }
 }
 
-void PreferenceWindow::View::DirectoryListItem::resized()
+void PreferencePanel::DirectoryListItem::resized()
 {
     mActiveCheckbox.setBounds(5, (getHeight() - 20) / 2, 20, 20);
     mDeleteButton.setBounds(getWidth() - 30, (getHeight() - 25) / 2, 25, 25);
 }
 
-void PreferenceWindow::View::DirectoryListItem::buttonClicked(Button* button)
+void PreferencePanel::DirectoryListItem::buttonClicked(Button* button)
 {
     if (button == &mDeleteButton)
     {

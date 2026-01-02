@@ -2,7 +2,7 @@
 
 Quick reference for AI coding agents working in this repository. See CLAUDE.md for detailed project documentation.
 
-## Build Commands
+## Useful Commands
 
 ```bash
 # Setup (first time only)
@@ -14,6 +14,9 @@ python3 scripts/setup.py              # Interactive setup with .env configuratio
 # Configure (generate build files from .jucer)
 python3 scripts/configure.py          # Configures JUCE paths and generates build files
                                       # Will auto-build Projucer if not found
+                                      # Windows: Creates wrapper .sln files in project root:
+                                      #   Samplore_VS2022.sln
+                                      #   Samplore_VS2019.sln
 
 # VSCode IntelliSense (optional - auto-syncs with .env + .jucer)
 python3 scripts/setup_vscode.py       # Generate c_cpp_properties.json
@@ -77,6 +80,7 @@ python3 scripts/debug.py -b main      # Set breakpoint at main()
 - **Core singletons**: `SamploreProperties` (owns `SampleLibrary`, `AudioPlayer`), `AppValues`, `ThemeManager`
 - **Data flow**: `SampleLibrary` manages all samples/tags/directories → broadcasts changes → UI components update
 - **Smart pointer arch**: `Sample` owned by `SampleDirectory` as `shared_ptr`, UI uses `Sample::Reference` (weak_ptr wrapper)
+- **Planning Docs** - are stored in docs directory
 
 ## Platform Notes
 

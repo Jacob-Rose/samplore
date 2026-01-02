@@ -13,6 +13,7 @@
 #include "SamplifyProperties.h"
 #include "SamplifyLookAndFeel.h"
 #include "ThemeManager.h"
+#include "PerformanceProfiler.h"
 
 using namespace samplore;
 
@@ -136,6 +137,8 @@ void SamplePlayerComponent::buttonClicked(Button* b)
 
 void SamplePlayerComponent::paint (Graphics& g)
 {
+	PROFILE_PAINT("SamplePlayerComponent::paint");
+	
     auto& theme = ThemeManager::getInstance();
     Sample::Reference samp = getCurrentSample();
 

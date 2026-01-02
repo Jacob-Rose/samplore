@@ -9,10 +9,10 @@ SamplifyProperties* SamplifyProperties::smAppProperties = nullptr;
 SamplifyProperties::SamplifyProperties()
 {
 	PropertiesFile::Options propFileOptions = PropertiesFile::Options();
-	propFileOptions.applicationName = "SamplifyPlus";
+	propFileOptions.applicationName = "Samplore";
 	propFileOptions.commonToAllUsers = false;
 	propFileOptions.filenameSuffix = ".settings";
-    propFileOptions.osxLibrarySubFolder = "Application Support/SamplifyPlus";
+    propFileOptions.osxLibrarySubFolder = "Application Support/Samplore";
 	propFileOptions.ignoreCaseOfKeyNames = true;
 	propFileOptions.storageFormat = PropertiesFile::StorageFormat::storeAsXML;
 	setStorageParameters(propFileOptions);
@@ -73,6 +73,13 @@ void SamplifyProperties::cleanup()
 		mAudioPlayer->stop();
 		savePropertiesFile();
 		closeFiles();
+		
+		// Explicitly clear sample library to release all Sample objects
+		if (mSampleLibrary)
+		{
+			mSampleLibrary.reset();
+		}
+		
 		mIsInit = false;
 	}
 }
@@ -91,6 +98,8 @@ void SamplifyProperties::loadPropertiesFile()
 				if (dir.exists())
 				{
 					mSampleLibrary->addDirectory(dir);
+					// Preload tags after adding the first directory
+					mSampleLibrary->launchPreloadAllTags();
 				}
 			});
 		}
@@ -100,6 +109,8 @@ void SamplifyProperties::loadPropertiesFile()
 			{
 				mSampleLibrary->addDirectory(File(propFile->getValue("directory " + String(i))));
 			}
+			// After loading all directories, preload tags from all samples
+			mSampleLibrary->launchPreloadAllTags();
 		}
 		
 		//load tags
@@ -132,6 +143,8 @@ void SamplifyProperties::loadPropertiesFile()
 			if (dir.exists())
 			{
 				mSampleLibrary->addDirectory(dir);
+				// Preload tags after adding the first directory
+				mSampleLibrary->launchPreloadAllTags();
 			}
 		});
 	}
@@ -145,7 +158,7 @@ void SamplifyProperties::savePropertiesFile()
 	{
 		propFile->clear();
 		//Save Dirs
-		std::vector<std::shared_ptr<SampleDirectory>> dirs = mSampleLibrary->getDirectories();
+		const auto& dirs = mSampleLibrary->getDirectories();
 		propFile->setValue("directory count", (int)dirs.size());
 		for (int i = 0; i < dirs.size(); i++)
 		{

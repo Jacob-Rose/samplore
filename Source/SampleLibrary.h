@@ -72,7 +72,7 @@ namespace samplore
 
 		///Directory Manager Merger - Reduce dependencies, less pointers, easier saving
 		void addDirectory(const File& dir);
-		std::vector<std::shared_ptr<SampleDirectory>> getDirectories() { return mDirectories; }
+		const std::vector<std::shared_ptr<SampleDirectory>>& getDirectories() const { return mDirectories; }
 		void removeDirectory(const File& dir);
 		void refreshDirectories();
 		int getDirectoryCount() { return mDirectories.size(); }
@@ -87,10 +87,18 @@ namespace samplore
 		Sample::List getAllSamplesInDirectories(juce::String query, bool ignoreCheckSystem);
 		std::future<Sample::List> getAllSamplesInDirectories_Async(juce::String query = "", bool ignoreCheckSystem = false);
 
+		/// Preload all sample files and extract their tags asynchronously
+		void launchPreloadAllTags();
+		bool isPreloadingTags() const { return mPreloadingTags; }
+
 	private:
+		void preloadTags_Worker();
+		
 		std::future<Sample::List> mUpdateSampleFuture;
+		std::future<void> mPreloadTagsFuture;
 		bool mUpdatingSamples = false;
 		bool mCancelUpdating = false;
+		bool mPreloadingTags = false;
 		Sample::List mCurrentSamples;
 		String mCurrentQuery;
 

@@ -49,10 +49,14 @@ void TagContainer::updateItemBounds()
 	}
 	for (int i = 0; i < mCurrentTags.size(); i++)
 	{
+		// Measure text width accurately
 		GlyphArrangement glyphs;
 		glyphs.addLineOfText(tagFont, mCurrentTags[i], 0, 0);
 		float fontWidth = glyphs.getBoundingBox(0, -1, true).getWidth();
-		float boxWidth = fontWidth + (padding * 2);
+		
+		// Add padding on both sides, plus a bit extra for border/corner rendering
+		// padding*2 for left+right text padding, +4 for visual breathing room
+		float boxWidth = fontWidth + (padding * 2) + 4;
 		if (currentWidth + boxWidth < getWidth())
 		{
 			TagTile* tag;

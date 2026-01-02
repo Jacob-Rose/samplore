@@ -60,15 +60,20 @@ namespace samplore
 			//}
 		}
 
-		void shutdown() override
-		{
-			mainWindow.reset(nullptr); //(deletes our window)
-			SamplifyProperties::cleanupInstance();
-			KeyBindingManager::cleanupInstance();
-			IconLibrary::cleanupInstance();
-			ThemeManager::cleanupInstance();
-			AppValues::cleanupInstance();
-		}
+	void shutdown() override
+	{
+		mainWindow.reset(nullptr); //(deletes our window)
+		
+		// Wait for async thumbnail loading threads to complete
+		// These background threads may hold weak_ptr references in lambdas
+		Thread::sleep(2000);
+		
+		SamplifyProperties::cleanupInstance();
+		KeyBindingManager::cleanupInstance();
+		IconLibrary::cleanupInstance();
+		ThemeManager::cleanupInstance();
+		AppValues::cleanupInstance();
+	}
 
 		//==============================================================================
 		void systemRequestedQuit() override

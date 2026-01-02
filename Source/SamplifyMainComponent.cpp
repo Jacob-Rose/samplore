@@ -36,6 +36,9 @@ SamplifyMainComponent::SamplifyMainComponent() :
 	addAndMakeVisible(mSampleExplorer);
 	addAndMakeVisible(mFilterExplorer);
 	addAndMakeVisible(mSamplePlayerComponent);
+	
+	// Setup central overlay panel
+	addChildComponent(mOverlayPanel);
 
 	//addAndMakeVisible(unlockForm);
     
@@ -57,6 +60,12 @@ SamplifyMainComponent::SamplifyMainComponent() :
 	
 	// Register with ThemeManager
 	ThemeManager::getInstance().addListener(this);
+	
+	// Enable performance profiling in debug builds
+	#if JUCE_DEBUG
+		PerformanceProfiler::getInstance().setEnabled(true);
+		DBG("Performance profiling enabled. Press F5 to view stats, F6 to reset.");
+	#endif
 }
 
 SamplifyMainComponent::~SamplifyMainComponent()
@@ -80,6 +89,21 @@ bool SamplifyMainComponent::keyPressed(const KeyPress& key, Component* originati
 {
 	auto& keyManager = KeyBindingManager::getInstance();
 	
+	// Performance profiling shortcuts (debug only)
+	#if JUCE_DEBUG
+		if (key == KeyPress::F5Key)
+		{
+			PerformanceProfiler::getInstance().printStatistics();
+			return true;
+		}
+		else if (key == KeyPress::F6Key)
+		{
+			PerformanceProfiler::getInstance().reset();
+			DBG("Performance statistics reset");
+			return true;
+		}
+	#endif
+	
 	if (keyManager.matchesAction(key, KeyBindingManager::Action::PlayAudio))
 	{
 		SamplifyProperties::getInstance()->getAudioPlayer()->play();
@@ -102,18 +126,7 @@ bool SamplifyMainComponent::keyPressed(const KeyPress& key, Component* originati
 	}
 	else if (keyManager.matchesAction(key, KeyBindingManager::Action::OpenPreferences))
 	{
-		// Launch preferences window
-		DialogWindow::LaunchOptions options;
-		auto* prefs = new PreferenceWindow::View();
-		options.content.setOwned(prefs);
-		options.dialogTitle = "Preferences";
-		options.dialogBackgroundColour = ThemeManager::getInstance().getColorForRole(ThemeManager::ColorRole::Background);
-		options.escapeKeyTriggersCloseButton = true;
-		options.useNativeTitleBar = false;
-		options.resizable = false;
-		
-		auto* dialog = options.launchAsync();
-		dialog->centreWithSize(600, 800);
+		showPreferences();
 		return true;
 	}
 	else if (keyManager.matchesAction(key, KeyBindingManager::Action::ExitApplication))
@@ -224,6 +237,7 @@ void samplore::SamplifyMainComponent::setupLookAndFeel(LookAndFeel& laf)
 //==============================================================================
 void SamplifyMainComponent::paint (Graphics& g)
 {
+	PROFILE_PAINT("SamplifyMainComponent::paint");
     g.fillAll (getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
 }
 const int edgeSize = 8;
@@ -246,6 +260,9 @@ void SamplifyMainComponent::resized()
 	bHeight += mResizableEdgeAudioPlayer.getHeight();
 	
 	mSampleExplorer.setBounds(lWidth, 0, getWidth() - (rWidth + lWidth), getHeight() - bHeight);
+	
+	// Overlay panel covers the entire component
+	mOverlayPanel.setBounds(getLocalBounds());
 	
 	mResizableEdgeDirectoryExplorerBounds.setMaximumWidth(getWidth() - (rWidth));
 	mResizableEdgeFilterExplorerBounds.setMaximumWidth(getWidth() - (lWidth));
@@ -270,6 +287,20 @@ void SamplifyMainComponent::timerCallback()
 void SamplifyMainComponent::mouseDrag(const MouseEvent& e)
 {
 	resized();
+}
+
+void SamplifyMainComponent::showImportWizard()
+{
+	mImportWizard.showMainMenu(); // Reset to main menu
+	mOverlayPanel.setContentComponent(&mImportWizard, false);
+	mOverlayPanel.show();
+}
+
+void SamplifyMainComponent::showPreferences()
+{
+	mPreferencePanel.setSize(600, 1070); // 50px header + 20px spacing + 1000px content
+	mOverlayPanel.setContentComponent(&mPreferencePanel, false);
+	mOverlayPanel.show();
 }
 
 //==============================================================================

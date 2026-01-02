@@ -5,11 +5,25 @@
 #include "SamplifyMainComponent.h"
 #include "ThemeManager.h"
 #include "UI/IconLibrary.h"
+#include "PerformanceProfiler.h"
 
 #include <iomanip>
 #include <sstream>
 
 using namespace samplore;
+
+// Static font cache for performance
+Font SampleTile::getTitleFont()
+{
+	static Font titleFont(Font::getDefaultSansSerifFontName(), 20.0f, Font::bold);
+	return titleFont;
+}
+
+Font SampleTile::getTimeFont()
+{
+	static Font timeFont(Font::getDefaultSansSerifFontName(), 14.0f, Font::plain);
+	return timeFont;
+}
 
 SampleTile::SampleTile(Sample::Reference sample) : mTagContainer(false)
 {
@@ -22,6 +36,9 @@ SampleTile::SampleTile(Sample::Reference sample) : mTagContainer(false)
 	
 	// Register with ThemeManager
 	ThemeManager::getInstance().addListener(this);
+	
+	// Enable buffering by default (disabled dynamically when playing)
+	setBufferedToImage(true);
 }
 
 SampleTile::~SampleTile()
@@ -30,10 +47,15 @@ SampleTile::~SampleTile()
 	if (!mSample.isNull())
 		mSample.removeChangeListener(this);
 	
+	// Clear sample reference to ensure thumbnail cleanup
+	mSample = nullptr;
+	
 	ThemeManager::getInstance().removeListener(this);
 }
 void SampleTile::paint (Graphics& g)
 {
+	PROFILE_PAINT("SampleTile::paint");
+	
 	if (!mSample.isNull())
 	{
 		auto& theme = ThemeManager::getInstance();
@@ -59,24 +81,21 @@ void SampleTile::paint (Graphics& g)
 
 		titleColor = theme.getColorForRole(ThemeManager::ColorRole::TextPrimary);
 
-		// Draw shadow (elevation level 1)
-		if (!isHovered)
-		{
-			DropShadow shadow(theme.getColorForRole(ThemeManager::ColorRole::Background).withAlpha(0.5f),
-			                  8, Point<int>(0, 2));
-			shadow.drawForRectangle(g, getLocalBounds().toNearestInt());
-		}
-		else
-		{
-			// Larger shadow on hover (elevation level 2)
-			DropShadow shadow(theme.getColorForRole(ThemeManager::ColorRole::Background).withAlpha(0.6f),
-			                  12, Point<int>(0, 4));
-			shadow.drawForRectangle(g, getLocalBounds().toNearestInt());
-		}
-
 		// Draw background
 		g.setColour(backgroundColor);
 		g.fillRoundedRectangle(getLocalBounds().toFloat(), cornerRadius);
+		
+		// Subtle border instead of expensive DropShadow
+		if (isHovered)
+		{
+			g.setColour(theme.getColorForRole(ThemeManager::ColorRole::AccentPrimary).withAlpha(0.3f));
+			g.drawRoundedRectangle(getLocalBounds().toFloat(), cornerRadius, 2.0f);
+		}
+		else
+		{
+			g.setColour(theme.getColorForRole(ThemeManager::ColorRole::Background).withAlpha(0.2f));
+			g.drawRoundedRectangle(getLocalBounds().toFloat(), cornerRadius, 1.0f);
+		}
 
 		// Draw info icon with padding
 		Rectangle<int> titleRect = m_TitleRect.reduced(padding, padding / 2);
@@ -94,23 +113,23 @@ void SampleTile::paint (Graphics& g)
 			titleRect = titleRect.withTrimmedLeft(m_InfoIcon.getWidth());
 		}
 
-		// Draw title with modern typography (20px)
-		g.setFont(FontOptions(20.0f, Font::bold));
+		// Draw title with cached font
+		g.setFont(getTitleFont());
 		g.setColour(titleColor);
 		g.drawText(mSample.getFile().getFileName(), titleRect, Justification::centredLeft, true);
 
-		// Draw time with secondary text color
+		// Draw time with cached font - batch with same font
+		g.setFont(getTimeFont());
 		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
-		g.setFont(FontOptions(14.0f));
-		std::stringstream secondsStr;
-		std::stringstream minutesStr;
-		int minutes = ((int)mSample.getLength()) / 60;
-		secondsStr << std::fixed << std::setprecision(1) << (mSample.getLength() - (60.0*minutes));
-		minutesStr << std::fixed << minutes;
-
+		
+		// Cache time calculation
+		double length = mSample.getLength();
+		int minutes = static_cast<int>(length) / 60;
+		double seconds = length - (60.0 * minutes);
+		
 		auto timeRect = m_TimeRect.reduced(padding / 2, padding / 2);
-		g.drawText(String(secondsStr.str()) + " sec", timeRect, Justification::bottom);
-		g.drawText(String(minutesStr.str()) + " min", timeRect, Justification::top);
+		g.drawText(String(seconds, 1) + " sec", timeRect, Justification::bottom);
+		g.drawText(String(minutes) + " min", timeRect, Justification::top);
 
 		// Draw waveform thumbnail with modern styling
 		std::shared_ptr<SampleAudioThumbnail> thumbnail = mSample.getThumbnail();
@@ -128,6 +147,22 @@ void SampleTile::paint (Graphics& g)
 
 		// Draw playback position indicators
 		std::shared_ptr<AudioPlayer> auxPlayer = SamplifyProperties::getInstance()->getAudioPlayer();
+		bool isCurrentlyPlaying = (auxPlayer->getSampleReference() == mSample) && 
+		                          (auxPlayer->getState() == AudioPlayer::TransportState::Playing);
+		
+		// Dynamic buffering: toggle after paint completes (can't change during paint)
+		if (isCurrentlyPlaying != mIsPlaying)
+		{
+			mIsPlaying = isCurrentlyPlaying;
+			// Defer buffering change until after paint() completes to avoid crash
+			// Use SafePointer to ensure component still exists
+			Component::SafePointer<SampleTile> safeThis(this);
+			MessageManager::callAsync([safeThis, shouldBuffer = !mIsPlaying]() {
+				if (safeThis != nullptr)
+					safeThis->setBufferedToImage(shouldBuffer);
+			});
+		}
+		
 		if (auxPlayer->getSampleReference() == mSample)
 		{
 			auto waveformRect = m_ThumbnailRect.reduced(padding / 2, 0);
@@ -143,7 +178,7 @@ void SampleTile::paint (Graphics& g)
 			g.drawLine(startX, y1, startX, y2, 1.5f);
 
 			// Draw current position with accent color
-			if (auxPlayer->getState() == AudioPlayer::TransportState::Playing)
+			if (mIsPlaying)
 			{
 				g.setColour(theme.getColorForRole(ThemeManager::ColorRole::AccentSecondary));
 				g.drawLine(currentX, y1, currentX, y2, 2.0f);

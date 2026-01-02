@@ -22,6 +22,9 @@
 #include "KeyBindingManager.h"
 #include "PreferenceWindow.h"
 #include "ThemeManager.h"
+#include "ImportWizard.h"
+#include "PerformanceProfiler.h"
+#include "UI/OverlayPanel.h"
 
 namespace samplore
 {
@@ -54,12 +57,18 @@ namespace samplore
 		SampleExplorer& getSampleExplorer() { return mSampleExplorer; }
 		FilterExplorer& getFilterExplorer() { return mFilterExplorer; }
 		SamplePlayerComponent& getSamplePlayerComponent() { return mSamplePlayerComponent; }
-		std::shared_ptr<AudioPlayer> getAudioPlayer() { return mAudioPlayer; }
+	std::shared_ptr<AudioPlayer> getAudioPlayer() { return mAudioPlayer; }
+	
+	/// Shows the import wizard overlay
+	void showImportWizard();
+	
+	/// Shows the preferences overlay
+	void showPreferences();
 
-		//==================================================================
-		// ThemeManager::Listener interface
-		void themeChanged(ThemeManager::Theme newTheme) override;
-		void colorChanged(ThemeManager::ColorRole role, Colour newColor) override;
+	//==================================================================
+	// ThemeManager::Listener interface
+	void themeChanged(ThemeManager::Theme newTheme) override;
+	void colorChanged(ThemeManager::ColorRole role, Colour newColor) override;
 		
 	private:
 		DirectoryExplorer mDirectoryExplorer;
@@ -73,10 +82,17 @@ namespace samplore
 		ComponentBoundsConstrainer mResizableEdgeFilterExplorerBounds;
 		ComponentBoundsConstrainer mResizableEdgeAudioPlayerBounds;
 
-		std::shared_ptr<AudioPlayer> mAudioPlayer;
-		juce::SharedResourcePointer<TooltipWindow> mTooltip;
+	std::shared_ptr<AudioPlayer> mAudioPlayer;
+	juce::SharedResourcePointer<TooltipWindow> mTooltip;
+	
+	// Central overlay panel for modal views
+	OverlayPanel mOverlayPanel;
+	
+	// Content views for overlay
+	ImportWizard mImportWizard;
+	PreferencePanel mPreferencePanel;
 
-		static SamplifyMainComponent* mInstance;
+	static SamplifyMainComponent* mInstance;
 
 		//ServerAuthStatus authorizationStatus;
 		//ServerAuthUnlockComponent unlockForm;

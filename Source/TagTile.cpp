@@ -4,16 +4,21 @@
 #include "SamplifyLookAndFeel.h"
 #include "SamplifyMainComponent.h"
 #include "ThemeManager.h"
+#include "PerformanceProfiler.h"
 
 using namespace samplore;
 TagTile::TagTile(juce::String tag, Font& font)
 {
 	mTag = tag;
 	mFont = &font;
-	setRepaintsOnMouseActivity(true);
 	
 	// Register with ThemeManager
 	ThemeManager::getInstance().addListener(this);
+	
+	// CRITICAL OPTIMIZATION: Cache tag tiles as images
+	// Tags are static content, perfect for buffering
+	// Reduces 42k+ paint calls to only when mouse enter/exit or content changes
+	setBufferedToImage(true);
 }
 
 TagTile::~TagTile()
@@ -29,11 +34,14 @@ void TagTile::setTag(juce::String tag)
 
 void TagTile::paint (Graphics& g)
 {
+	PROFILE_PAINT("TagTile::paint");
+	
 	if (mTag != "")
 	{
 		auto& theme = ThemeManager::getInstance();
 		const float cornerSize = 6.0f;
-		const int padding = 6;
+		// Match padding from TagContainer calculation (SAMPLE_TAG_TEXT_PADDING)
+		const int padding = static_cast<int>(AppValues::getInstance().SAMPLE_TAG_TEXT_PADDING);
 		bool isHovered = isMouseOver(true);
 
 		Colour mainColor = SamplifyProperties::getInstance()->getSampleLibrary()->getTagColor(mTag);
@@ -61,7 +69,8 @@ void TagTile::paint (Graphics& g)
 		g.setColour(textColor);
 		g.setFont(*mFont);
 		auto textBounds = getLocalBounds().reduced(padding, 2);
-		g.drawText(mTag, textBounds, Justification::centred, true);
+		// Draw full text without truncation (last param = false)
+		g.drawText(mTag, textBounds, Justification::centred, false);
 	}
 }
 

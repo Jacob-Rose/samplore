@@ -34,16 +34,17 @@ namespace samplore
 	class SamplifyMainMenu : public Component, public MenuBarModel, public ThemeManager::Listener
 	{
 	public:
-		enum CommandIDs
-		{
-			noCommand = 0,
-			refreshDirectories,
-			setPreferences,
-			setVolume,
-			exitApplication,
-			viewInformation,
-			visitWebsite
-		};
+	enum CommandIDs
+	{
+		noCommand = 0,
+		refreshDirectories,
+		openImportWizard,
+		setPreferences,
+		setVolume,
+		exitApplication,
+		viewInformation,
+		visitWebsite
+	};
 
 		SamplifyMainMenu();
 		~SamplifyMainMenu() override;

@@ -26,8 +26,8 @@ namespace samplore
 		Colour MAIN_BACKGROUND_COLOR = Colours::white;
 		Colour MAIN_FOREGROUND_COLOR = Colours::blueviolet;
 
-		int SAMPLE_TAG_FONT_SIZE = 14;
-		float SAMPLE_TAG_TEXT_PADDING = 2.0f;
+		int SAMPLE_TAG_FONT_SIZE = 12;
+		float SAMPLE_TAG_TEXT_PADDING = 4.0f;
 
 		float WINDOW_WIDTH = 800;
 		float WINDOW_HEIGHT = 600;

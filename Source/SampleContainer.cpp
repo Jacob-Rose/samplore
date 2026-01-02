@@ -29,6 +29,9 @@ void SampleContainer::resized()
 	int totalHeight = calculateTotalHeight();
 	setSize(getWidth(), totalHeight);
 	
+	// Pre-allocate tile pool when size changes (e.g., window resize)
+	preallocateTilePool();
+	
 	// Update visible items (will be called by viewport)
 	// For now, just update with current view (0, 0)
 	updateVisibleItems(0, getParentHeight());
@@ -66,12 +69,12 @@ void SampleContainer::updateVisibleItems(int viewportTop, int viewportHeight)
 	
 	int visibleCount = lastVisibleIndex - firstVisibleIndex + 1;
 	
-	// Ensure we have enough tiles in the pool
-	while ((int)mTilePool.size() < visibleCount)
+	// Note: Tile pool should already be pre-allocated by preallocateTilePool()
+	// This is a safety check in case pool wasn't allocated yet
+	if ((int)mTilePool.size() < visibleCount)
 	{
-		auto tile = std::make_unique<SampleTile>(nullptr);
-		addAndMakeVisible(tile.get());
-		mTilePool.push_back(std::move(tile));
+		DBG("WARNING: Tile pool not pre-allocated, allocating during scroll (this should not happen)");
+		preallocateTilePool();
 	}
 	
 	// Update visible tiles
@@ -83,11 +86,23 @@ void SampleContainer::updateVisibleItems(int viewportTop, int viewportHeight)
 		
 		SampleTile* tile = mTilePool[i].get();
 		tile->setVisible(true);
-		tile->setBounds((column * tileWidth) + padding,
-		                (row * tileHeight) + padding,
-		                tileWidth - (padding * 2),
-		                tileHeight - (padding * 2));
-		tile->setSample(mCurrentSamples[sampleIndex]);
+		
+		// Only update bounds if changed (avoids unnecessary resized() calls)
+		Rectangle<int> newBounds((column * tileWidth) + padding,
+		                         (row * tileHeight) + padding,
+		                         tileWidth - (padding * 2),
+		                         tileHeight - (padding * 2));
+		if (tile->getBounds() != newBounds)
+		{
+			tile->setBounds(newBounds);
+		}
+		
+		// Only update sample if changed (avoids redundant thumbnail generation and repaints)
+		Sample::Reference newSample = mCurrentSamples[sampleIndex];
+		if (tile->getSample() != newSample)
+		{
+			tile->setSample(newSample);
+		}
 	}
 	
 	// Hide unused tiles
@@ -112,6 +127,9 @@ void SampleContainer::setSampleItems(Sample::List currentSamples)
 	// Recalculate total height based on all samples
 	int totalHeight = calculateTotalHeight();
 	setSize(getWidth(), totalHeight);
+	
+	// Pre-allocate tile pool for new sample list
+	preallocateTilePool();
 	
 	// Update visible items
 	updateVisibleItems(mLastViewportTop >= 0 ? mLastViewportTop : 0, 
@@ -157,4 +175,51 @@ int SampleContainer::getTileWidth() const
 		return AppValues::getInstance().SAMPLE_TILE_MIN_WIDTH;
 	
 	return getWidth() / columns;
+}
+
+void SampleContainer::preallocateTilePool()
+{
+	int columns = getColumnCount();
+	if (columns <= 0)
+		return;
+	
+	int tileHeight = getTileHeight();
+	if (tileHeight <= 0)
+		return;
+	
+	// Get viewport height
+	int viewportHeight = getParentHeight();
+	if (viewportHeight <= 0)
+		viewportHeight = 800;  // Default fallback
+	
+	// Calculate visible rows in viewport
+	int visibleRows = (viewportHeight / tileHeight) + 1;  // +1 for partial row
+	
+	// Pre-allocate 4x the visible tiles for smooth scrolling
+	// Tiles are REUSED and repositioned as user scrolls (virtual scrolling)
+	// We just need enough in the pool to cover scroll buffer without mid-scroll allocation
+	int tilesNeeded = visibleRows * columns * 4;
+	
+	// Cap at total samples if library is small
+	if (mCurrentSamples.size() > 0)
+	{
+		tilesNeeded = jmin(tilesNeeded, (int)mCurrentSamples.size());
+	}
+	
+	// Pre-allocate tiles if pool is smaller than needed
+	int tilesAdded = 0;
+	while ((int)mTilePool.size() < tilesNeeded)
+	{
+		auto tile = std::make_unique<SampleTile>(nullptr);
+		addAndMakeVisible(tile.get());
+		mTilePool.push_back(std::move(tile));
+		tilesAdded++;
+	}
+	
+	if (tilesAdded > 0)
+	{
+		DBG("Tile pool pre-allocated: added " << tilesAdded << " tiles, "
+		    << "total: " << mTilePool.size() << " tiles "
+		    << "(4x visible rows for tile reuse during scroll)");
+	}
 }
