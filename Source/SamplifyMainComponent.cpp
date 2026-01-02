@@ -91,7 +91,13 @@ bool SamplifyMainComponent::keyPressed(const KeyPress& key, Component* originati
 	
 	// Performance profiling shortcuts (debug only)
 	#if JUCE_DEBUG
-		if (key == KeyPress::F5Key)
+		if (key == KeyPress::F4Key)
+		{
+			auto& profiler = PerformanceProfiler::getInstance();
+			profiler.setEnabled(!profiler.isEnabled());
+			return true;
+		}
+		else if (key == KeyPress::F5Key)
 		{
 			PerformanceProfiler::getInstance().printStatistics();
 			return true;
@@ -99,7 +105,6 @@ bool SamplifyMainComponent::keyPressed(const KeyPress& key, Component* originati
 		else if (key == KeyPress::F6Key)
 		{
 			PerformanceProfiler::getInstance().reset();
-			DBG("Performance statistics reset");
 			return true;
 		}
 	#endif

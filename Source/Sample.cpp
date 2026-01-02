@@ -2,6 +2,7 @@
 #include <string>
 #include "SamplifyProperties.h"
 #include "SampleLibrary.h"
+#include "PerformanceProfiler.h"
 
 using namespace samplore;
 
@@ -268,29 +269,34 @@ bool Sample::Reference::isPropertiesFileValid() const
 
 void Sample::Reference::generateThumbnailAndCache()
 {
+	PROFILE_SCOPE("Sample::generateThumbnailAndCache");
+
 	std::shared_ptr<Sample> sample = mSample.lock();
-	
+
 	// Early exit if already generated or currently loading
 	if (!isNull() && sample->mThumbnail == nullptr)
 	{
 		// Create placeholder thumbnail immediately to prevent duplicate requests
-		sample->mThumbnailCache = std::make_shared<AudioThumbnailCache>(1);
-		AudioFormatManager* afm = SamplifyProperties::getInstance()->getAudioPlayer()->getFormatManager();
-		sample->mThumbnail = std::make_shared<SampleAudioThumbnail>(512, *afm, *sample->mThumbnailCache);
-		sample->mThumbnail->addChangeListener(sample->getChangeListener());
-		
+		{
+			PROFILE_SCOPE("Sample::generateThumbnailAndCache::createThumbnail");
+			sample->mThumbnailCache = std::make_shared<AudioThumbnailCache>(1);
+			AudioFormatManager* afm = SamplifyProperties::getInstance()->getAudioPlayer()->getFormatManager();
+			sample->mThumbnail = std::make_shared<SampleAudioThumbnail>(512, *afm, *sample->mThumbnailCache);
+			sample->mThumbnail->addChangeListener(sample->getChangeListener());
+		}
+
 		// Launch async background task for file I/O
 		// Capture by value to ensure data stays valid
 		File fileToLoad = sample->mFile;
 		std::weak_ptr<SampleAudioThumbnail> weakThumbnail = sample->mThumbnail;  // Weak ptr to avoid keeping sample alive
 		std::weak_ptr<Sample> weakSample = mSample;  // Weak ptr to avoid keeping sample alive
-		
+
 		Thread::launch([weakSample, fileToLoad, weakThumbnail]() {
 			// Use separate AudioFormatManager for thread safety
 			// (UI thread and audio thread should not share the same instance)
 			AudioFormatManager localAfm;
 			localAfm.registerBasicFormats();
-			
+
 			// Perform blocking file I/O on background thread - read metadata only
 			AudioFormatReader* reader = localAfm.createReaderFor(fileToLoad);
 			if (reader != nullptr)
@@ -298,13 +304,13 @@ void Sample::Reference::generateThumbnailAndCache()
 				// Store sample length from reader
 				double sampleLength = (double)reader->lengthInSamples / reader->sampleRate;
 				delete reader;
-				
+
 				// Marshal back to message thread for setSource() call
 				// (AudioThumbnail requires message manager lock)
 				MessageManager::callAsync([weakSample, fileToLoad, weakThumbnail, sampleLength]() {
 					std::shared_ptr<Sample> sample = weakSample.lock();
 					std::shared_ptr<SampleAudioThumbnail> thumbnail = weakThumbnail.lock();
-					
+
 					// Check if both Sample and thumbnail still exist
 					if (sample != nullptr && thumbnail != nullptr)
 					{
@@ -312,7 +318,7 @@ void Sample::Reference::generateThumbnailAndCache()
 						// AudioThumbnail takes ownership of the InputSource
 						// The actual waveform generation happens asynchronously in AudioThumbnail's own thread
 						thumbnail->setSource(new FileInputSource(fileToLoad));
-						
+
 						// Store sample length
 						sample->mLength = (float)sampleLength;
 						

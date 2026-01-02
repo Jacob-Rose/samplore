@@ -254,10 +254,12 @@ SampleExplorer::SampleViewport::SampleViewport(SampleContainer* container)
 
 void SampleExplorer::SampleViewport::visibleAreaChanged(const Rectangle<int>& newVisibleArea)
 {
+	PROFILE_SCOPE("SampleViewport::visibleAreaChanged");
+
 	// Update visible items based on current viewport position
 	int viewportTop = newVisibleArea.getY();
 	int viewportHeight = newVisibleArea.getHeight();
-	
+
 	mSampleContainer->updateVisibleItems(viewportTop, viewportHeight);
 }
 

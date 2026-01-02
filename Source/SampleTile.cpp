@@ -55,7 +55,7 @@ SampleTile::~SampleTile()
 void SampleTile::paint (Graphics& g)
 {
 	PROFILE_PAINT("SampleTile::paint");
-	
+
 	if (!mSample.isNull())
 	{
 		auto& theme = ThemeManager::getInstance();
@@ -82,25 +82,29 @@ void SampleTile::paint (Graphics& g)
 		titleColor = theme.getColorForRole(ThemeManager::ColorRole::TextPrimary);
 
 		// Draw background
-		g.setColour(backgroundColor);
-		g.fillRoundedRectangle(getLocalBounds().toFloat(), cornerRadius);
-		
-		// Subtle border instead of expensive DropShadow
-		if (isHovered)
 		{
-			g.setColour(theme.getColorForRole(ThemeManager::ColorRole::AccentPrimary).withAlpha(0.3f));
-			g.drawRoundedRectangle(getLocalBounds().toFloat(), cornerRadius, 2.0f);
-		}
-		else
-		{
-			g.setColour(theme.getColorForRole(ThemeManager::ColorRole::Background).withAlpha(0.2f));
-			g.drawRoundedRectangle(getLocalBounds().toFloat(), cornerRadius, 1.0f);
+			PROFILE_SCOPE("SampleTile::paint::background");
+			g.setColour(backgroundColor);
+			g.fillRoundedRectangle(getLocalBounds().toFloat(), cornerRadius);
+
+			// Subtle border instead of expensive DropShadow
+			if (isHovered)
+			{
+				g.setColour(theme.getColorForRole(ThemeManager::ColorRole::AccentPrimary).withAlpha(0.3f));
+				g.drawRoundedRectangle(getLocalBounds().toFloat(), cornerRadius, 2.0f);
+			}
+			else
+			{
+				g.setColour(theme.getColorForRole(ThemeManager::ColorRole::Background).withAlpha(0.2f));
+				g.drawRoundedRectangle(getLocalBounds().toFloat(), cornerRadius, 1.0f);
+			}
 		}
 
 		// Draw info icon with padding
 		Rectangle<int> titleRect = m_TitleRect.reduced(padding, padding / 2);
 		if (mSample.getInfoText() != "" || mSample.getColor().getAlpha() != 0.0f)
 		{
+			PROFILE_SCOPE("SampleTile::paint::infoIcon");
 			if (mSample.getColor().getFloatAlpha() > 0.0f)
 			{
 				auto iconBounds = m_InfoIcon.getBounds().reduced(INFO_ICON_PADDING + 2).toFloat();
@@ -114,80 +118,95 @@ void SampleTile::paint (Graphics& g)
 		}
 
 		// Draw title with cached font
-		g.setFont(getTitleFont());
-		g.setColour(titleColor);
-		g.drawText(mSample.getFile().getFileName(), titleRect, Justification::centredLeft, true);
+		{
+			PROFILE_SCOPE("SampleTile::paint::title");
+			g.setFont(getTitleFont());
+			g.setColour(titleColor);
+			g.drawText(mSample.getFile().getFileName(), titleRect, Justification::centredLeft, true);
+		}
 
 		// Draw time with cached font - batch with same font
-		g.setFont(getTimeFont());
-		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
-		
-		// Cache time calculation
-		double length = mSample.getLength();
-		int minutes = static_cast<int>(length) / 60;
-		double seconds = length - (60.0 * minutes);
-		
-		auto timeRect = m_TimeRect.reduced(padding / 2, padding / 2);
-		g.drawText(String(seconds, 1) + " sec", timeRect, Justification::bottom);
-		g.drawText(String(minutes) + " min", timeRect, Justification::top);
+		{
+			PROFILE_SCOPE("SampleTile::paint::timeLabels");
+			g.setFont(getTimeFont());
+			g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
+
+			// Cache time calculation
+			double length = mSample.getLength();
+			int minutes = static_cast<int>(length) / 60;
+			double seconds = length - (60.0 * minutes);
+
+			auto timeRect = m_TimeRect.reduced(padding / 2, padding / 2);
+			g.drawText(String(seconds, 1) + " sec", timeRect, Justification::bottom);
+			g.drawText(String(minutes) + " min", timeRect, Justification::top);
+		}
 
 		// Draw waveform thumbnail with modern styling
-		std::shared_ptr<SampleAudioThumbnail> thumbnail = mSample.getThumbnail();
-		if (thumbnail->isFullyLoaded())
 		{
-			if (thumbnail->getNumChannels() != 0)
+			PROFILE_SCOPE("SampleTile::paint::waveform");
+			std::shared_ptr<SampleAudioThumbnail> thumbnail = mSample.getThumbnail();
+			if (thumbnail->isFullyLoaded())
 			{
-				// Use waveform color from theme with opacity based on amplitude
-				g.setColour(foregroundColor.withAlpha(0.9f));
-				auto waveformRect = m_ThumbnailRect.reduced(padding / 2, 0);
-				thumbnail->drawChannel(g, waveformRect.toNearestInt(),
-				                       0.0, thumbnail->getTotalLength(), 0, 1.0f);
+				if (thumbnail->getNumChannels() != 0)
+				{
+					// Use waveform color from theme with opacity based on amplitude
+					g.setColour(foregroundColor.withAlpha(0.9f));
+					auto waveformRect = m_ThumbnailRect.reduced(padding / 2, 0);
+					thumbnail->drawChannel(g, waveformRect.toNearestInt(),
+					                       0.0, thumbnail->getTotalLength(), 0, 1.0f);
+				}
 			}
 		}
 
 		// Draw playback position indicators
-		std::shared_ptr<AudioPlayer> auxPlayer = SamplifyProperties::getInstance()->getAudioPlayer();
-		bool isCurrentlyPlaying = (auxPlayer->getSampleReference() == mSample) && 
-		                          (auxPlayer->getState() == AudioPlayer::TransportState::Playing);
-		
-		// Dynamic buffering: toggle after paint completes (can't change during paint)
-		if (isCurrentlyPlaying != mIsPlaying)
 		{
-			mIsPlaying = isCurrentlyPlaying;
-			// Defer buffering change until after paint() completes to avoid crash
-			// Use SafePointer to ensure component still exists
-			Component::SafePointer<SampleTile> safeThis(this);
-			MessageManager::callAsync([safeThis, shouldBuffer = !mIsPlaying]() {
-				if (safeThis != nullptr)
-					safeThis->setBufferedToImage(shouldBuffer);
-			});
-		}
-		
-		if (auxPlayer->getSampleReference() == mSample)
-		{
-			auto waveformRect = m_ThumbnailRect.reduced(padding / 2, 0);
-			float startT = auxPlayer->getStartCueRelative();
-			float currentT = auxPlayer->getRelativeTime();
-			float startX = waveformRect.getX() + (waveformRect.getWidth() * startT);
-			float currentX = waveformRect.getX() + (waveformRect.getWidth() * currentT);
-			float y1 = waveformRect.getY();
-			float y2 = waveformRect.getBottom();
+			PROFILE_SCOPE("SampleTile::paint::playbackIndicators");
+			std::shared_ptr<AudioPlayer> auxPlayer = SamplifyProperties::getInstance()->getAudioPlayer();
+			bool isCurrentlyPlaying = (auxPlayer->getSampleReference() == mSample) &&
+			                          (auxPlayer->getState() == AudioPlayer::TransportState::Playing);
 
-			// Draw start position with subtle color
-			g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary).withAlpha(0.5f));
-			g.drawLine(startX, y1, startX, y2, 1.5f);
-
-			// Draw current position with accent color
-			if (mIsPlaying)
+			// Dynamic buffering: toggle after paint completes (can't change during paint)
+			if (isCurrentlyPlaying != mIsPlaying)
 			{
-				g.setColour(theme.getColorForRole(ThemeManager::ColorRole::AccentSecondary));
-				g.drawLine(currentX, y1, currentX, y2, 2.0f);
-				repaint();
+				mIsPlaying = isCurrentlyPlaying;
+				// Defer buffering change until after paint() completes to avoid crash
+				// Use SafePointer to ensure component still exists
+				Component::SafePointer<SampleTile> safeThis(this);
+				MessageManager::callAsync([safeThis, shouldBuffer = !mIsPlaying]() {
+					if (safeThis != nullptr)
+						safeThis->setBufferedToImage(shouldBuffer);
+				});
+			}
+
+			if (auxPlayer->getSampleReference() == mSample)
+			{
+				auto waveformRect = m_ThumbnailRect.reduced(padding / 2, 0);
+				float startT = auxPlayer->getStartCueRelative();
+				float currentT = auxPlayer->getRelativeTime();
+				float startX = waveformRect.getX() + (waveformRect.getWidth() * startT);
+				float currentX = waveformRect.getX() + (waveformRect.getWidth() * currentT);
+				float y1 = waveformRect.getY();
+				float y2 = waveformRect.getBottom();
+
+				// Draw start position with subtle color
+				g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary).withAlpha(0.5f));
+				g.drawLine(startX, y1, startX, y2, 1.5f);
+
+				// Draw current position with accent color
+				if (mIsPlaying)
+				{
+					g.setColour(theme.getColorForRole(ThemeManager::ColorRole::AccentSecondary));
+					g.drawLine(currentX, y1, currentX, y2, 2.0f);
+					repaint();
+				}
 			}
 		}
 
 		// Update tags
-		mTagContainer.setTags(mSample.getTags());
+		{
+			PROFILE_SCOPE("SampleTile::paint::updateTags");
+			mTagContainer.setTags(mSample.getTags());
+		}
 	}
 	else
 	{
@@ -198,6 +217,8 @@ void SampleTile::paint (Graphics& g)
 
 void SampleTile::resized()
 {
+	PROFILE_SCOPE("SampleTile::resized");
+
 	const int padding = 12;
 	const int titleHeight = 32; // Height for 20px font + spacing
 
@@ -377,6 +398,8 @@ void SampleTile::changeListenerCallback(ChangeBroadcaster* source)
 
 void SampleTile::setSample(Sample::Reference sample)
 {
+	PROFILE_SCOPE("SampleTile::setSample");
+
 	if (!sample.isNull())
 	{
 		bool alreadyThis = false;
@@ -388,15 +411,24 @@ void SampleTile::setSample(Sample::Reference sample)
 			}
 			else
 			{
+				PROFILE_SCOPE("SampleTile::setSample::removeListener");
 				mSample.removeChangeListener(this);
 			}
 		}
 		if (!alreadyThis)
 		{
-			
-			sample.generateThumbnailAndCache();
-			m_InfoIcon.setTooltip(sample.getInfoText());
-			sample.addChangeListener(this);
+			{
+				PROFILE_SCOPE("SampleTile::setSample::generateThumbnail");
+				sample.generateThumbnailAndCache();
+			}
+			{
+				PROFILE_SCOPE("SampleTile::setSample::setTooltip");
+				m_InfoIcon.setTooltip(sample.getInfoText());
+			}
+			{
+				PROFILE_SCOPE("SampleTile::setSample::addListener");
+				sample.addChangeListener(this);
+			}
 		}
 	}
 	else
@@ -404,7 +436,10 @@ void SampleTile::setSample(Sample::Reference sample)
 		m_InfoIcon.setTooltip("");
 	}
 	mSample = sample;
-	repaint();
+	{
+		PROFILE_SCOPE("SampleTile::setSample::repaint");
+		repaint();
+	}
 }
 
 Sample::Reference SampleTile::getSample()
