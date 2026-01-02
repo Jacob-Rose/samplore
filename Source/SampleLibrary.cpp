@@ -60,7 +60,7 @@ void SampleLibrary::addDirectory(const File& dir)
 	refreshCurrentSamples();
 	
 	// Preload all tags from all samples asynchronously
-	preloadAllTags();
+	launchPreloadAllTags();
 	
 	sendChangeMessage();
 }
@@ -248,7 +248,7 @@ std::future<Sample::List> SampleLibrary::getAllSamplesInDirectories_Async(juce::
 	return asfunc;
 }
 
-void SampleLibrary::preloadAllTags()
+void SampleLibrary::launchPreloadAllTags()
 {
 	if (!mPreloadingTags)
 	{

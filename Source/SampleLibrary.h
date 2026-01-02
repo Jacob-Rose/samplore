@@ -88,7 +88,7 @@ namespace samplore
 		std::future<Sample::List> getAllSamplesInDirectories_Async(juce::String query = "", bool ignoreCheckSystem = false);
 
 		/// Preload all sample files and extract their tags asynchronously
-		void preloadAllTags();
+		void launchPreloadAllTags();
 		bool isPreloadingTags() const { return mPreloadingTags; }
 
 	private:
