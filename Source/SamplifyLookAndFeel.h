@@ -16,6 +16,13 @@
 
 namespace samplore
 {
+	enum class PlaybackIndicatorMode
+	{
+		AnimatedRainbow = 0,
+		StaticRainbow = 1,
+		StaticColor = 2
+	};
+
 	class AppValues
 	{
 	public:
@@ -48,6 +55,8 @@ namespace samplore
 		bool EXTENDEDSAMPLEWINDOWOPEN = true;
 
 		bool RIGHTCLICKPLAYFROMPOINT = true;
+		PlaybackIndicatorMode PLAYBACK_INDICATOR_MODE = PlaybackIndicatorMode::AnimatedRainbow;
+		Colour PLAYBACK_INDICATOR_COLOR = Colour(0xFF4A9EFF);
 
 		Drawable* getDrawable(String id);
 		void loadDrawables();

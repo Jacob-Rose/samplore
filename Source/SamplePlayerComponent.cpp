@@ -181,6 +181,48 @@ void SamplePlayerComponent::paint (Graphics& g)
         std::shared_ptr<AudioPlayer> auxPlayer = SamplifyProperties::getInstance()->getAudioPlayer();
         if (auxPlayer->getSampleReference() == samp)
         {
+            // Draw playback indicator overlay when playing
+            if (auxPlayer->getState() == AudioPlayer::TransportState::Playing)
+            {
+                PROFILE_SCOPE("SamplePlayerComponent::paint::playbackIndicator");
+                auto waveformRect = m_ThumbnailRect.toFloat();
+                auto& appValues = AppValues::getInstance();
+
+                if (appValues.PLAYBACK_INDICATOR_MODE == PlaybackIndicatorMode::StaticColor)
+                {
+                    // Static color mode
+                    g.setColour(appValues.PLAYBACK_INDICATOR_COLOR.withAlpha(0.15f));
+                    g.fillRoundedRectangle(waveformRect, 8.0f);
+                }
+                else
+                {
+                    // Rainbow modes (animated or static)
+                    float animPhase = 0.0f;
+                    if (appValues.PLAYBACK_INDICATOR_MODE == PlaybackIndicatorMode::AnimatedRainbow)
+                    {
+                        double currentTime = Time::getMillisecondCounterHiRes();
+                        animPhase = static_cast<float>(std::fmod(currentTime * 0.0002, 1.0));
+                    }
+
+                    // Create rainbow gradientai
+                    ColourGradient rainbow;
+                    rainbow.isRadial = false;
+                    rainbow.point1 = Point<float>(waveformRect.getX(), waveformRect.getCentreY());
+                    rainbow.point2 = Point<float>(waveformRect.getRight(), waveformRect.getCentreY());
+
+                    const int numColors = 7;
+                    for (int i = 0; i < numColors; ++i)
+                    {
+                        float position = static_cast<float>(i) / (numColors - 1);
+                        float hue = std::fmod(position + animPhase, 1.0f);
+                        Colour rainbowColor = Colour::fromHSV(hue, 0.7f, 1.0f, 0.15f);
+                        rainbow.addColour(position, rainbowColor);
+                    }
+
+                    g.setGradientFill(rainbow);
+                    g.fillRoundedRectangle(waveformRect, 8.0f);
+                }
+            }
             float startT = auxPlayer->getStartCueRelative();
             float currentT = auxPlayer->getRelativeTime();
             float startX = m_ThumbnailRect.getX() + (m_ThumbnailRect.getWidth() * startT);
@@ -197,7 +239,12 @@ void SamplePlayerComponent::paint (Graphics& g)
             {
                 g.setColour(theme.getColorForRole(ThemeManager::ColorRole::AccentSecondary));
                 g.drawLine(currentX, y1, currentX, y2, 2.0f);
-                repaint();
+
+                // Only trigger continuous repaint if in animated rainbow mode
+                if (AppValues::getInstance().PLAYBACK_INDICATOR_MODE == PlaybackIndicatorMode::AnimatedRainbow)
+                {
+                    repaint();
+                }
             }
         }
     }
