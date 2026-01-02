@@ -276,6 +276,19 @@ void Sample::Reference::generateThumbnailAndCache()
 	// Early exit if already generated or currently loading
 	if (!isNull() && sample->mThumbnail == nullptr)
 	{
+		// CPU Throttle: limit concurrent thumbnail generations to ~80% CPU usage
+		static std::atomic<int> activeThumbnailGenerations(0);
+		static constexpr int MAX_CONCURRENT_GENERATIONS = 4; // Adjust based on core count
+
+		// Check if we're already at the limit
+		int currentActive = activeThumbnailGenerations.load();
+		if (currentActive >= MAX_CONCURRENT_GENERATIONS)
+		{
+			// Too many concurrent generations - skip for now
+			// Will be requested again when tile scrolls back into view
+			return;
+		}
+
 		// Create placeholder thumbnail immediately to prevent duplicate requests
 		{
 			PROFILE_SCOPE("Sample::generateThumbnailAndCache::createThumbnail");
@@ -291,11 +304,17 @@ void Sample::Reference::generateThumbnailAndCache()
 		std::weak_ptr<SampleAudioThumbnail> weakThumbnail = sample->mThumbnail;  // Weak ptr to avoid keeping sample alive
 		std::weak_ptr<Sample> weakSample = mSample;  // Weak ptr to avoid keeping sample alive
 
+		// Increment active count
+		activeThumbnailGenerations++;
+
 		Thread::launch([weakSample, fileToLoad, weakThumbnail]() {
 			// Use separate AudioFormatManager for thread safety
 			// (UI thread and audio thread should not share the same instance)
 			AudioFormatManager localAfm;
 			localAfm.registerBasicFormats();
+
+			// CPU Throttle: small delay before starting I/O to stagger requests
+			Thread::sleep(5);
 
 			// Perform blocking file I/O on background thread - read metadata only
 			AudioFormatReader* reader = localAfm.createReaderFor(fileToLoad);
@@ -304,6 +323,9 @@ void Sample::Reference::generateThumbnailAndCache()
 				// Store sample length from reader
 				double sampleLength = (double)reader->lengthInSamples / reader->sampleRate;
 				delete reader;
+
+				// CPU Throttle: yield after I/O to let other tasks run
+				Thread::sleep(3);
 
 				// Marshal back to message thread for setSource() call
 				// (AudioThumbnail requires message manager lock)
@@ -332,6 +354,9 @@ void Sample::Reference::generateThumbnailAndCache()
 					// If either is nullptr, sample was deleted before callback executed - gracefully skip
 				});
 			}
+
+			// Decrement active count when done (whether success or failure)
+			activeThumbnailGenerations--;
 		});
 	}
 }

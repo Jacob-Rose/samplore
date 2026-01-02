@@ -33,7 +33,7 @@ namespace samplore
 			loadingWheelColorId
 		};
 		///Custom Viewport to add support for the visible area changed method,
-		///needed to check if scrolled to bottom 
+		///needed to check if scrolled to bottom
 		class SampleViewport : public Viewport
 		{
 		public:

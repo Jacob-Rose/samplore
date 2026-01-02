@@ -145,7 +145,7 @@ void SampleTile::paint (Graphics& g)
 		{
 			PROFILE_SCOPE("SampleTile::paint::waveform");
 			std::shared_ptr<SampleAudioThumbnail> thumbnail = mSample.getThumbnail();
-			if (thumbnail->isFullyLoaded())
+			if (thumbnail && thumbnail->isFullyLoaded())
 			{
 				if (thumbnail->getNumChannels() != 0)
 				{
@@ -201,17 +201,6 @@ void SampleTile::paint (Graphics& g)
 				}
 			}
 		}
-
-		// Update tags
-		{
-			PROFILE_SCOPE("SampleTile::paint::updateTags");
-			mTagContainer.setTags(mSample.getTags());
-		}
-	}
-	else
-	{
-		//reset all info if no sample currently active
-		mTagContainer.setTags(StringArray());
 	}
 }
 
@@ -384,13 +373,15 @@ void SampleTile::changeListenerCallback(ChangeBroadcaster* source)
 		if (aux->getSampleReference() == mSample)
 		{
 			if (!(aux->getState() == AudioPlayer::TransportState::Starting ||
-				aux->getState() == AudioPlayer::TransportState::Stopped || 
+				aux->getState() == AudioPlayer::TransportState::Stopped ||
 				aux->getState() == AudioPlayer::TransportState::Stopping))
 			{
 				aux->removeChangeListener(this);
 			}
 		}
 		m_InfoIcon.setTooltip(mSample.getInfoText());
+		// Update tags when sample changes (e.g., tags added/removed)
+		mTagContainer.setTags(mSample.getTags());
 	}
 	resized();
 	repaint();
@@ -429,11 +420,16 @@ void SampleTile::setSample(Sample::Reference sample)
 				PROFILE_SCOPE("SampleTile::setSample::addListener");
 				sample.addChangeListener(this);
 			}
+			{
+				PROFILE_SCOPE("SampleTile::setSample::updateTags");
+				mTagContainer.setTags(sample.getTags());
+			}
 		}
 	}
 	else
 	{
 		m_InfoIcon.setTooltip("");
+		mTagContainer.setTags(StringArray());
 	}
 	mSample = sample;
 	{
