@@ -113,14 +113,14 @@ void SamplifyProperties::loadPropertiesFile()
 			mSampleLibrary->launchPreloadAllTags();
 		}
 		
-		//load tags
+		//load tags (stored as hue values 0.0-1.0)
 		int tagCount = propFile->getIntValue("tag count");
 		for (int i = 0; i < tagCount; i++)
 		{
 			String tag = propFile->getValue("tag " + String(i));
 			jassert(tag != "");
-			Colour color = Colour::fromString(propFile->getValue("tag " + tag));
-			mSampleLibrary->addTag(tag, color);
+			float hue = propFile->getValue("tag " + tag).getFloatValue();
+			mSampleLibrary->addTag(tag, hue);
 		}
 
 		//HERE IS WHERE DEFAULT VALUES FOR LOOK AND FEEL ARE SET
@@ -165,12 +165,12 @@ void SamplifyProperties::savePropertiesFile()
 			propFile->setValue("directory " + String(i), dirs[i]->getFile().getFullPathName());
 		}
 
-		//save tags
+		//save tags (stored as hue values)
 		std::vector<SampleLibrary::Tag> allTags = mSampleLibrary->getTags();
-		for(int i =0; i < allTags.size(); i++)
+		for(int i = 0; i < allTags.size(); i++)
 		{
 			propFile->setValue("tag " + String(i), allTags[i].mTitle);
-			propFile->setValue("tag " + allTags[i].mTitle, allTags[i].mColor.toString());
+			propFile->setValue("tag " + allTags[i].mTitle, String(allTags[i].mHue));
 		}
 		propFile->setValue("tag count", (int)allTags.size());
 		propFile->saveIfNeeded();

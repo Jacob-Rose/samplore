@@ -147,18 +147,27 @@ void SampleLibrary::timerCallback()
 	
 }
 
-void SampleLibrary::addTag(juce::String text, Colour color)
+Colour SampleLibrary::hueToColor(float hue)
 {
-	mTags.push_back(Tag(text, color));
+	// Use fixed saturation and brightness for consistent, vibrant tag colors
+	const float saturation = 0.65f;
+	const float brightness = 0.85f;
+	return Colour::fromHSV(hue, saturation, brightness, 1.0f);
+}
+
+void SampleLibrary::addTag(juce::String text, float hue)
+{
+	mTags.push_back(Tag(text, hue));
 	sendChangeMessage();
 }
 
 void SampleLibrary::addTag(juce::String text)
 {
 	Random& r = Random::getSystemRandom();
-	addTag(text, Colour(juce::uint8(r.nextInt(Range(0, 256))),
-		juce::uint8(r.nextInt(Range(0, 256))),
-		juce::uint8(r.nextInt(Range(0, 256)))));
+	// Generate random hue (0.0-1.0)
+	float hue = r.nextFloat();
+	mTags.push_back(Tag(text, hue));
+	sendChangeMessage();
 }
 
 void SampleLibrary::deleteTag(juce::String tag)
@@ -187,12 +196,26 @@ Colour SampleLibrary::getTagColor(String tag)
 	{
 		if (mTags[i].mTitle == tag)
 		{
-			return mTags[i].mColor;
+			return hueToColor(mTags[i].mHue);
 		}
 	}
 	//if not in list, make and then return again
 	addTag(tag);
 	return getTagColor(tag);
+}
+
+float SampleLibrary::getTagHue(String tag)
+{
+	for (int i = 0; i < mTags.size(); i++)
+	{
+		if (mTags[i].mTitle == tag)
+		{
+			return mTags[i].mHue;
+		}
+	}
+	//if not in list, make and then return again
+	addTag(tag);
+	return getTagHue(tag);
 }
 
 StringArray SampleLibrary::getTagsStringArray()
@@ -205,13 +228,15 @@ StringArray SampleLibrary::getTagsStringArray()
 	return tags;
 }
 
-void SampleLibrary::setTagColor(juce::String tag, juce::Colour newColor)
+void SampleLibrary::setTagHue(juce::String tag, float hue)
 {
 	for (int i = 0; i < mTags.size(); i++)
 	{
 		if (mTags[i].mTitle == tag)
 		{
-			mTags[i].mColor = newColor;
+			mTags[i].mHue = hue;
+			sendChangeMessage();
+			return;
 		}
 	}
 }

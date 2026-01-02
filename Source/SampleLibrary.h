@@ -30,15 +30,15 @@ namespace samplore
 		// Use function-local static to avoid static destruction order issues
 		static const Tag& getEmptyTag()
 		{
-			static const Tag emptyTag(juce::String(), juce::Colours::magenta);
+			static const Tag emptyTag(juce::String(), 0.83f); // Magenta hue
 			return emptyTag;
 		}
-		
-		//simple holder for information, can be expanded later
-		Tag(juce::String title, juce::Colour color) : mTitle(title), mColor(color) {}
+
+		/// Tag stores just a hue (0.0-1.0) for theme-consistent colors
+		Tag(juce::String title, float hue) : mTitle(title), mHue(hue) {}
 
 		juce::String mTitle;
-		juce::Colour mColor;
+		float mHue; // 0.0-1.0, used with fixed saturation/brightness
 	};
 
 		SampleLibrary();
@@ -57,17 +57,21 @@ namespace samplore
 		void timerCallback() override;
 
 		///Tag Library Merger - They are dependent on each other for results and modifications
-		void addTag(String tag, Colour color);
+		void addTag(String tag, float hue);
 		void addTag(String tag);
 		//void renameTag(juce::String currentTagName, juce::String desiredName);
 		void deleteTag(String tag);
 		int getTagCount() { return mTags.size(); }
 		Colour getTagColor(String tag);
+		float getTagHue(String tag);
 		std::vector<Tag> getTags() { return mTags; }
 		StringArray getTagsStringArray();
 
-		void setTagColor(juce::String tag, juce::Colour newColor);
+		void setTagHue(juce::String tag, float hue);
 		SampleLibrary::Tag getTag(juce::String tag);
+
+		/// Converts a hue to a display color with theme-appropriate saturation/brightness
+		static Colour hueToColor(float hue);
 
 
 		///Directory Manager Merger - Reduce dependencies, less pointers, easier saving

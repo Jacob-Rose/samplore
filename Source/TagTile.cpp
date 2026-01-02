@@ -51,19 +51,24 @@ void TagTile::paint (Graphics& g)
 		g.setColour(mainColor.withAlpha(alpha));
 		g.fillRoundedRectangle(getLocalBounds().toFloat(), cornerSize);
 
-		// Subtle border
-		g.setColour(mainColor.darker(0.2f).withAlpha(0.6f));
+		// Subtle border using darker shade of the tag color
+		g.setColour(mainColor.darker(0.3f).withAlpha(0.7f));
 		g.drawRoundedRectangle(getLocalBounds().toFloat(), cornerSize, 1.0f);
 
-		// Text color based on background brightness
+		// Text color: use contrasting color for readability
+		// With our fixed saturation (0.65) and brightness (0.85), most colors are fairly bright
+		// Use dark text for light backgrounds, white for dark backgrounds
 		Colour textColor;
-		if (mainColor.getPerceivedBrightness() > 0.5f)
+		float luminance = mainColor.getPerceivedBrightness();
+		if (luminance > 0.55f)
 		{
-			textColor = theme.getColorForRole(ThemeManager::ColorRole::TextPrimary).darker(0.3f);
+			// Light background: use dark text with slight transparency for softer look
+			textColor = Colours::black.withAlpha(0.85f);
 		}
 		else
 		{
-			textColor = Colours::white;
+			// Dark background: use white text
+			textColor = Colours::white.withAlpha(0.95f);
 		}
 
 		g.setColour(textColor);

@@ -84,7 +84,7 @@ void SampleExplorer::paint (Graphics& g)
 		// Draw icon/emoji at top
 		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
 		g.setFont(48.0f);
-		g.drawText("📁", messageBox.removeFromTop(80), Justification::centred);
+		g.drawText("[]", messageBox.removeFromTop(80), Justification::centred);
 		
 		// Draw title
 		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
