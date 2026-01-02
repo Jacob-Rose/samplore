@@ -172,6 +172,9 @@ PreferencePanel::PreferencePanel()
 
 PreferencePanel::~PreferencePanel()
 {
+    // Explicitly delete all directory list items to release SampleDirectory shared_ptrs
+    mDirectoryListContainer.deleteAllChildren();
+    
     ThemeManager::getInstance().removeListener(this);
 }
 
@@ -608,10 +611,10 @@ void PreferencePanel::colorChanged(ThemeManager::ColorRole role, Colour newColor
 
 void PreferencePanel::updateDirectoryList()
 {
-    // Clear existing list items
-    mDirectoryListContainer.removeAllChildren();
+    // Clear existing list items (deleteChildComponents = true to actually delete them)
+    mDirectoryListContainer.deleteAllChildren();
     
-    auto dirs = SamplifyProperties::getInstance()->getSampleLibrary()->getDirectories();
+    const auto& dirs = SamplifyProperties::getInstance()->getSampleLibrary()->getDirectories();
     int y = 0;
     const int itemHeight = 40;
     int width = 550; // Fixed width based on viewport

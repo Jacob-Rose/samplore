@@ -47,6 +47,9 @@ SampleTile::~SampleTile()
 	if (!mSample.isNull())
 		mSample.removeChangeListener(this);
 	
+	// Clear sample reference to ensure thumbnail cleanup
+	mSample = nullptr;
+	
 	ThemeManager::getInstance().removeListener(this);
 }
 void SampleTile::paint (Graphics& g)

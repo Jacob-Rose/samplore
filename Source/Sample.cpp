@@ -271,10 +271,10 @@ void Sample::Reference::generateThumbnailAndCache()
 		// Launch async background task for file I/O
 		// Capture by value to ensure data stays valid
 		File fileToLoad = sample->mFile;
-		std::shared_ptr<SampleAudioThumbnail> thumbnailPtr = sample->mThumbnail;
+		std::weak_ptr<SampleAudioThumbnail> weakThumbnail = sample->mThumbnail;  // Weak ptr to avoid keeping sample alive
 		std::weak_ptr<Sample> weakSample = mSample;  // Weak ptr to avoid keeping sample alive
 		
-		Thread::launch([weakSample, fileToLoad, thumbnailPtr]() {
+		Thread::launch([weakSample, fileToLoad, weakThumbnail]() {
 			// Use separate AudioFormatManager for thread safety
 			// (UI thread and audio thread should not share the same instance)
 			AudioFormatManager localAfm;
@@ -290,14 +290,17 @@ void Sample::Reference::generateThumbnailAndCache()
 				
 				// Marshal back to message thread for setSource() call
 				// (AudioThumbnail requires message manager lock)
-				MessageManager::callAsync([weakSample, fileToLoad, thumbnailPtr, sampleLength]() {
+				MessageManager::callAsync([weakSample, fileToLoad, weakThumbnail, sampleLength]() {
 					std::shared_ptr<Sample> sample = weakSample.lock();
-					if (sample != nullptr)
+					std::shared_ptr<SampleAudioThumbnail> thumbnail = weakThumbnail.lock();
+					
+					// Check if both Sample and thumbnail still exist
+					if (sample != nullptr && thumbnail != nullptr)
 					{
 						// Set thumbnail source - MUST be on message thread
 						// AudioThumbnail takes ownership of the InputSource
 						// The actual waveform generation happens asynchronously in AudioThumbnail's own thread
-						thumbnailPtr->setSource(new FileInputSource(fileToLoad));
+						thumbnail->setSource(new FileInputSource(fileToLoad));
 						
 						// Store sample length
 						sample->mLength = (float)sampleLength;
@@ -309,6 +312,7 @@ void Sample::Reference::generateThumbnailAndCache()
 						// The AudioThumbnail will send its own change notifications when generation completes
 						sample->sendChangeMessage();
 					}
+					// If either is nullptr, sample was deleted before callback executed - gracefully skip
 				});
 			}
 		});

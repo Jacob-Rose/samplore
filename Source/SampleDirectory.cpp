@@ -49,6 +49,10 @@ SampleDirectory::~SampleDirectory()
 			childDir->removeChangeListener(this);
 		}
 	}
+	
+	// Explicitly clear all samples and child directories
+	mChildSamples.clear();
+	mChildDirectories.clear();
 }
 
 Sample::List samplore::SampleDirectory::getChildSamplesRecursive(juce::String query, bool ignoreCheckSystem)

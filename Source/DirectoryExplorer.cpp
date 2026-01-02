@@ -42,7 +42,7 @@ void DirectoryExplorer::refresh()
 	{
 		root->clearSubItems();
 	}
-	std::vector<std::shared_ptr<SampleDirectory>> dirs = SamplifyProperties::getInstance()->getSampleLibrary()->getDirectories();
+	const auto& dirs = SamplifyProperties::getInstance()->getSampleLibrary()->getDirectories();
 	for (int i = 0; i < dirs.size(); i++)
 	{
 		DirectoryExplorerTreeViewItem* item = new DirectoryExplorerTreeViewItem(dirs[i]);

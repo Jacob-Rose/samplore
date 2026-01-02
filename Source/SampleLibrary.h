@@ -72,7 +72,7 @@ namespace samplore
 
 		///Directory Manager Merger - Reduce dependencies, less pointers, easier saving
 		void addDirectory(const File& dir);
-		std::vector<std::shared_ptr<SampleDirectory>> getDirectories() { return mDirectories; }
+		const std::vector<std::shared_ptr<SampleDirectory>>& getDirectories() const { return mDirectories; }
 		void removeDirectory(const File& dir);
 		void refreshDirectories();
 		int getDirectoryCount() { return mDirectories.size(); }

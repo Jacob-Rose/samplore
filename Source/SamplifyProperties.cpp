@@ -73,6 +73,13 @@ void SamplifyProperties::cleanup()
 		mAudioPlayer->stop();
 		savePropertiesFile();
 		closeFiles();
+		
+		// Explicitly clear sample library to release all Sample objects
+		if (mSampleLibrary)
+		{
+			mSampleLibrary.reset();
+		}
+		
 		mIsInit = false;
 	}
 }
@@ -151,7 +158,7 @@ void SamplifyProperties::savePropertiesFile()
 	{
 		propFile->clear();
 		//Save Dirs
-		std::vector<std::shared_ptr<SampleDirectory>> dirs = mSampleLibrary->getDirectories();
+		const auto& dirs = mSampleLibrary->getDirectories();
 		propFile->setValue("directory count", (int)dirs.size());
 		for (int i = 0; i < dirs.size(); i++)
 		{

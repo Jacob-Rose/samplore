@@ -18,6 +18,9 @@ SampleLibrary::~SampleLibrary()
 			dir->removeChangeListener(this);
 		}
 	}
+	
+	// Explicitly clear all directories to release Sample objects
+	mDirectories.clear();
 }
 
 void SampleLibrary::updateCurrentSamples(String query)

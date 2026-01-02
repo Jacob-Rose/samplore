@@ -33,12 +33,6 @@ DirectoryExplorerTreeViewItem::~DirectoryExplorerTreeViewItem()
 		mSampleDirectory->removeChangeListener(this);
 	
 	ThemeManager::getInstance().removeListener(this);
-	
-	int subItemCount = getNumSubItems();
-	for (int i = 0; i < subItemCount; i++)
-	{
-		removeSubItem(0, true); 
-	}
 }
 
 bool DirectoryExplorerTreeViewItem::mightContainSubItems()
