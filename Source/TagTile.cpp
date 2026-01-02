@@ -96,9 +96,8 @@ void TagTile::mouseUp(const MouseEvent& e)
 	{
 		if (e.mods.isLeftButtonDown())
 		{
-			//todo set sample container filter
-			String text = SamplifyMainComponent::getInstance()->getSampleExplorer().getSearchBar().getText();
-			SamplifyMainComponent::getInstance()->getSampleExplorer().getSearchBar().setText("#" + mTag);
+			// Toggle this tag in the active filter
+			SamplifyMainComponent::getInstance()->getSampleExplorer().toggleActiveTag(mTag);
 		}
 		else if (e.mods.isRightButtonDown())
 		{

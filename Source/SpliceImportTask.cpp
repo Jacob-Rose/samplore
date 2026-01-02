@@ -191,7 +191,7 @@ namespace samplore
         }
 
         // Get all library samples for lookup
-        auto allLibrarySamples = mLibrary.getAllSamplesInDirectories("", true);
+        auto allLibrarySamples = mLibrary.getAllSamplesInDirectories({}, true);
         
         // Apply tags
         int processed = 0;

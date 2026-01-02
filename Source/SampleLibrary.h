@@ -21,6 +21,16 @@
 
 namespace samplore
 {
+	/// Filter criteria for sample searches
+	struct FilterQuery
+	{
+		String searchText;      // Matches against filename/path
+		StringArray tags;       // All tags must be present on sample
+
+		bool isEmpty() const { return searchText.isEmpty() && tags.isEmpty(); }
+		void clear() { searchText.clear(); tags.clear(); }
+	};
+
 	class SampleLibrary : public ChangeBroadcaster, public ChangeListener, public Timer
 	{
 	public:
@@ -45,12 +55,12 @@ namespace samplore
 		~SampleLibrary();
 
 		void refreshCurrentSamples() { updateCurrentSamples(mCurrentQuery); }
-		void updateCurrentSamples(String query);
+		void updateCurrentSamples(const FilterQuery& query);
 
 		void sortSamples(SortingMethod method);
 
 		Sample::List getCurrentSamples();
-		String getCurrentQuery() { return mCurrentQuery; }
+		const FilterQuery& getCurrentQuery() { return mCurrentQuery; }
 
 		StringArray getUsedTags(); //get tags that are currently connected to one or more samples
 
@@ -88,8 +98,8 @@ namespace samplore
 		bool isAsyncValid() { return mUpdateSampleFuture.valid(); }
 
 		//Get Samples
-		Sample::List getAllSamplesInDirectories(juce::String query, bool ignoreCheckSystem);
-		std::future<Sample::List> getAllSamplesInDirectories_Async(juce::String query = "", bool ignoreCheckSystem = false);
+		Sample::List getAllSamplesInDirectories(const FilterQuery& query, bool ignoreCheckSystem);
+		std::future<Sample::List> getAllSamplesInDirectories_Async(const FilterQuery& query = {}, bool ignoreCheckSystem = false);
 
 		/// Preload all sample files and extract their tags asynchronously
 		void launchPreloadAllTags();
@@ -104,7 +114,7 @@ namespace samplore
 		bool mCancelUpdating = false;
 		bool mPreloadingTags = false;
 		Sample::List mCurrentSamples;
-		String mCurrentQuery;
+		FilterQuery mCurrentQuery;
 
 		std::vector<Tag> mTags;
 		//pointer necessary to keep the check system

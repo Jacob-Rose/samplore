@@ -9,6 +9,8 @@
 */
 
 #include "SampleDirectory.h"
+#include "SampleLibrary.h"
+
 using namespace samplore;
 
 SampleDirectory::SampleDirectory(File file)
@@ -55,7 +57,7 @@ SampleDirectory::~SampleDirectory()
 	mChildDirectories.clear();
 }
 
-Sample::List samplore::SampleDirectory::getChildSamplesRecursive(juce::String query, bool ignoreCheckSystem)
+Sample::List samplore::SampleDirectory::getChildSamplesRecursive(const FilterQuery& query, bool ignoreCheckSystem)
 {
 	Sample::List list;
 	if (mCheckStatus == CheckStatus::Disabled || mCheckStatus == CheckStatus::NotLoaded)

@@ -13,6 +13,8 @@ SampleExplorer::SampleExplorer() : mViewport(&mSampleContainer)
     addAndMakeVisible(mViewport);
 	addAndMakeVisible(mFilter);
 	addAndMakeVisible(mSearchBar);
+	addChildComponent(mActiveTagsBar); // Hidden initially
+
 	for (int i = 1; i < sortingNames.size(); i++)
 	{
 		mFilter.addItem(sortingNames[i], i);
@@ -22,17 +24,20 @@ SampleExplorer::SampleExplorer() : mViewport(&mSampleContainer)
 	mViewport.addAndMakeVisible(mSampleContainer);
 	mViewport.setViewedComponent(&mSampleContainer);
 	mViewport.setScrollBarsShown(true, false, true, false);
-	
+
 	// Enable smooth scrolling (not chunky)
 	mViewport.setScrollOnDragMode(Viewport::ScrollOnDragMode::nonHover);
 	// Ultra-small step size for smoothest possible scrolling
 	// Mouse wheel delta ~120, so 0.08 * 120 = ~10 pixels per tick
 	mViewport.getVerticalScrollBar().setSingleStepSize(0.08);
 	mViewport.setScrollBarThickness(12);
-	
+
 	mSearchBar.addListener(this);
 	mFilter.addListener(this);
-	
+
+	// Active tags bar callback
+	mActiveTagsBar.onTagsChanged = [this]() { updateFilter(); };
+
 	// Register with ThemeManager
 	ThemeManager::getInstance().addListener(this);
 }
@@ -155,22 +160,51 @@ void SampleExplorer::resized()
 	auto sampleLib = SamplifyProperties::getInstance()->getSampleLibrary();
 	bool hasDirectories = !sampleLib->getDirectories().empty();
 	bool hasSamples = sampleLib->getCurrentSamples().size() > 0;
-	
+
 	// Hide search/filter UI when showing empty state
-	bool showUI = hasDirectories && (hasSamples || !mSearchBar.getText().isEmpty());
+	bool showUI = hasDirectories && (hasSamples || !mSearchBar.getText().isEmpty() || mActiveTagsBar.hasActiveTags());
 	mSearchBar.setVisible(showUI);
 	mFilter.setVisible(showUI);
 	mViewport.setVisible(showUI);
-	
-	mSearchBar.setBounds(0, 0, getWidth() - 120, 30);
-	mFilter.setBounds(getWidth() - 120, 0, 120, 30);
-	mViewport.setBounds(0, 30, getWidth(), getHeight() - 30);
+
+	int yOffset = 0;
+
+	// Search bar row
+	mSearchBar.setBounds(0, yOffset, getWidth() - 120, 30);
+	mFilter.setBounds(getWidth() - 120, yOffset, 120, 30);
+	yOffset += 30;
+
+	// Active tags bar (only visible when tags are active)
+	bool showTagsBar = mActiveTagsBar.hasActiveTags();
+	mActiveTagsBar.setVisible(showTagsBar);
+	if (showTagsBar)
+	{
+		mActiveTagsBar.setBounds(0, yOffset, getWidth(), ActiveTagsBar::BAR_HEIGHT);
+		yOffset += ActiveTagsBar::BAR_HEIGHT;
+	}
+
+	mViewport.setBounds(0, yOffset, getWidth(), getHeight() - yOffset);
 	mSampleContainer.setBounds(mViewport.getBounds().withRight(mViewport.getWidth() - mViewport.getScrollBarThickness()));
 }
 
 void SampleExplorer::textEditorTextChanged(TextEditor& e)
 {
-	SamplifyProperties::getInstance()->getSampleLibrary()->updateCurrentSamples(e.getText());
+	updateFilter();
+}
+
+void SampleExplorer::toggleActiveTag(const String& tag)
+{
+	mActiveTagsBar.toggleTag(tag);
+	resized(); // Update layout for tag bar visibility
+}
+
+void SampleExplorer::updateFilter()
+{
+	FilterQuery query;
+	query.searchText = mSearchBar.getText();
+	query.tags = mActiveTagsBar.getActiveTags();
+
+	SamplifyProperties::getInstance()->getSampleLibrary()->updateCurrentSamples(query);
 }
 
 void SampleExplorer::changeListenerCallback(ChangeBroadcaster* source)

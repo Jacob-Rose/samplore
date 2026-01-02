@@ -79,6 +79,8 @@
           <FILE id="J6wKdl" name="DirectoryExplorerTreeViewItem.cpp" compile="1" resource="0" file="Source/DirectoryExplorerTreeViewItem.cpp" />
         </GROUP>
         <GROUP id="{32C94151-7191-C734-302B-CB6AD55EE076}" name="SampleExplorer">
+          <FILE id="ATB001" name="ActiveTagsBar.h" compile="0" resource="0" file="Source/ActiveTagsBar.h" />
+          <FILE id="ATB002" name="ActiveTagsBar.cpp" compile="1" resource="0" file="Source/ActiveTagsBar.cpp" />
           <FILE id="wDxLlc" name="SampleContainer.h" compile="0" resource="0" file="Source/SampleContainer.h" />
           <FILE id="cuUpOg" name="SampleContainer.cpp" compile="1" resource="0" file="Source/SampleContainer.cpp" />
           <FILE id="gKzZ4q" name="SampleExplorer.cpp" compile="1" resource="0" file="Source/SampleExplorer.cpp" />

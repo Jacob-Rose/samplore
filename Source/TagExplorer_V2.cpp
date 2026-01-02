@@ -14,15 +14,13 @@
 
 using namespace samplore;
 
-TagExplorer_V2::TagExplorer_V2() : mTagsContainer(false)
+TagExplorer_V2::TagExplorer_V2() : mTagsContainer(true)
 {
 	mNewButtonTag.setButtonText("New Tag");
-	mNewButtonTag.onClick = [this] {addNewTag(); };
+	mNewButtonTag.onClick = [this] { addNewTag(); };
 	addAndMakeVisible(mNewButtonTag);
 	addAndMakeVisible(mTagViewport);
-	mTagViewport.addAndMakeVisible(mTagsContainer);
-	mTagViewport.setViewedComponent(&mTagsContainer);
-	//mTagViewport.setViewedComponent()
+	mTagViewport.setViewedComponent(&mTagsContainer, false);
 	mTagViewport.setScrollBarsShown(true, false, true, false);
 	SamplifyProperties::getInstance()->getSampleLibrary()->addChangeListener(this);
 }
@@ -38,7 +36,10 @@ void TagExplorer_V2::resized()
 {
 	mNewButtonTag.setBounds(0, getHeight() - 30, getWidth(), 30);
 	mTagViewport.setBounds(0, 0, getWidth(), getHeight() - 30);
-	mTagsContainer.setBounds(mTagViewport.getBounds());
+
+	// Set container width (minus scrollbar), let TagContainer calculate its own height
+	int contentWidth = mTagViewport.getWidth() - mTagViewport.getScrollBarThickness();
+	mTagsContainer.setSize(contentWidth, mTagsContainer.getHeight());
 }
 
 void TagExplorer_V2::paint(Graphics&)

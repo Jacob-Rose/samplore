@@ -1,6 +1,7 @@
 #include "Sample.h"
 #include <string>
 #include "SamplifyProperties.h"
+#include "SampleLibrary.h"
 
 using namespace samplore;
 
@@ -32,13 +33,23 @@ bool Sample::isPropertiesFileValid()
 	return mPropertiesFile->isValidFile();
 }
 
-bool Sample::isQueryValid(juce::String query)
+bool Sample::isQueryValid(const FilterQuery& query)
 {
-	if(mFile.getFullPathName().containsIgnoreCase(query) || mTags.contains("#" + query))
+	// Check text search against filename/path
+	if (query.searchText.isNotEmpty())
 	{
-		return true;
+		if (!mFile.getFullPathName().containsIgnoreCase(query.searchText))
+			return false;
 	}
-	return false;
+
+	// Check all required tags are present
+	for (const auto& tag : query.tags)
+	{
+		if (!mTags.contains(tag))
+			return false;
+	}
+
+	return true;
 }
 
 /* deprecated

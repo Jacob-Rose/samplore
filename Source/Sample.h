@@ -18,6 +18,8 @@
 
 namespace samplore
 {
+	struct FilterQuery; // Forward declaration
+
 	class Sample : public ChangeBroadcaster, public ChangeListener
 	{
 	public:
@@ -114,7 +116,7 @@ namespace samplore
 		float getValueForSortType(SortingMethod method) const;
 		/*Checks if file both exist and has same or older version number*/
 		bool isPropertiesFileValid();
-		bool isQueryValid(juce::String query); //used in search
+		bool isQueryValid(const FilterQuery& query); //used in search
 		static PropertiesFile* getPropertiesFile(const File& sampleFile);
 	private:
 		File mFile;

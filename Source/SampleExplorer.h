@@ -14,6 +14,7 @@
 #include "JuceHeader.h"
 
 #include "SampleContainer.h"
+#include "ActiveTagsBar.h"
 
 #include "SamplifyProperties.h"
 #include "ThemeManager.h"
@@ -67,18 +68,25 @@ namespace samplore
 
 		TextEditor& getSearchBar() { return mSearchBar; }
 		SampleContainer& getSampleContainer() { return mSampleContainer; }
-		
+		ActiveTagsBar& getActiveTagsBar() { return mActiveTagsBar; }
+
+		/// Toggles a tag in the active filter
+		void toggleActiveTag(const String& tag);
+
 		//==================================================================
 		// ThemeManager::Listener interface
 		void themeChanged(ThemeManager::Theme newTheme) override;
 		void colorChanged(ThemeManager::ColorRole role, Colour newColor) override;
-		
+
 	private:
+		/// Triggers sample update with current search + active tags
+		void updateFilter();
 		//============================================================
 		bool mIsUpdating = false;
 		ComboBox mFilter;
 		SampleViewport mViewport;
 		SampleSearchbar mSearchBar;
+		ActiveTagsBar mActiveTagsBar;
 		SampleContainer mSampleContainer;
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SampleExplorer)
 	};

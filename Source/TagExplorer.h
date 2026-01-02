@@ -28,41 +28,26 @@ namespace samplore
 		class Container : public Component
 		{
 		public:
-			Container() : Component(), mNewTags(true), mContainedTags(true), mNotContainedTags(true)
+			Container() : Component(), mTags(true)
 			{
-				addAndMakeVisible(mNewTags);
-				addAndMakeVisible(mContainedTags);
-				addAndMakeVisible(mNotContainedTags);
+				addAndMakeVisible(mTags);
 			}
-			void paint(Graphics& g) override;
-			//this references samplifyproperties
-			void addNewTag(juce::String tag)
-			{
-				mNewTags.addTag(tag);
-				updateTagContainerBounds();
-			}
-			void updateTags(juce::String newSearch);
-			void updateTagContainerBounds();
-			void resetTags();
-			void removeNewTag(juce::String tag);
+
+			void updateTags();
+			void updateBounds();
 
 			void resized() override
 			{
-				updateTagContainerBounds();
+				// Parent handles bounds update
 			}
 		private:
-			const Font infoFont = FontOptions(16.0f);
-			TagContainer mNewTags;
-			TagContainer mContainedTags; //all tags for current files in directory with text from search bar contained in it
-			TagContainer mNotContainedTags; //all tags for lower half, only ones with the text in search bar contained in it
+			TagContainer mTags;
 		};
-		Container& getTagContainer() {
-			return mTagsContainer;
-		}
+		Container& getTagContainer() { return mTagsContainer; }
+
 		void resized() override;
 		void paint(Graphics&) override;
 		void addNewTag();
-		Container& getContainer() { return mTagsContainer; }
 
 		void changeListenerCallback(ChangeBroadcaster* source) override;
 		

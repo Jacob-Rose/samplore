@@ -56,7 +56,7 @@ SamplifyMainComponent::SamplifyMainComponent() :
 	//startTimer(100);
 	setSize(AppValues::getInstance().WINDOW_WIDTH, AppValues::getInstance().WINDOW_HEIGHT);
 	//initial load
-	SamplifyProperties::getInstance()->getSampleLibrary()->updateCurrentSamples("");
+	SamplifyProperties::getInstance()->getSampleLibrary()->updateCurrentSamples({});
 	
 	// Register with ThemeManager
 	ThemeManager::getInstance().addListener(this);

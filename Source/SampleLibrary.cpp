@@ -23,7 +23,7 @@ SampleLibrary::~SampleLibrary()
 	mDirectories.clear();
 }
 
-void SampleLibrary::updateCurrentSamples(String query)
+void SampleLibrary::updateCurrentSamples(const FilterQuery& query)
 {
 	mCurrentQuery = query;
 
@@ -33,7 +33,6 @@ void SampleLibrary::updateCurrentSamples(String query)
 	}
 	mUpdateSampleFuture = std::future<Sample::List>(getAllSamplesInDirectories_Async(query));
 	mUpdatingSamples = true;
-	//mCurrentSamples = getAllSamplesInDirectories(query, false);
 	sendChangeMessage();
 }
 
@@ -119,7 +118,7 @@ Sample::List SampleLibrary::getCurrentSamples()
 StringArray samplore::SampleLibrary::getUsedTags()
 {
 	StringArray tags;
-	Sample::List allSamps = getAllSamplesInDirectories("", true);
+	Sample::List allSamps = getAllSamplesInDirectories({}, true);
 	for (int i = 0; i < allSamps.size(); i++)
 	{
 		StringArray sampleTags = allSamps[i].getTags();
@@ -150,8 +149,8 @@ void SampleLibrary::timerCallback()
 Colour SampleLibrary::hueToColor(float hue)
 {
 	// Use fixed saturation and brightness for consistent, vibrant tag colors
-	const float saturation = 0.65f;
-	const float brightness = 0.85f;
+	const float saturation = 0.45f;
+	const float brightness = 0.75f;
 	return Colour::fromHSV(hue, saturation, brightness, 1.0f);
 }
 
@@ -172,7 +171,7 @@ void SampleLibrary::addTag(juce::String text)
 
 void SampleLibrary::deleteTag(juce::String tag)
 {
-	Sample::List allSamps = getAllSamplesInDirectories("", true);
+	Sample::List allSamps = getAllSamplesInDirectories({}, true);
 	for (int i = 0; i < allSamps.size(); i++)
 	{
 		allSamps[i].removeTag(tag); //remove if exist
@@ -253,7 +252,7 @@ SampleLibrary::Tag SampleLibrary::getTag(juce::String tag)
 	return SampleLibrary::Tag::getEmptyTag();
 }
 
-Sample::List SampleLibrary::getAllSamplesInDirectories(juce::String query, bool ignoreCheckSystem)
+Sample::List SampleLibrary::getAllSamplesInDirectories(const FilterQuery& query, bool ignoreCheckSystem)
 {
 	Sample::List list;
 	for (int i = 0; i < mDirectories.size(); i++)
@@ -269,7 +268,7 @@ Sample::List SampleLibrary::getAllSamplesInDirectories(juce::String query, bool 
 }
 
 
-std::future<Sample::List> SampleLibrary::getAllSamplesInDirectories_Async(juce::String query, bool ignoreCheckSystem)
+std::future<Sample::List> SampleLibrary::getAllSamplesInDirectories_Async(const FilterQuery& query, bool ignoreCheckSystem)
 {
 	std::future<Sample::List> asfunc = std::async(std::launch::async, &SampleLibrary::getAllSamplesInDirectories, this, query, ignoreCheckSystem);
 	startTimer(300);
@@ -288,9 +287,9 @@ void SampleLibrary::launchPreloadAllTags()
 void SampleLibrary::preloadTags_Worker()
 {
 	DBG("Starting tag preload from all sample files...");
-	
+
 	// Get all samples without filtering (empty query, ignore check system)
-	Sample::List allSamples = getAllSamplesInDirectories("", true);
+	Sample::List allSamples = getAllSamplesInDirectories({}, true);
 	
 	// Iterate through all samples and load their properties/tags
 	int sampleCount = allSamples.size();
