@@ -80,6 +80,7 @@ python3 scripts/debug.py -b main      # Set breakpoint at main()
 - **Core singletons**: `SamploreProperties` (owns `SampleLibrary`, `AudioPlayer`), `AppValues`, `ThemeManager`
 - **Data flow**: `SampleLibrary` manages all samples/tags/directories → broadcasts changes → UI components update
 - **Smart pointer arch**: `Sample` owned by `SampleDirectory` as `shared_ptr`, UI uses `Sample::Reference` (weak_ptr wrapper)
+- **Planning Docs** - are stored in docs directory
 
 ## Platform Notes
 

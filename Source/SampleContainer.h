@@ -40,6 +40,8 @@ namespace samplore
 		int getTileHeight() const;
 		int getTileWidth() const;
 	private:
+		/// Pre-allocate tile pool to avoid mid-scroll allocations
+		void preallocateTilePool();
 		//=============================================================================
 		/// Pool of reusable SampleTile objects
 		std::vector<std::unique_ptr<SampleTile>> mTilePool;
