@@ -5,7 +5,8 @@
     Created: 2025
     Author:  Samplore Team
 
-    Centralized key binding management system with persistence and rebinding
+    Centralized key binding management system with persistence and rebinding.
+    Uses InputContextManager internally for key handling.
 
   ==============================================================================
 */
@@ -14,7 +15,9 @@
 #define KEYBINDINGMANAGER_H
 
 #include "JuceHeader.h"
+#include "InputContext.h"
 #include <map>
+#include <functional>
 
 namespace samplore
 {
@@ -30,19 +33,17 @@ namespace samplore
             ToggleFilterWindow,
             ToggleDirectoryWindow,
             OpenPreferences,
-            ExitApplication
+            ExitApplication,
+            ToggleCueBindings
         };
 
-        /// Represents a key binding with modifiers
-        struct KeyBinding
+        /// Metadata for an action (does not include callback)
+        struct ActionInfo
         {
-            juce::KeyPress keyPress;
+            juce::KeyPress defaultKey;
+            juce::KeyPress currentKey;
             juce::String displayName;
             juce::String description;
-
-            KeyBinding() = default;
-            KeyBinding(const juce::KeyPress& kp, const juce::String& name, const juce::String& desc)
-                : keyPress(kp), displayName(name), description(desc) {}
         };
 
         //======================================================================
@@ -52,32 +53,35 @@ namespace samplore
         static KeyBindingManager& getInstance();
 
         //======================================================================
-        /// Get the key binding for an action
-        KeyBinding getBinding(Action action) const;
-        
-        /// Set/rebind a key for an action
-        bool setBinding(Action action, const juce::KeyPress& newKey);
-        
+        /// Set callback for an action - this is how components register their handlers
+        void setCallback(Action action, std::function<void()> callback);
+
+        /// Remove callback for an action
+        void clearCallback(Action action);
+
+        /// Get info about an action
+        const ActionInfo* getActionInfo(Action action) const;
+
+        /// Get current key for an action
+        juce::KeyPress getKey(Action action) const;
+
+        /// Set/rebind a key for an action (returns false if conflict)
+        bool setKey(Action action, const juce::KeyPress& newKey);
+
         /// Reset a specific binding to default
-        void resetBinding(Action action);
-        
+        void resetKey(Action action);
+
         /// Reset all bindings to defaults
-        void resetAllBindings();
-        
-        /// Check if a key press matches an action
-        bool matchesAction(const juce::KeyPress& key, Action action) const;
-        
-        /// Get all bindings (for UI display)
-        std::map<Action, KeyBinding> getAllBindings() const { return mBindings; }
-        
+        void resetAllKeys();
+
+        /// Get all actions (for UI display)
+        const std::map<Action, ActionInfo>& getAllActions() const { return mActions; }
+
         /// Get action name for display
         static juce::String getActionName(Action action);
-        
+
         /// Get key string for display
         juce::String getKeyString(Action action) const;
-        
-        /// Reset all bindings to defaults
-        void resetToDefaults();
 
         //======================================================================
         // Persistence
@@ -86,11 +90,16 @@ namespace samplore
 
     public:
         KeyBindingManager();
-    private:
-        void initializeDefaultBindings();
 
-        std::map<Action, KeyBinding> mBindings;
-        static std::unique_ptr<KeyBindingManager> instance;
+    private:
+        void initializeActions();
+        void rebuildContext();
+
+        std::map<Action, ActionInfo> mActions;
+        std::map<Action, std::function<void()>> mCallbacks;
+        std::shared_ptr<InputContext> mContext;
+
+        static std::unique_ptr<KeyBindingManager> sInstance;
     };
 }
 

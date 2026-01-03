@@ -4,6 +4,7 @@ Samplore Run Script
 Launches the built application
 """
 
+import argparse
 import os
 import platform
 import subprocess
@@ -48,21 +49,25 @@ def get_platform():
         return system
 
 
-def run_linux():
+def run_linux(config="Release"):
     """Run Linux binary."""
+    # Debug and Release use the same output path for Projucer builds
     binary_path = BUILDS_DIR / "LinuxMakefile" / "build" / "Samplore"
-    
+
     if not binary_path.exists():
         print(f"✗ Binary not found at {binary_path}")
         print()
         print("Build the application first:")
-        print("  ./scripts/build.sh")
+        print(f"  python3 scripts/build.py {'--debug' if config == 'Debug' else ''}")
         return 1
-    
-    print(f"Launching Samplore...")
+
+    print(f"Launching Samplore ({config})...")
+    if config == "Debug":
+        print("(DBG output will appear below)")
     print()
-    
+
     try:
+        # Run with stdout/stderr visible in console
         subprocess.run([str(binary_path)], check=True)
         return 0
     except subprocess.CalledProcessError as e:
@@ -139,22 +144,49 @@ def run_windows(config):
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Samplore Run Script - Launches the built application",
+        epilog="""
+Examples:
+  python3 scripts/run.py                # Run Release build
+  python3 scripts/run.py --debug        # Run Debug build (with console output)
+        """
+    )
+    parser.add_argument(
+        "--debug", "-d",
+        action="store_true",
+        help="Run Debug build (shows DBG output in console)"
+    )
+    parser.add_argument(
+        "--config", "-c",
+        choices=["Debug", "Release"],
+        default=None,
+        help="Build configuration to run"
+    )
+
+    args = parser.parse_args()
+
     print("=" * 70)
     print("Samplore Launcher")
     print("=" * 70)
     print()
-    
-    # Load config
+
+    # Load config from env, but allow override
     env_vars = load_env_file()
-    config = env_vars.get('BUILD_CONFIG', 'Release')
-    
+    if args.debug:
+        config = "Debug"
+    elif args.config:
+        config = args.config
+    else:
+        config = env_vars.get('BUILD_CONFIG', 'Release')
+
     plat = get_platform()
     print(f"Platform: {plat}")
     print(f"Config:   {config}")
     print()
-    
+
     if plat == "linux":
-        return run_linux()
+        return run_linux(config)
     elif plat == "macos":
         return run_macos(config)
     elif plat == "windows":

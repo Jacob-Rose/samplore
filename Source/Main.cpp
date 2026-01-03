@@ -22,6 +22,8 @@
 #include "ThemeManager.h"
 #include "UI/IconLibrary.h"
 #include "KeyBindingManager.h"
+#include "InputContext.h"
+#include "CueManager.h"
 
 namespace samplore
 {
@@ -54,8 +56,10 @@ namespace samplore
 			AppValues::initInstance();
 			ThemeManager::initInstance();  // Initialize ThemeManager before SamplifyProperties
 			IconLibrary::initInstance();    // Initialize IconLibrary
+			InputContextManager::initInstance(); // Initialize InputContextManager for layered input
 			KeyBindingManager::initInstance(); // Initialize KeyBindingManager
 			SamplifyProperties::initInstance();
+			CueManager::initInstance(); // Initialize CueManager after SamplifyProperties (needs library)
 			mainWindow.reset(new MainWindow(getApplicationName()));
 			//}
 		}
@@ -63,13 +67,15 @@ namespace samplore
 	void shutdown() override
 	{
 		mainWindow.reset(nullptr); //(deletes our window)
-		
+
 		// Wait for async thumbnail loading threads to complete
 		// These background threads may hold weak_ptr references in lambdas
 		Thread::sleep(2000);
-		
+
+		CueManager::cleanupInstance(); // Cleanup CueManager before SamplifyProperties
 		SamplifyProperties::cleanupInstance();
 		KeyBindingManager::cleanupInstance();
+		InputContextManager::cleanupInstance(); // Cleanup InputContextManager
 		IconLibrary::cleanupInstance();
 		ThemeManager::cleanupInstance();
 		AppValues::cleanupInstance();

@@ -11,12 +11,61 @@ using namespace samplore;
 
 SampleContainer::SampleContainer()
 {
-
+	// Register with SampleLibrary for thumbnail ready notifications
+	if (auto library = SamplifyProperties::getInstance()->getSampleLibrary())
+	{
+		library->addRequestProvider(this);
+	}
 }
 
 SampleContainer::~SampleContainer()
 {
+	// Unregister from SampleLibrary
+	if (auto* props = SamplifyProperties::getInstance())
+	{
+		if (auto library = props->getSampleLibrary())
+		{
+			library->removeRequestProvider(this);
+		}
+	}
 	clearItems();
+}
+
+void SampleContainer::retryVisibleThumbnails()
+{
+	// Retry thumbnail generation for visible samples that are still missing thumbnails
+	if (mLastViewportTop < 0 || mLastViewportHeight <= 0)
+		return;
+
+	int columns = getColumnCount();
+	if (columns <= 0)
+		return;
+
+	int tileHeight = getTileHeight();
+	if (tileHeight <= 0)
+		return;
+
+	int firstVisibleRow = jmax(0, (mLastViewportTop / tileHeight) - 1);
+	int lastVisibleRow = jmin(getTotalRowCount() - 1,
+	                          ((mLastViewportTop + mLastViewportHeight) / tileHeight) + 1);
+
+	int firstVisibleIndex = firstVisibleRow * columns;
+	int lastVisibleIndex = jmin((int)mCurrentSamples.size() - 1,
+	                            (lastVisibleRow + 1) * columns - 1);
+
+	for (int i = firstVisibleIndex; i <= lastVisibleIndex && i < (int)mCurrentSamples.size(); i++)
+	{
+		Sample::Reference sample = mCurrentSamples[i];
+		if (!sample.isNull())
+		{
+			auto thumbnail = sample.getThumbnail();
+			if (thumbnail == nullptr)
+			{
+				sample.generateThumbnailAndCache();
+				break; // Only start one at a time to respect throttling
+			}
+		}
+	}
 }
 
 void SampleContainer::paint (Graphics& g)
@@ -131,6 +180,23 @@ void SampleContainer::updateVisibleItems(int viewportTop, int viewportHeight)
 		if (!tileUsedThisFrame[i] && mTilePool[i]->isVisible())
 		{
 			mTilePool[i]->setVisible(false);
+		}
+	}
+
+	// Retry thumbnail generation for visible tiles that are missing thumbnails
+	// This handles cases where thumbnails were skipped due to throttling
+	for (int i = 0; i < visibleCount && (firstVisibleIndex + i) < (int)mCurrentSamples.size(); i++)
+	{
+		int sampleIndex = firstVisibleIndex + i;
+		Sample::Reference sample = mCurrentSamples[sampleIndex];
+		if (!sample.isNull())
+		{
+			auto thumbnail = sample.getThumbnail();
+			if (thumbnail == nullptr)
+			{
+				// This sample needs a thumbnail - retry generation
+				sample.generateThumbnailAndCache();
+			}
 		}
 	}
 

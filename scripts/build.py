@@ -474,7 +474,7 @@ def main():
         epilog="""
 Examples:
   python3 scripts/build.py                    # Build Release
-  python3 scripts/build.py --config Debug     # Build Debug
+  python3 scripts/build.py --debug            # Build Debug (with DBG output)
   python3 scripts/build.py --clean            # Clean build artifacts
   python3 scripts/build.py --clean --build    # Clean then build
   python3 scripts/build.py --run              # Build and run
@@ -487,6 +487,11 @@ Examples:
         choices=["Debug", "Release"],
         default="Release",
         help="Build configuration (default: Release)"
+    )
+    parser.add_argument(
+        "--debug", "-d",
+        action="store_true",
+        help="Build in Debug mode (shorthand for --config Debug)"
     )
     parser.add_argument(
         "--clean",
@@ -548,6 +553,10 @@ Examples:
     print(f"Project: {PROJECT_ROOT}")
     print()
 
+    # --debug flag overrides --config
+    if args.debug:
+        args.config = "Debug"
+
     # Default to build if no action specified
     if not args.clean and not args.build and not args.run and not args.build_tests:
         args.build = True
@@ -591,36 +600,6 @@ Examples:
             binary = get_output_binary(plat, args.config)
             if binary and binary.exists():
                 print(f"Output: {binary}")
-
-    # Run
-    if args.run and result == 0:
-        print()
-        result = run_app(plat, args.config)
-        if result != 0:
-            print("\nRun failed!")
-            return result
-
-    return result
-
-    # Build tests (always uses Debug config)
-    if args.build_tests:
-        result = build(plat, "Debug", args.jobs, build_tests=True)
-        if result != 0:
-            print("\nTest build failed!")
-            return result
-
-    # Build main project
-    if args.build or args.run:
-        result = build(plat, args.config, args.jobs)
-        if result != 0:
-            print("\nBuild failed!")
-            return result
-        print("\nBuild successful!")
-
-        # Show output location
-        binary = get_output_binary(plat, args.config)
-        if binary and binary.exists():
-            print(f"Output: {binary}")
 
     # Run
     if args.run and result == 0:

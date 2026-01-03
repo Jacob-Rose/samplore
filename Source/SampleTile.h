@@ -105,8 +105,22 @@ namespace samplore
 		static Font getTitleFont();
 		static Font getTimeFont();
 		
-		// Track if this tile is currently playing (for dynamic buffering)
+		// Track if this tile is currently playing (for playback overlay and dynamic buffering)
 		bool mIsPlaying = false;
+
+		// Track if this tile is the active sample (for rainbow cue animation)
+		bool mIsActiveSample = false;
+
+		// Timer for rainbow cue animation at 30hz
+		class RainbowAnimationTimer : public juce::Timer
+		{
+		public:
+			RainbowAnimationTimer(SampleTile& owner) : mOwner(owner) {}
+			void timerCallback() override { mOwner.repaint(); }
+		private:
+			SampleTile& mOwner;
+		};
+		RainbowAnimationTimer mRainbowTimer{*this};
 
 		//Rectangle<float> m_FavoriteButtonRect;
 		//Rectangle<float> m_SaveForLaterRect;

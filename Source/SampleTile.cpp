@@ -6,6 +6,7 @@
 #include "ThemeManager.h"
 #include "UI/IconLibrary.h"
 #include "PerformanceProfiler.h"
+#include "CueManager.h"
 
 #include <iomanip>
 #include <sstream>
@@ -33,23 +34,38 @@ SampleTile::SampleTile(Sample::Reference sample) : mTagContainer(false)
     mTagContainer.addMouseListener(this, false);
 	addAndMakeVisible(mTagContainer);
 	addAndMakeVisible(m_InfoIcon);
-	
+
 	// Register with ThemeManager
 	ThemeManager::getInstance().addListener(this);
-	
+
+	// Register with AudioPlayer to get notified when active sample changes
+	if (auto player = SamplifyProperties::getInstance()->getAudioPlayer())
+	{
+		player->addChangeListener(this);
+	}
+
 	// Enable buffering by default (disabled dynamically when playing)
 	setBufferedToImage(true);
 }
 
 SampleTile::~SampleTile()
 {
+	// Stop animation timer
+	mRainbowTimer.stopTimer();
+
 	// Remove ourselves as listener from the sample before destruction
 	if (!mSample.isNull())
 		mSample.removeChangeListener(this);
-	
+
+	// Remove from AudioPlayer
+	if (auto player = SamplifyProperties::getInstance()->getAudioPlayer())
+	{
+		player->removeChangeListener(this);
+	}
+
 	// Clear sample reference to ensure thumbnail cleanup
 	mSample = nullptr;
-	
+
 	ThemeManager::getInstance().removeListener(this);
 }
 void SampleTile::paint (Graphics& g)
@@ -158,6 +174,51 @@ void SampleTile::paint (Graphics& g)
 			}
 		}
 
+		// Draw cue point indicators (like Ableton hot cues)
+		{
+			PROFILE_SCOPE("SampleTile::paint::cueIndicators");
+			auto& cueManager = CueManager::getInstance();
+			const auto& bindings = cueManager.getBindings();
+			auto waveformRect = m_ThumbnailRect.reduced(padding / 2, 0).toFloat();
+
+			for (const auto& [key, binding] : bindings)
+			{
+				// Skip if not for this sample
+				if (binding.mSample.isNull() || binding.mSample != mSample)
+					continue;
+
+				// Calculate x position from start time
+				float cueX = waveformRect.getX() + (waveformRect.getWidth() * static_cast<float>(binding.mStartTime));
+				float y1 = waveformRect.getY();
+				float y2 = waveformRect.getBottom();
+
+				// Get cue color
+				Colour cueColor = binding.getColor();
+
+				// Draw vertical line
+				g.setColour(cueColor.withAlpha(0.9f));
+				g.drawLine(cueX, y1, cueX, y2, 2.0f);
+
+				// Draw play triangle at top
+				const float triangleSize = 8.0f;
+				Path triangle;
+				triangle.addTriangle(
+					cueX, y1,                                    // Top point
+					cueX - triangleSize * 0.6f, y1 + triangleSize,  // Bottom left
+					cueX + triangleSize * 0.6f, y1 + triangleSize   // Bottom right
+				);
+				g.setColour(cueColor);
+				g.fillPath(triangle);
+
+				// Draw key label below triangle
+				g.setColour(cueColor.darker(0.2f));
+				auto keyStr = CueManager::getKeyDisplayString(key);
+				auto labelRect = Rectangle<float>(cueX - 8.0f, y1 + triangleSize, 16.0f, 12.0f);
+				g.setFont(FontOptions(10.0f).withStyle("Bold"));
+				g.drawText(keyStr, labelRect, Justification::centred, false);
+			}
+		}
+
 		// Draw playback position indicators
 		{
 			PROFILE_SCOPE("SampleTile::paint::playbackIndicators");
@@ -165,14 +226,12 @@ void SampleTile::paint (Graphics& g)
 			bool isCurrentlyPlaying = (auxPlayer->getSampleReference() == mSample) &&
 			                          (auxPlayer->getState() == AudioPlayer::TransportState::Playing);
 
-			// Dynamic buffering: toggle after paint completes (can't change during paint)
+			// Dynamic buffering: disable when playing (frequent full repaints)
 			if (isCurrentlyPlaying != mIsPlaying)
 			{
 				mIsPlaying = isCurrentlyPlaying;
-				// Defer buffering change until after paint() completes to avoid crash
-				// Use SafePointer to ensure component still exists
 				Component::SafePointer<SampleTile> safeThis(this);
-				MessageManager::callAsync([safeThis, shouldBuffer = !mIsPlaying]() {
+				MessageManager::callAsync([safeThis, shouldBuffer = !isCurrentlyPlaying]() {
 					if (safeThis != nullptr)
 						safeThis->setBufferedToImage(shouldBuffer);
 				});
@@ -221,31 +280,58 @@ void SampleTile::paint (Graphics& g)
 				}
 			}
 
-			if (auxPlayer->getSampleReference() == mSample)
+			auto waveformRect = m_ThumbnailRect.reduced(padding / 2, 0);
+			float y1 = static_cast<float>(waveformRect.getY());
+			float y2 = static_cast<float>(waveformRect.getBottom());
+
+			// Draw start position and playback position when this sample is loaded in player
+			bool isCurrentSample = (auxPlayer->getSampleReference() == mSample);
+
+			// Start/stop rainbow animation timer based on active state
+			if (isCurrentSample != mIsActiveSample)
 			{
-				auto waveformRect = m_ThumbnailRect.reduced(padding / 2, 0);
+				mIsActiveSample = isCurrentSample;
+				if (mIsActiveSample)
+					mRainbowTimer.startTimerHz(30);
+				else
+					mRainbowTimer.stopTimer();
+			}
+
+			if (isCurrentSample)
+			{
 				float startT = auxPlayer->getStartCueRelative();
-				float currentT = auxPlayer->getRelativeTime();
 				float startX = waveformRect.getX() + (waveformRect.getWidth() * startT);
-				float currentX = waveformRect.getX() + (waveformRect.getWidth() * currentT);
-				float y1 = waveformRect.getY();
-				float y2 = waveformRect.getBottom();
 
-				// Draw start position with subtle color
-				g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary).withAlpha(0.5f));
-				g.drawLine(startX, y1, startX, y2, 1.5f);
+				// Draw start position with animated rainbow color and triangle
+				{
+					double currentTime = Time::getMillisecondCounterHiRes();
+					float animPhase = static_cast<float>(std::fmod(currentTime * 0.0003, 1.0));
+					Colour rainbowColor = Colour::fromHSV(animPhase, 0.8f, 0.9f, 1.0f);
 
-				// Draw current position with accent color
+					// Draw vertical line with rainbow color
+					g.setColour(rainbowColor.withAlpha(0.7f));
+					g.drawLine(startX, y1, startX, y2, 2.0f);
+
+					// Draw rainbow triangle at top
+					const float triangleSize = 8.0f;
+					Path triangle;
+					triangle.addTriangle(
+						startX, y1,
+						startX - triangleSize * 0.6f, y1 + triangleSize,
+						startX + triangleSize * 0.6f, y1 + triangleSize
+					);
+					g.setColour(rainbowColor);
+					g.fillPath(triangle);
+				}
+
+				// Draw current playback position with accent color when playing
 				if (mIsPlaying)
 				{
+					float currentT = auxPlayer->getRelativeTime();
+					float currentX = waveformRect.getX() + (waveformRect.getWidth() * currentT);
+
 					g.setColour(theme.getColorForRole(ThemeManager::ColorRole::AccentSecondary));
 					g.drawLine(currentX, y1, currentX, y2, 2.0f);
-
-					// Only trigger continuous repaint if in animated rainbow mode
-					if (AppValues::getInstance().PLAYBACK_INDICATOR_MODE == PlaybackIndicatorMode::AnimatedRainbow)
-					{
-						repaint();
-					}
 				}
 			}
 		}
@@ -303,13 +389,13 @@ void SampleTile::mouseUp(const MouseEvent& e)
 		}
 		else if (e.mods.isRightButtonDown())
 		{
-			
 			if (m_ThumbnailRect.contains(e.getMouseDownPosition()) && AppValues::getInstance().RIGHTCLICKPLAYFROMPOINT)
 			{
-				float rectWidth = m_ThumbnailRect.getWidth();
-				float mouseDownX = e.getMouseDownX();
+				float rectWidth = static_cast<float>(m_ThumbnailRect.getWidth());
+				float mouseDownX = static_cast<float>(e.getMouseDownX() - m_ThumbnailRect.getX());
+				float startPos = mouseDownX / rectWidth;
 				SamplifyProperties::getInstance()->getAudioPlayer()->loadFile(mSample);
-				SamplifyProperties::getInstance()->getAudioPlayer()->playSample(mouseDownX / rectWidth);
+				SamplifyProperties::getInstance()->getAudioPlayer()->playSample(startPos);
 			}
 			/*
 			else if (m_TitleRect.contains(e.getMouseDownPosition().toFloat()) && e.mods.isLeftButtonDown())
@@ -326,7 +412,7 @@ void SampleTile::mouseUp(const MouseEvent& e)
 			else
 			{
 				PopupMenu menu;
-				menu.addItem((int)RightClickOptions::openExplorer, "Open in Explorer", true, false); //QEDITOR IS THE PLACE TO BREAK A SAMPLE
+				menu.addItem((int)RightClickOptions::openExplorer, "Open in Explorer", true, false);
 				menu.addSeparator();
 				menu.addItem((int)RightClickOptions::renameSample, "Rename", true, false);
 				menu.addItem((int)RightClickOptions::deleteSample, "Move To Trash", true, false);
@@ -417,21 +503,11 @@ void SampleTile::changeListenerCallback(ChangeBroadcaster* source)
 {
 	if (!mSample.isNull())
 	{
-		std::shared_ptr<AudioPlayer> aux = SamplifyProperties::getInstance()->getAudioPlayer();
-		if (aux->getSampleReference() == mSample)
-		{
-			if (!(aux->getState() == AudioPlayer::TransportState::Starting ||
-				aux->getState() == AudioPlayer::TransportState::Stopped ||
-				aux->getState() == AudioPlayer::TransportState::Stopping))
-			{
-				aux->removeChangeListener(this);
-			}
-		}
 		m_InfoIcon.setTooltip(mSample.getInfoText());
 		// Update tags when sample changes (e.g., tags added/removed)
 		mTagContainer.setTags(mSample.getTags());
 	}
-	resized();
+	// Always repaint - handles AudioPlayer changes (active sample, playback state)
 	repaint();
 }
 

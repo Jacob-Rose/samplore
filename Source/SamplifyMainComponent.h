@@ -14,17 +14,20 @@
 #include "JuceHeader.h"
 
 #include "AudioPlayer.h"
-#include "DirectoryExplorer.h"
+#include "UI/LeftPanelTabs.h"
 #include "FilterExplorer.h"
 #include "SamplePlayerComponent.h"
 #include "SampleExplorer.h"
 #include "ServerAuthUnlockComponent.h"
 #include "KeyBindingManager.h"
+#include "InputContext.h"
 #include "PreferenceWindow.h"
 #include "ThemeManager.h"
 #include "ImportWizard.h"
 #include "PerformanceProfiler.h"
 #include "UI/OverlayPanel.h"
+#include "UI/CueBindingsWindow.h"
+#include "UI/KeyCaptureOverlay.h"
 
 namespace samplore
 {
@@ -53,25 +56,32 @@ namespace samplore
 		void mouseDrag(const MouseEvent& e) override;
 
 
-		DirectoryExplorer& getDirectoryExplorer() { return mDirectoryExplorer; }
+		DirectoryExplorer& getDirectoryExplorer() { return mLeftPanel.getDirectoryExplorer(); }
+		LeftPanelTabs& getLeftPanel() { return mLeftPanel; }
 		SampleExplorer& getSampleExplorer() { return mSampleExplorer; }
 		FilterExplorer& getFilterExplorer() { return mFilterExplorer; }
 		SamplePlayerComponent& getSamplePlayerComponent() { return mSamplePlayerComponent; }
-	std::shared_ptr<AudioPlayer> getAudioPlayer() { return mAudioPlayer; }
+		std::shared_ptr<AudioPlayer> getAudioPlayer() { return mAudioPlayer; }
 	
-	/// Shows the import wizard overlay
-	void showImportWizard();
-	
-	/// Shows the preferences overlay
-	void showPreferences();
+		/// Shows the import wizard overlay
+		void showImportWizard();
 
-	//==================================================================
-	// ThemeManager::Listener interface
-	void themeChanged(ThemeManager::Theme newTheme) override;
-	void colorChanged(ThemeManager::ColorRole role, Colour newColor) override;
+		/// Shows the preferences overlay
+		void showPreferences();
+
+		/// Shows/toggles the cue bindings window
+		void showCueBindingsWindow();
+
+		/// Shows the key capture overlay for binding a key to current sample
+		void showKeyCaptureOverlay();
+
+		//==================================================================
+		// ThemeManager::Listener interface
+		void themeChanged(ThemeManager::Theme newTheme) override;
+		void colorChanged(ThemeManager::ColorRole role, Colour newColor) override;
 		
 	private:
-		DirectoryExplorer mDirectoryExplorer;
+		LeftPanelTabs mLeftPanel;
 		SampleExplorer mSampleExplorer;
 		FilterExplorer mFilterExplorer;
 		SamplePlayerComponent mSamplePlayerComponent;
@@ -82,23 +92,30 @@ namespace samplore
 		ComponentBoundsConstrainer mResizableEdgeFilterExplorerBounds;
 		ComponentBoundsConstrainer mResizableEdgeAudioPlayerBounds;
 
-	std::shared_ptr<AudioPlayer> mAudioPlayer;
-	juce::SharedResourcePointer<TooltipWindow> mTooltip;
-	
-	// Central overlay panel for modal views
-	OverlayPanel mOverlayPanel;
-	
-	// Content views for overlay
-	ImportWizard mImportWizard;
-	PreferencePanel mPreferencePanel;
+		std::shared_ptr<AudioPlayer> mAudioPlayer;
+		juce::SharedResourcePointer<TooltipWindow> mTooltip;
+		
+		// Central overlay panel for modal views
+		OverlayPanel mOverlayPanel;
+		
+		// Content views for overlay
+		ImportWizard mImportWizard;
+		PreferencePanel mPreferencePanel;
+		KeyCaptureOverlay mKeyCaptureOverlay;
 
-	static SamplifyMainComponent* mInstance;
+		// Floating cue bindings window
+		std::unique_ptr<CueBindingsWindow> mCueBindingsWindow;
 
-		//ServerAuthStatus authorizationStatus;
-		//ServerAuthUnlockComponent unlockForm;
-		//bool isUnlocked = false;
+		/// Register callbacks for global key bindings with KeyBindingManager
+		void registerKeyBindingCallbacks();
 
-		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SamplifyMainComponent)
-	};
+		static SamplifyMainComponent* mInstance;
+
+			//ServerAuthStatus authorizationStatus;
+			//ServerAuthUnlockComponent unlockForm;
+			//bool isUnlocked = false;
+
+			JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SamplifyMainComponent)
+		};
 }
 #endif

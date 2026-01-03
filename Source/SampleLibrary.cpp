@@ -275,6 +275,23 @@ std::future<Sample::List> SampleLibrary::getAllSamplesInDirectories_Async(const 
 	return asfunc;
 }
 
+Sample::Reference SampleLibrary::findSampleByFile(const juce::File& file)
+{
+	FilterQuery emptyQuery;
+	Sample::List allSamples = getAllSamplesInDirectories(emptyQuery, true);
+
+	for (int i = 0; i < allSamples.size(); ++i)
+	{
+		Sample::Reference ref = allSamples[i];
+		if (!ref.isNull() && ref.getFile() == file)
+		{
+			return ref;
+		}
+	}
+
+	return Sample::Reference(nullptr);
+}
+
 void SampleLibrary::launchPreloadAllTags()
 {
 	if (!mPreloadingTags)
@@ -336,7 +353,38 @@ void SampleLibrary::preloadTags_Worker()
 	
 	DBG("Tag preload complete! Processed " + String(processedCount) + " samples");
 	mPreloadingTags = false;
-	
+
 	// Notify listeners that tags have been updated
 	sendChangeMessage();
+}
+
+//==============================================================================
+// Sample request providers
+
+void SampleLibrary::addRequestProvider(ISampleRequestProvider* provider)
+{
+	if (provider != nullptr)
+	{
+		mRequestProviders.push_back(provider);
+	}
+}
+
+void SampleLibrary::removeRequestProvider(ISampleRequestProvider* provider)
+{
+	auto it = std::find(mRequestProviders.begin(), mRequestProviders.end(), provider);
+	if (it != mRequestProviders.end())
+	{
+		mRequestProviders.erase(it);
+	}
+}
+
+void SampleLibrary::notifyThumbnailReady()
+{
+	for (auto* provider : mRequestProviders)
+	{
+		if (provider != nullptr)
+		{
+			provider->retryVisibleThumbnails();
+		}
+	}
 }

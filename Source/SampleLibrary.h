@@ -21,6 +21,16 @@
 
 namespace samplore
 {
+	/// Interface for components that can provide visible samples for thumbnail retry
+	class ISampleRequestProvider
+	{
+	public:
+		virtual ~ISampleRequestProvider() = default;
+
+		/// Called when a thumbnail finishes loading - providers should retry visible samples
+		virtual void retryVisibleThumbnails() = 0;
+	};
+
 	/// Filter criteria for sample searches
 	struct FilterQuery
 	{
@@ -101,9 +111,20 @@ namespace samplore
 		Sample::List getAllSamplesInDirectories(const FilterQuery& query, bool ignoreCheckSystem);
 		std::future<Sample::List> getAllSamplesInDirectories_Async(const FilterQuery& query = {}, bool ignoreCheckSystem = false);
 
+		/// Find a sample by its file path (for cue binding restoration)
+		Sample::Reference findSampleByFile(const juce::File& file);
+
 		/// Preload all sample files and extract their tags asynchronously
 		void launchPreloadAllTags();
 		bool isPreloadingTags() const { return mPreloadingTags; }
+
+		//======================================================================
+		// Sample request providers (for thumbnail retry)
+		void addRequestProvider(ISampleRequestProvider* provider);
+		void removeRequestProvider(ISampleRequestProvider* provider);
+
+		/// Called when a thumbnail finishes loading - notifies all providers to retry
+		void notifyThumbnailReady();
 
 	private:
 		void preloadTags_Worker();
@@ -118,7 +139,10 @@ namespace samplore
 
 		std::vector<Tag> mTags;
 		//pointer necessary to keep the check system
-		std::vector<std::shared_ptr<SampleDirectory>> mDirectories = std::vector<std::shared_ptr<SampleDirectory>>(); 
+		std::vector<std::shared_ptr<SampleDirectory>> mDirectories = std::vector<std::shared_ptr<SampleDirectory>>();
+
+		/// Registered providers for thumbnail retry notifications
+		std::vector<ISampleRequestProvider*> mRequestProviders;
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SampleLibrary)
 	};
