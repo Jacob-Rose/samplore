@@ -16,7 +16,7 @@ using namespace samplore;
 // Static font cache for performance
 Font SampleTile::getTitleFont()
 {
-	static Font titleFont(Font::getDefaultSansSerifFontName(), 20.0f, Font::bold);
+	static Font titleFont(Font::getDefaultSansSerifFontName(), 15.0f, Font::bold);
 	return titleFont;
 }
 
@@ -141,20 +141,22 @@ void SampleTile::paint (Graphics& g)
 			g.drawText(mSample.getFile().getFileName(), titleRect, Justification::centredLeft, true);
 		}
 
-		// Draw time with cached font - batch with same font
+		// Draw time with cached font
 		{
 			PROFILE_SCOPE("SampleTile::paint::timeLabels");
-			g.setFont(getTimeFont());
+			g.setFont(FontOptions(15.0f));
 			g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
 
 			// Cache time calculation
 			double length = mSample.getLength();
 			int minutes = static_cast<int>(length) / 60;
-			double seconds = length - (60.0 * minutes);
+			int seconds = static_cast<int>(length - (60.0 * minutes));
+
+			// Format as "3min24sec"
+			String timeString = String(minutes) + "min" + String(seconds) + "sec";
 
 			auto timeRect = m_TimeRect.reduced(padding / 2, padding / 2);
-			g.drawText(String(seconds, 1) + " sec", timeRect, Justification::bottom);
-			g.drawText(String(minutes) + " min", timeRect, Justification::top);
+			g.drawText(timeString, timeRect, Justification::centredLeft);
 		}
 
 		// Draw waveform thumbnail with modern styling
@@ -343,16 +345,19 @@ void SampleTile::resized()
 	PROFILE_SCOPE("SampleTile::resized");
 
 	const int padding = 12;
-	const int titleHeight = 32; // Height for 20px font + spacing
+	const int titleHeight = 24; // Reduced height for 15px font + minimal spacing
+	const int bottomInfoHeight = getWidth() / 4; // Increased from 1/5 to 1/4 for more space
 
 	// Core Rects with modern spacing
 	m_TitleRect = Rectangle<int>(0, 0, getWidth(), titleHeight);
-	m_TypeRect = Rectangle<int>(0, getHeight() - (getWidth() / 5), getWidth() / 5, getWidth() / 5);
-	m_TimeRect = Rectangle<int>(getWidth() / 5, getHeight() - (getWidth() / 5), getWidth() / 5, getWidth() / 5);
+	m_TypeRect = Rectangle<int>(0, getHeight() - bottomInfoHeight, getWidth() / 5, bottomInfoHeight);
+
+	// TimeRect now spans both positions 0 and 1 (2/5 of width)
+	m_TimeRect = Rectangle<int>(0, getHeight() - bottomInfoHeight, (getWidth() * 2) / 5, bottomInfoHeight);
 
 	// Derivative Rects
 	int startY = m_TitleRect.getHeight();
-	m_ThumbnailRect = Rectangle<int>(0, startY, getWidth(), getHeight() - (startY + (getWidth() / 5)));
+	m_ThumbnailRect = Rectangle<int>(0, startY, getWidth(), getHeight() - (startY + bottomInfoHeight));
 
 	int offset = (m_TitleRect.getHeight() + m_ThumbnailRect.getHeight());
 	m_TagRect = Rectangle<int>(getWidth() / 2, offset, getWidth() / 2, getHeight() - offset);
