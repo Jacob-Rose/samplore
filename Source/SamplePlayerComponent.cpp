@@ -328,9 +328,10 @@ void SamplePlayerComponent::mouseDown(const MouseEvent& e)
     {
         if (m_ThumbnailRect.contains(e.getMouseDownPosition()))
         {
-            float rectWidth = m_ThumbnailRect.getWidth();
-            float mouseDownX = e.getMouseDownX();
-            SamplifyProperties::getInstance()->getAudioPlayer()->playSample(mouseDownX / rectWidth);
+            float rectWidth = static_cast<float>(m_ThumbnailRect.getWidth());
+            float mouseDownX = static_cast<float>(e.getMouseDownX() - m_ThumbnailRect.getX());
+            float startPos = juce::jlimit(0.0f, 1.0f, mouseDownX / rectWidth);
+            SamplifyProperties::getInstance()->getAudioPlayer()->playSample(startPos);
         }
     }
 }

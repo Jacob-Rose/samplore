@@ -391,9 +391,12 @@ void SampleTile::mouseUp(const MouseEvent& e)
 		{
 			if (m_ThumbnailRect.contains(e.getMouseDownPosition()) && AppValues::getInstance().RIGHTCLICKPLAYFROMPOINT)
 			{
-				float rectWidth = static_cast<float>(m_ThumbnailRect.getWidth());
-				float mouseDownX = static_cast<float>(e.getMouseDownX() - m_ThumbnailRect.getX());
-				float startPos = mouseDownX / rectWidth;
+				// Use the same reduced waveform rect as paint() for accurate positioning
+				const int padding = 12;
+				auto waveformRect = m_ThumbnailRect.reduced(padding / 2, 0);
+				float rectWidth = static_cast<float>(waveformRect.getWidth());
+				float mouseDownX = static_cast<float>(e.getMouseDownX() - waveformRect.getX());
+				float startPos = juce::jlimit(0.0f, 1.0f, mouseDownX / rectWidth);
 				SamplifyProperties::getInstance()->getAudioPlayer()->loadFile(mSample);
 				SamplifyProperties::getInstance()->getAudioPlayer()->playSample(startPos);
 			}
