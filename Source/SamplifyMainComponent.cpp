@@ -19,6 +19,9 @@ SamplifyMainComponent::SamplifyMainComponent() :
 	mAudioPlayer = std::make_shared<AudioPlayer>();
 	SamplifyProperties::getInstance()->setAudioPlayer(mAudioPlayer);
 
+	// Configure tooltip to show faster
+	mTooltip->setMillisecondsBeforeTipAppears(300); // Show after 300ms instead of default 700ms
+
 	mResizableEdgeDirectoryExplorerBounds.setMinimumWidth(100);
 	mResizableEdgeFilterExplorerBounds.setMinimumWidth(100);
 	mResizableEdgeAudioPlayerBounds.setMinimumHeight(100);

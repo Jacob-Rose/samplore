@@ -152,8 +152,12 @@ void SampleTile::paint (Graphics& g)
 			int minutes = static_cast<int>(length) / 60;
 			int seconds = static_cast<int>(length - (60.0 * minutes));
 
-			// Format as "3min24sec"
-			String timeString = String(minutes) + "min" + String(seconds) + "sec";
+			// Format as "3min24sec" or just "24sec" if 0 minutes
+			String timeString;
+			if (minutes > 0)
+				timeString = String(minutes) + "min" + String(seconds) + "sec";
+			else
+				timeString = String(seconds) + "sec";
 
 			auto timeRect = m_TimeRect.reduced(padding / 2, padding / 2);
 			g.drawText(timeString, timeRect, Justification::centredLeft);
@@ -363,8 +367,9 @@ void SampleTile::resized()
 	m_TagRect = Rectangle<int>(getWidth() / 2, offset, getWidth() / 2, getHeight() - offset);
 	mTagContainer.setBounds(m_TagRect.reduced(padding / 2));
 
-	// Info icon in top left corner
-	m_InfoIcon.setBounds(padding / 2, padding / 2, titleHeight - padding, titleHeight - padding);
+	// Info icon in top left corner - make it bigger and more visible
+	int iconSize = titleHeight - 4; // Larger icon, only small margin
+	m_InfoIcon.setBounds(4, 2, iconSize, iconSize);
 }
 
 bool SampleTile::isInterestedInDragSource(const SourceDetails& dragSourceDetails)
@@ -596,9 +601,17 @@ void SampleTile::InfoIcon::paint(Graphics& g)
 	if (mTooltip != "")
 	{
 		auto& theme = ThemeManager::getInstance();
+		auto bounds = getLocalBounds().toFloat();
+
+		// Draw background circle with more opacity
+		g.setColour(theme.getColorForRole(ThemeManager::ColorRole::AccentPrimary).withAlpha(0.3f));
+		g.fillEllipse(bounds);
+
+		// Draw icon on top with slight padding
+		auto iconBounds = bounds.reduced(3.0f);
 		IconLibrary::getInstance().drawIcon(g, IconLibrary::Icon::Info,
-		                                     getBounds().reduced(2.0f).toFloat(),
-		                                     theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
+		                                     iconBounds,
+		                                     theme.getColorForRole(ThemeManager::ColorRole::AccentPrimary));
 	}
 }
 

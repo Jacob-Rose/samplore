@@ -74,7 +74,7 @@ namespace samplore
 		{
 		public:
 			InfoIcon();
-			String getTooltip();
+			String getTooltip() override;
 			void setTooltip(String newTooltip);
 
 			void paint(Graphics& g) override;
