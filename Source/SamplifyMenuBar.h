@@ -43,7 +43,8 @@ namespace samplore
 		setVolume,
 		exitApplication,
 		viewInformation,
-		visitWebsite
+		visitWebsite,
+		openCueBindings
 	};
 
 		SamplifyMainMenu();

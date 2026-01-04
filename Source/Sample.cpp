@@ -1,8 +1,16 @@
 #include "Sample.h"
 #include <string>
 #include "SamplifyProperties.h"
+#include "SampleLibrary.h"
+#include "PerformanceProfiler.h"
 
 using namespace samplore;
+
+// Thumbnail generation throttling
+namespace {
+    std::atomic<int> activeThumbnailGenerations(0);
+    constexpr int MAX_CONCURRENT_GENERATIONS = 4;
+}
 
 Sample::Sample(const File& file) : mFile(file)
 {
@@ -32,13 +40,23 @@ bool Sample::isPropertiesFileValid()
 	return mPropertiesFile->isValidFile();
 }
 
-bool Sample::isQueryValid(juce::String query)
+bool Sample::isQueryValid(const FilterQuery& query)
 {
-	if(mFile.getFullPathName().containsIgnoreCase(query) || mTags.contains("#" + query))
+	// Check text search against filename/path
+	if (query.searchText.isNotEmpty())
 	{
-		return true;
+		if (!mFile.getFullPathName().containsIgnoreCase(query.searchText))
+			return false;
 	}
-	return false;
+
+	// Check all required tags are present
+	for (const auto& tag : query.tags)
+	{
+		if (!mTags.contains(tag))
+			return false;
+	}
+
+	return true;
 }
 
 /* deprecated
@@ -257,64 +275,79 @@ bool Sample::Reference::isPropertiesFileValid() const
 
 void Sample::Reference::generateThumbnailAndCache()
 {
+	PROFILE_SCOPE("Sample::generateThumbnailAndCache");
+
 	std::shared_ptr<Sample> sample = mSample.lock();
-	
+
 	// Early exit if already generated or currently loading
 	if (!isNull() && sample->mThumbnail == nullptr)
 	{
+		// CPU Throttle: limit concurrent thumbnail generations
+		int currentActive = activeThumbnailGenerations.load();
+		if (currentActive >= MAX_CONCURRENT_GENERATIONS)
+		{
+			// At limit - skip for now, will retry when view updates
+			return;
+		}
+
 		// Create placeholder thumbnail immediately to prevent duplicate requests
-		sample->mThumbnailCache = std::make_shared<AudioThumbnailCache>(1);
-		AudioFormatManager* afm = SamplifyProperties::getInstance()->getAudioPlayer()->getFormatManager();
-		sample->mThumbnail = std::make_shared<SampleAudioThumbnail>(512, *afm, *sample->mThumbnailCache);
-		sample->mThumbnail->addChangeListener(sample->getChangeListener());
-		
+		{
+			PROFILE_SCOPE("Sample::generateThumbnailAndCache::createThumbnail");
+			sample->mThumbnailCache = std::make_shared<AudioThumbnailCache>(1);
+			AudioFormatManager* afm = SamplifyProperties::getInstance()->getAudioPlayer()->getFormatManager();
+			sample->mThumbnail = std::make_shared<SampleAudioThumbnail>(512, *afm, *sample->mThumbnailCache);
+			sample->mThumbnail->addChangeListener(sample->getChangeListener());
+		}
+
 		// Launch async background task for file I/O
-		// Capture by value to ensure data stays valid
 		File fileToLoad = sample->mFile;
-		std::weak_ptr<SampleAudioThumbnail> weakThumbnail = sample->mThumbnail;  // Weak ptr to avoid keeping sample alive
-		std::weak_ptr<Sample> weakSample = mSample;  // Weak ptr to avoid keeping sample alive
-		
+		std::weak_ptr<SampleAudioThumbnail> weakThumbnail = sample->mThumbnail;
+		std::weak_ptr<Sample> weakSample = mSample;
+
+		// Increment active count
+		activeThumbnailGenerations++;
+
 		Thread::launch([weakSample, fileToLoad, weakThumbnail]() {
-			// Use separate AudioFormatManager for thread safety
-			// (UI thread and audio thread should not share the same instance)
 			AudioFormatManager localAfm;
 			localAfm.registerBasicFormats();
-			
-			// Perform blocking file I/O on background thread - read metadata only
+
+			Thread::sleep(5);
+
 			AudioFormatReader* reader = localAfm.createReaderFor(fileToLoad);
 			if (reader != nullptr)
 			{
-				// Store sample length from reader
 				double sampleLength = (double)reader->lengthInSamples / reader->sampleRate;
 				delete reader;
-				
-				// Marshal back to message thread for setSource() call
-				// (AudioThumbnail requires message manager lock)
+
+				Thread::sleep(3);
+
 				MessageManager::callAsync([weakSample, fileToLoad, weakThumbnail, sampleLength]() {
 					std::shared_ptr<Sample> sample = weakSample.lock();
 					std::shared_ptr<SampleAudioThumbnail> thumbnail = weakThumbnail.lock();
-					
-					// Check if both Sample and thumbnail still exist
+
 					if (sample != nullptr && thumbnail != nullptr)
 					{
-						// Set thumbnail source - MUST be on message thread
-						// AudioThumbnail takes ownership of the InputSource
-						// The actual waveform generation happens asynchronously in AudioThumbnail's own thread
 						thumbnail->setSource(new FileInputSource(fileToLoad));
-						
-						// Store sample length
 						sample->mLength = (float)sampleLength;
-						
-						// Save properties file (async write handled by PropertiesFile internally)
 						sample->savePropertiesFile();
-						
-						// Notify listeners that thumbnail is loading
-						// The AudioThumbnail will send its own change notifications when generation completes
 						sample->sendChangeMessage();
 					}
-					// If either is nullptr, sample was deleted before callback executed - gracefully skip
 				});
 			}
+
+			// Decrement active count when done
+			activeThumbnailGenerations--;
+
+			// Notify SampleLibrary that a thumbnail is ready - it will tell all providers to retry
+			MessageManager::callAsync([]() {
+				if (auto* props = SamplifyProperties::getInstance())
+				{
+					if (auto library = props->getSampleLibrary())
+					{
+						library->notifyThumbnailReady();
+					}
+				}
+			});
 		});
 	}
 }

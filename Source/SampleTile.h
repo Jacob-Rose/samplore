@@ -60,10 +60,13 @@ namespace samplore
 
 		bool isInterestedInDragSource(const SourceDetails& dragSourceDetails) override;
 		void itemDropped(const SourceDetails& dragSourceDetails) override;
+		void itemDragEnter(const SourceDetails& dragSourceDetails) override;
+		void itemDragExit(const SourceDetails& dragSourceDetails) override;
 		void changeListenerCallback(ChangeBroadcaster* source) override;
 
 		void setSample(Sample::Reference);
 		Sample::Reference getSample();
+		void refreshTags();
 
 		//===========================================================================
 		// ThemeManager::Listener interface
@@ -74,7 +77,7 @@ namespace samplore
 		{
 		public:
 			InfoIcon();
-			String getTooltip();
+			String getTooltip() override;
 			void setTooltip(String newTooltip);
 
 			void paint(Graphics& g) override;
@@ -105,8 +108,25 @@ namespace samplore
 		static Font getTitleFont();
 		static Font getTimeFont();
 		
-		// Track if this tile is currently playing (for dynamic buffering)
+		// Track if this tile is currently playing (for playback overlay and dynamic buffering)
 		bool mIsPlaying = false;
+
+		// Track if this tile is the active sample (for rainbow cue animation)
+		bool mIsActiveSample = false;
+
+		// Track if a tag is being dragged over this tile
+		bool mDragHighlight = false;
+
+		// Timer for rainbow cue animation at 30hz
+		class RainbowAnimationTimer : public juce::Timer
+		{
+		public:
+			RainbowAnimationTimer(SampleTile& owner) : mOwner(owner) {}
+			void timerCallback() override { mOwner.repaint(); }
+		private:
+			SampleTile& mOwner;
+		};
+		RainbowAnimationTimer mRainbowTimer{*this};
 
 		//Rectangle<float> m_FavoriteButtonRect;
 		//Rectangle<float> m_SaveForLaterRect;

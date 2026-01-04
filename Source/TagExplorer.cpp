@@ -1,31 +1,34 @@
+/*
+  ==============================================================================
+
+    TagExplorer.cpp
+    Created: 30 May 2020 6:33:22pm
+    Author:  jacob
+
+  ==============================================================================
+*/
+
 #include "TagExplorer.h"
-#include "SamplifyProperties.h"
 #include "SamplifyLookAndFeel.h"
-#include "Sample.h"
+#include "SamplifyProperties.h"
 
 using namespace samplore;
 
 TagExplorer::TagExplorer()
 {
 	mNewButtonTag.setButtonText("New Tag");
-	mNewButtonTag.onClick = [this] {addNewTag(); };
+	mNewButtonTag.onClick = [this] { addNewTag(); };
 	addAndMakeVisible(mNewButtonTag);
 	addAndMakeVisible(mTagViewport);
-	mTagViewport.addAndMakeVisible(mTagsContainer);
-	mTagViewport.setViewedComponent(&mTagsContainer);
-	//mTagViewport.setViewedComponent()
+	mTagViewport.setViewedComponent(&mScrollContent, false);
 	mTagViewport.setScrollBarsShown(true, false, true, false);
 	SamplifyProperties::getInstance()->getSampleLibrary()->addChangeListener(this);
-	
-	// Register with ThemeManager
-	ThemeManager::getInstance().addListener(this);
+
+	rebuildSections();
 }
 
 TagExplorer::~TagExplorer()
 {
-	// Remove from ThemeManager
-	ThemeManager::getInstance().removeListener(this);
-	
 	// Remove from SampleLibrary to prevent dangling pointer
 	if (auto lib = SamplifyProperties::getInstance()->getSampleLibrary())
 		lib->removeChangeListener(this);
@@ -33,14 +36,72 @@ TagExplorer::~TagExplorer()
 
 void TagExplorer::resized()
 {
-	mNewButtonTag.setBounds(0,getHeight()-30, getWidth(), 30);
+	mNewButtonTag.setBounds(0, getHeight() - 30, getWidth(), 30);
 	mTagViewport.setBounds(0, 0, getWidth(), getHeight() - 30);
-	mTagsContainer.setBounds(mTagViewport.getBounds());
+
+	// Calculate content width (minus scrollbar)
+	int contentWidth = mTagViewport.getWidth() - mTagViewport.getScrollBarThickness();
+
+	// Stack sections vertically
+	int yPos = 0;
+	for (auto& section : mSections)
+	{
+		section->setSize(contentWidth, section->calculateHeight());
+		section->setTopLeftPosition(0, yPos);
+		yPos += section->getHeight();
+	}
+
+	// Set scroll content size
+	mScrollContent.setSize(contentWidth, yPos);
 }
 
-void TagExplorer::paint(Graphics& g)
+void TagExplorer::paint(Graphics&)
 {
+}
 
+void TagExplorer::rebuildSections()
+{
+	// Clear existing sections
+	mSections.clear();
+	mScrollContent.removeAllChildren();
+
+	auto library = SamplifyProperties::getInstance()->getSampleLibrary();
+
+	// Get ordered collections
+	StringArray collections = library->getCollections();
+
+	// Create a section for each user collection
+	for (const auto& collectionName : collections)
+	{
+		auto section = std::make_unique<TagCollectionSection>(collectionName, false);
+
+		// Wire up move down callback
+		section->onMoveDown = [this](juce::String name) {
+			SamplifyProperties::getInstance()->getSampleLibrary()->moveCollectionDown(name);
+		};
+
+		// Wire up layout changed callback for collapse/expand
+		section->onLayoutChanged = [this]() {
+			resized();
+		};
+
+		mScrollContent.addAndMakeVisible(section.get());
+		mSections.push_back(std::move(section));
+	}
+
+	// Create the default section (always at bottom)
+	auto defaultSection = std::make_unique<TagCollectionSection>("", true);
+	defaultSection->onLayoutChanged = [this]() {
+		resized();
+	};
+	mScrollContent.addAndMakeVisible(defaultSection.get());
+	mSections.push_back(std::move(defaultSection));
+
+	// Update tags in all sections
+	updateTags(mCurrentQuery);
+
+	// Trigger layout
+	resized();
 }
 
 void TagExplorer::addNewTag()
@@ -58,145 +119,43 @@ void TagExplorer::addNewTag()
 			if (tagName.isNotEmpty())
 			{
 				SamplifyProperties::getInstance()->getSampleLibrary()->addTag(tagName);
-				mTagsContainer.updateTags(SamplifyProperties::getInstance()->getSampleLibrary()->getCurrentQuery());
 			}
 		}
 		mAlertWindow.reset();
 	}), true);
 }
 
-void samplore::TagExplorer::changeListenerCallback(ChangeBroadcaster* source)
+void TagExplorer::updateTags(juce::String query)
 {
-	mTagsContainer.updateTags("");
-}
+	mCurrentQuery = query;
 
-void samplore::TagExplorer::Container::removeNewTag(juce::String tag)
-{
-	mNewTags.removeTag(tag);
-}
+	auto library = SamplifyProperties::getInstance()->getSampleLibrary();
+	StringArray collections = library->getCollections();
 
-void TagExplorer::Container::paint(Graphics& g)
-{
-	//g.fillAll(Colours::bisque);
-	String firstLine = "New Tags:";
-	float cHeight = 0.0f;
-	g.drawText(firstLine, Rectangle<float>(0.0f, cHeight, getWidth(), infoFont.getHeight()), Justification::centred);
-	String secondLine = "Directory Contained:";
-	cHeight += mNewTags.getHeight();
-	cHeight += infoFont.getHeight();
-	g.drawText(secondLine, Rectangle<float>(0.0f, cHeight, getWidth(), infoFont.getHeight()), Justification::centred);
-	String thirdLine = "Outside Tags:";
-	cHeight += mContainedTags.getHeight();
-	cHeight += infoFont.getHeight();
-	g.drawText(thirdLine, Rectangle<float>(0.0f, cHeight, getWidth(), infoFont.getHeight()), Justification::centred);
-}
-
-void TagExplorer::Container::updateTags(juce::String newSearch)
-{
-	
-	std::vector<SampleLibrary::Tag> allTags = SamplifyProperties::getInstance()->getSampleLibrary()->getTags();
-	//remove all new tags that have been used now
-	resetTags();
-	StringArray passedTags; //in dir
-	StringArray failedTags; //not in dir
-	//StringArray currentSampleTags = SamplifyProperties::getInstance()->getSampleLibrary()->getCurrentSamples();
-	Sample::List currentSamps = SamplifyProperties::getInstance()->getSampleLibrary()->getCurrentSamples();
-	
-	for (int i = 0; i < allTags.size(); i++)
+	// Update each section with its tags
+	for (auto& section : mSections)
 	{
-		if (allTags[i].mTitle.contains(newSearch))
+		String collectionName = section->getCollectionName();
+		std::vector<SampleLibrary::Tag> tagsInCollection = library->getTagsInCollection(collectionName);
+
+		// Filter by query and extract tag names
+		StringArray filteredTags;
+		for (const auto& tag : tagsInCollection)
 		{
-			bool found = false;
-			for (int j = 0; j < currentSamps.size(); j++)
+			if (query.isEmpty() || tag.mTitle.containsIgnoreCase(query))
 			{
-				StringArray sampTags = currentSamps[j].getTags();
-				if (sampTags.contains(allTags[i].mTitle))
-				{
-					found = true;
-					break;
-				}
-			}
-			if (found)
-			{
-				passedTags.add(allTags[i].mTitle);
-			}
-			else
-			{
-				failedTags.add(allTags[i].mTitle);
+				filteredTags.add(tag.mTitle);
 			}
 		}
+
+		section->setTags(filteredTags);
 	}
-	
-	mContainedTags.setTags(passedTags);
-	mNotContainedTags.setTags(failedTags);
-	//updateTagContainerBounds();
-	
+
+	// Recalculate layout
+	resized();
 }
 
-void TagExplorer::Container::updateTagContainerBounds()
+void TagExplorer::changeListenerCallback(ChangeBroadcaster* source)
 {
-	float textHeight = infoFont.getHeight();
-	float cHeight = 0.0f;
-	cHeight += textHeight;
-	mNewTags.setBounds(0, cHeight, getWidth(), getHeight());
-	mNewTags.setTopLeftPosition(0, cHeight);
-	cHeight += mNewTags.getBounds().getHeight();
-	cHeight += textHeight;
-	mContainedTags.setBounds(0, cHeight, getWidth(), getHeight());
-	mContainedTags.setTopLeftPosition(0, cHeight);
-	cHeight += mContainedTags.getBounds().getHeight();
-	cHeight += textHeight;
-	mNotContainedTags.setBounds(0, cHeight, getWidth(), getHeight());
-	mNotContainedTags.setTopLeftPosition(0, cHeight);
-	cHeight += mNotContainedTags.getBounds().getHeight();
-	//setBounds(0, 0, getWidth(),cHeight);
-	repaint();
-}
-
-void TagExplorer::Container::resetTags()
-{
-	/*
-	StringArray allTags = SamplifyProperties::getInstance()->getSampleLibrary().getAllTags();
-	for (int i = 0; i < mNewTags.getTags().size(); i++)
-	{
-		if (allTags.contains(mNewTags.getTags()[i]))
-		{
-			mContainedTags.addTag(mNewTags.getTags()[i]);
-			mNewTags.removeTag(mNewTags.getTags()[i]);
-			i--;
-		}
-	}
-	for (int i = 0; i < mContainedTags.getTags().size(); i++)
-	{
-		if (!allTags.contains(mContainedTags.getTags()[i]))
-		{
-			mContainedTags.removeTag(mContainedTags.getTags()[i]);
-			i--;
-		}
-	}
-	for (int i = 0; i < mNotContainedTags.getTags().size(); i++)
-	{
-		if (!allTags.contains(mNotContainedTags.getTags()[i]))
-		{
-			mNotContainedTags.removeTag(mNotContainedTags.getTags()[i]);
-			i--;
-		}
-	}
-	*/
-}
-
-//==============================================================================
-// ThemeManager::Listener implementation
-void TagExplorer::themeChanged(ThemeManager::Theme newTheme)
-{
-	mTagsContainer.repaint();
-}
-
-void TagExplorer::colorChanged(ThemeManager::ColorRole role, Colour newColor)
-{
-	// Repaint if text colors changed
-	if (role == ThemeManager::ColorRole::TextPrimary || role == ThemeManager::ColorRole::TextSecondary)
-	{
-		mTagsContainer.repaint();
-	}
+	rebuildSections();
 }

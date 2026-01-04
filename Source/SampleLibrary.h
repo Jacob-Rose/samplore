@@ -21,6 +21,26 @@
 
 namespace samplore
 {
+	/// Interface for components that can provide visible samples for thumbnail retry
+	class ISampleRequestProvider
+	{
+	public:
+		virtual ~ISampleRequestProvider() = default;
+
+		/// Called when a thumbnail finishes loading - providers should retry visible samples
+		virtual void retryVisibleThumbnails() = 0;
+	};
+
+	/// Filter criteria for sample searches
+	struct FilterQuery
+	{
+		String searchText;      // Matches against filename/path
+		StringArray tags;       // All tags must be present on sample
+
+		bool isEmpty() const { return searchText.isEmpty() && tags.isEmpty(); }
+		void clear() { searchText.clear(); tags.clear(); }
+	};
+
 	class SampleLibrary : public ChangeBroadcaster, public ChangeListener, public Timer
 	{
 	public:
@@ -30,44 +50,58 @@ namespace samplore
 		// Use function-local static to avoid static destruction order issues
 		static const Tag& getEmptyTag()
 		{
-			static const Tag emptyTag(juce::String(), juce::Colours::magenta);
+			static const Tag emptyTag(juce::String(), 0.83f, ""); // Magenta hue, default collection
 			return emptyTag;
 		}
-		
-		//simple holder for information, can be expanded later
-		Tag(juce::String title, juce::Colour color) : mTitle(title), mColor(color) {}
+
+		/// Tag stores title, hue, and collection name
+		Tag(juce::String title, float hue, juce::String collection = "")
+			: mTitle(title), mHue(hue), mCollection(collection) {}
 
 		juce::String mTitle;
-		juce::Colour mColor;
+		float mHue; // 0.0-1.0, used with fixed saturation/brightness
+		juce::String mCollection; // Empty string = "Default" collection
 	};
 
 		SampleLibrary();
 		~SampleLibrary();
 
 		void refreshCurrentSamples() { updateCurrentSamples(mCurrentQuery); }
-		void updateCurrentSamples(String query);
+		void updateCurrentSamples(const FilterQuery& query);
 
 		void sortSamples(SortingMethod method);
 
 		Sample::List getCurrentSamples();
-		String getCurrentQuery() { return mCurrentQuery; }
+		const FilterQuery& getCurrentQuery() { return mCurrentQuery; }
 
 		StringArray getUsedTags(); //get tags that are currently connected to one or more samples
 
 		void timerCallback() override;
 
 		///Tag Library Merger - They are dependent on each other for results and modifications
-		void addTag(String tag, Colour color);
+		void addTag(String tag, float hue, String collection = "");
 		void addTag(String tag);
 		//void renameTag(juce::String currentTagName, juce::String desiredName);
 		void deleteTag(String tag);
 		int getTagCount() { return mTags.size(); }
 		Colour getTagColor(String tag);
+		float getTagHue(String tag);
 		std::vector<Tag> getTags() { return mTags; }
 		StringArray getTagsStringArray();
 
-		void setTagColor(juce::String tag, juce::Colour newColor);
+		void setTagHue(juce::String tag, float hue);
 		SampleLibrary::Tag getTag(juce::String tag);
+
+		/// Collection management
+		StringArray getCollections(); // Returns ordered list of collection names (not including Default)
+		void addCollection(juce::String name);
+		void removeCollection(juce::String name); // Moves tags to Default
+		void moveCollectionDown(juce::String name); // Swaps with next collection in order
+		void setTagCollection(juce::String tagTitle, juce::String collectionName);
+		std::vector<Tag> getTagsInCollection(juce::String collection); // Empty string = Default
+
+		/// Converts a hue to a display color with theme-appropriate saturation/brightness
+		static Colour hueToColor(float hue);
 
 
 		///Directory Manager Merger - Reduce dependencies, less pointers, easier saving
@@ -84,12 +118,23 @@ namespace samplore
 		bool isAsyncValid() { return mUpdateSampleFuture.valid(); }
 
 		//Get Samples
-		Sample::List getAllSamplesInDirectories(juce::String query, bool ignoreCheckSystem);
-		std::future<Sample::List> getAllSamplesInDirectories_Async(juce::String query = "", bool ignoreCheckSystem = false);
+		Sample::List getAllSamplesInDirectories(const FilterQuery& query, bool ignoreCheckSystem);
+		std::future<Sample::List> getAllSamplesInDirectories_Async(const FilterQuery& query = {}, bool ignoreCheckSystem = false);
+
+		/// Find a sample by its file path (for cue binding restoration)
+		Sample::Reference findSampleByFile(const juce::File& file);
 
 		/// Preload all sample files and extract their tags asynchronously
 		void launchPreloadAllTags();
 		bool isPreloadingTags() const { return mPreloadingTags; }
+
+		//======================================================================
+		// Sample request providers (for thumbnail retry)
+		void addRequestProvider(ISampleRequestProvider* provider);
+		void removeRequestProvider(ISampleRequestProvider* provider);
+
+		/// Called when a thumbnail finishes loading - notifies all providers to retry
+		void notifyThumbnailReady();
 
 	private:
 		void preloadTags_Worker();
@@ -100,11 +145,15 @@ namespace samplore
 		bool mCancelUpdating = false;
 		bool mPreloadingTags = false;
 		Sample::List mCurrentSamples;
-		String mCurrentQuery;
+		FilterQuery mCurrentQuery;
 
 		std::vector<Tag> mTags;
+		StringArray mCollectionOrder; // Ordered collection names (Default is implicit, always last)
 		//pointer necessary to keep the check system
-		std::vector<std::shared_ptr<SampleDirectory>> mDirectories = std::vector<std::shared_ptr<SampleDirectory>>(); 
+		std::vector<std::shared_ptr<SampleDirectory>> mDirectories = std::vector<std::shared_ptr<SampleDirectory>>();
+
+		/// Registered providers for thumbnail retry notifications
+		std::vector<ISampleRequestProvider*> mRequestProviders;
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SampleLibrary)
 	};

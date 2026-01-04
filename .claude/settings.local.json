@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh pr diff:*)",
+      "Bash(ls:*)",
+      "Bash(python3 scripts/build.py:*)",
+      "Bash(python3 scripts/configure.py:*)"
+    ]
+  }
+}

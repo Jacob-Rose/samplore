@@ -81,6 +81,13 @@ void SamplifyMainMenu::menuItemSelected(int menuItemID, int topLevelMenuIndex)
 	{
 		URL("www.samplify.app").launchInDefaultBrowser();
 	}
+	else if (menuItemID == openCueBindings)
+	{
+		if (auto* mainComponent = SamplifyMainComponent::getInstance())
+		{
+			mainComponent->showCueBindingsWindow();
+		}
+	}
 
 }
 
@@ -97,6 +104,7 @@ PopupMenu SamplifyMainMenu::getMenuForIndex(int menuIndex, const String& menuNam
 	}
 	else if (menuIndex == 1) //View
 	{
+		menu.addItem(openCueBindings, "Cue Bindings (Ctrl+K)", true, false);
 		//todo check if enabled or disabled
 		//menu.addItem(togglePlayerWindow, "Toggle Player Window (TBD)");
 		//menu.addItem(toggleFilterWindow, "Toggle Filter Window (TBD)");

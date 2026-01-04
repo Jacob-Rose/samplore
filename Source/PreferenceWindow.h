@@ -87,6 +87,9 @@ namespace samplore
         Label mThumbnailLinesPlayerLabel;
         TextEditor mThumbnailLineCountPlayer;
         TextEditor mThumbnailLineCount;
+        Label mPlaybackIndicatorLabel;
+        ComboBox mPlaybackIndicatorModeSelector;
+        TextButton mPlaybackIndicatorColorButton;
 
         // Key bindings section
         Label mKeyBindingsLabel;
@@ -121,8 +124,10 @@ namespace samplore
         };
 
         std::unique_ptr<ColourSelector> mColourSelector;
-        enum class ColorEditMode { Primary, Accent };
+        enum class ColorEditMode { Primary, Accent, PlaybackIndicator };
         ColorEditMode mColorEditMode = ColorEditMode::Primary;
+
+        void updatePlaybackIndicatorColorButton();
     };
 }
 #endif

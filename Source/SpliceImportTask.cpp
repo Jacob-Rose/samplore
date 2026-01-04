@@ -179,14 +179,19 @@ namespace samplore
             
             if (!alreadyInLibrary)
             {
-                mLibrary.addDirectory(packsDir);
-                mAddedDirectories.push_back(packsDir);
-                DBG("Added Splice packs directory to library: " + packsDir.getFullPathName());
+                // Must lock message manager to safely add change listeners
+                const MessageManagerLock mmLock;
+                if (mmLock.lockWasGained())
+                {
+                    mLibrary.addDirectory(packsDir);
+                    mAddedDirectories.push_back(packsDir);
+                    DBG("Added Splice packs directory to library: " + packsDir.getFullPathName());
+                }
             }
         }
-        
+
         // Get all library samples for lookup
-        auto allLibrarySamples = mLibrary.getAllSamplesInDirectories("", true);
+        auto allLibrarySamples = mLibrary.getAllSamplesInDirectories({}, true);
         
         // Apply tags
         int processed = 0;
@@ -317,10 +322,17 @@ namespace samplore
         }
         mModifiedSamples.clear();
         
-        // Remove all directories we added
-        for (const auto& dir : mAddedDirectories)
+        // Remove all directories we added (requires message manager lock)
+        if (!mAddedDirectories.empty())
         {
-            mLibrary.removeDirectory(dir);
+            const MessageManagerLock mmLock;
+            if (mmLock.lockWasGained())
+            {
+                for (const auto& dir : mAddedDirectories)
+                {
+                    mLibrary.removeDirectory(dir);
+                }
+            }
         }
         mAddedDirectories.clear();
         

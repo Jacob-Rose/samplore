@@ -13,152 +13,199 @@
 
 using namespace samplore;
 
-std::unique_ptr<KeyBindingManager> KeyBindingManager::instance = nullptr;
+std::unique_ptr<KeyBindingManager> KeyBindingManager::sInstance = nullptr;
 
 KeyBindingManager::KeyBindingManager()
 {
-    initializeDefaultBindings();
+    initializeActions();
 }
 
 void KeyBindingManager::initInstance()
 {
-    instance = std::make_unique<KeyBindingManager>();
-    instance->loadBindings();
+    sInstance = std::make_unique<KeyBindingManager>();
+
+    // Create our input context (priority 0 = global/default)
+    sInstance->mContext = InputContextManager::getInstance().createContext("Global", 0);
+
+    // Load any saved bindings
+    sInstance->loadBindings();
 }
 
 void KeyBindingManager::cleanupInstance()
 {
-    if (instance)
+    if (sInstance)
     {
-        instance->saveBindings();
-        instance.reset();
+        sInstance->saveBindings();
+
+        // Remove our context from the manager
+        InputContextManager::getInstance().removeContext("Global");
+        sInstance.reset();
     }
 }
 
 KeyBindingManager& KeyBindingManager::getInstance()
 {
-    return *instance;
+    jassert(sInstance != nullptr);
+    return *sInstance;
 }
 
-void KeyBindingManager::initializeDefaultBindings()
+void KeyBindingManager::initializeActions()
 {
     // Audio playback
-    mBindings[Action::PlayAudio] = KeyBinding(
-        juce::KeyPress('g'),
+    mActions[Action::PlayAudio] = {
+        juce::KeyPress('g'),  // default
+        juce::KeyPress('g'),  // current (same initially)
         "Play",
         "Play the current sample"
-    );
-    
-    mBindings[Action::StopAudio] = KeyBinding(
+    };
+
+    mActions[Action::StopAudio] = {
+        juce::KeyPress('h'),
         juce::KeyPress('h'),
         "Stop",
         "Stop audio playback"
-    );
-    
-    // Window toggles (not yet implemented, but reserved)
-    mBindings[Action::TogglePlayerWindow] = KeyBinding(
+    };
+
+    // Window toggles
+    mActions[Action::TogglePlayerWindow] = {
+        juce::KeyPress('p', juce::ModifierKeys::ctrlModifier, 0),
         juce::KeyPress('p', juce::ModifierKeys::ctrlModifier, 0),
         "Toggle Player",
         "Show/hide player window"
-    );
-    
-    mBindings[Action::ToggleFilterWindow] = KeyBinding(
+    };
+
+    mActions[Action::ToggleFilterWindow] = {
+        juce::KeyPress('f', juce::ModifierKeys::ctrlModifier, 0),
         juce::KeyPress('f', juce::ModifierKeys::ctrlModifier, 0),
         "Toggle Filter",
         "Show/hide filter window"
-    );
-    
-    mBindings[Action::ToggleDirectoryWindow] = KeyBinding(
+    };
+
+    mActions[Action::ToggleDirectoryWindow] = {
+        juce::KeyPress('d', juce::ModifierKeys::ctrlModifier, 0),
         juce::KeyPress('d', juce::ModifierKeys::ctrlModifier, 0),
         "Toggle Directory",
         "Show/hide directory window"
-    );
-    
+    };
+
     // Application
 #if JUCE_MAC
-    mBindings[Action::OpenPreferences] = KeyBinding(
+    mActions[Action::OpenPreferences] = {
+        juce::KeyPress(',', juce::ModifierKeys::commandModifier, 0),
         juce::KeyPress(',', juce::ModifierKeys::commandModifier, 0),
         "Preferences",
         "Open preferences window"
-    );
+    };
 #else
-    mBindings[Action::OpenPreferences] = KeyBinding(
+    mActions[Action::OpenPreferences] = {
+        juce::KeyPress('p', juce::ModifierKeys::ctrlModifier | juce::ModifierKeys::shiftModifier, 0),
         juce::KeyPress('p', juce::ModifierKeys::ctrlModifier | juce::ModifierKeys::shiftModifier, 0),
         "Preferences",
         "Open preferences window"
-    );
+    };
 #endif
-    
-    mBindings[Action::ExitApplication] = KeyBinding(
+
+    mActions[Action::ExitApplication] = {
+        juce::KeyPress('q', juce::ModifierKeys::ctrlModifier, 0),
         juce::KeyPress('q', juce::ModifierKeys::ctrlModifier, 0),
         "Exit",
         "Exit application"
-    );
+    };
+
+    mActions[Action::ToggleCueBindings] = {
+        juce::KeyPress('k', juce::ModifierKeys::ctrlModifier, 0),
+        juce::KeyPress('k', juce::ModifierKeys::ctrlModifier, 0),
+        "Cue Bindings",
+        "Open cue bindings window"
+    };
 }
 
-KeyBindingManager::KeyBinding KeyBindingManager::getBinding(Action action) const
+void KeyBindingManager::setCallback(Action action, std::function<void()> callback)
 {
-    auto it = mBindings.find(action);
-    if (it != mBindings.end())
-        return it->second;
-    
-    return KeyBinding();
+    mCallbacks[action] = callback;
+    rebuildContext();
 }
 
-bool KeyBindingManager::setBinding(Action action, const juce::KeyPress& newKey)
+void KeyBindingManager::clearCallback(Action action)
 {
-    // Check for conflicts with other bindings
-    for (const auto& pair : mBindings)
+    mCallbacks.erase(action);
+    rebuildContext();
+}
+
+void KeyBindingManager::rebuildContext()
+{
+    if (!mContext)
+        return;
+
+    mContext->clear();
+
+    for (const auto& [action, info] : mActions)
     {
-        if (pair.first != action && pair.second.keyPress == newKey)
+        auto callbackIt = mCallbacks.find(action);
+        if (callbackIt != mCallbacks.end() && callbackIt->second)
         {
-            // Conflict detected
-            return false;
+            mContext->bind(info.currentKey,
+                           info.displayName,
+                           callbackIt->second,
+                           info.description);
         }
     }
-    
-    // Update binding
-    auto it = mBindings.find(action);
-    if (it != mBindings.end())
+}
+
+const KeyBindingManager::ActionInfo* KeyBindingManager::getActionInfo(Action action) const
+{
+    auto it = mActions.find(action);
+    return (it != mActions.end()) ? &it->second : nullptr;
+}
+
+juce::KeyPress KeyBindingManager::getKey(Action action) const
+{
+    auto it = mActions.find(action);
+    if (it != mActions.end())
+        return it->second.currentKey;
+    return {};
+}
+
+bool KeyBindingManager::setKey(Action action, const juce::KeyPress& newKey)
+{
+    // Check for conflicts with other bindings
+    for (const auto& [otherAction, info] : mActions)
     {
-        it->second.keyPress = newKey;
+        if (otherAction != action && info.currentKey == newKey)
+            return false;  // Conflict
+    }
+
+    auto it = mActions.find(action);
+    if (it != mActions.end())
+    {
+        it->second.currentKey = newKey;
+        rebuildContext();
         saveBindings();
         return true;
     }
-    
+
     return false;
 }
 
-void KeyBindingManager::resetBinding(Action action)
+void KeyBindingManager::resetKey(Action action)
 {
-    // Temporarily save current bindings
-    auto currentBindings = mBindings;
-    
-    // Reinitialize defaults
-    initializeDefaultBindings();
-    
-    // Get the default for this action
-    auto defaultBinding = mBindings[action];
-    
-    // Restore current bindings
-    mBindings = currentBindings;
-    
-    // Apply the default
-    mBindings[action] = defaultBinding;
-    
-    saveBindings();
+    auto it = mActions.find(action);
+    if (it != mActions.end())
+    {
+        it->second.currentKey = it->second.defaultKey;
+        rebuildContext();
+        saveBindings();
+    }
 }
 
-void KeyBindingManager::resetAllBindings()
+void KeyBindingManager::resetAllKeys()
 {
-    initializeDefaultBindings();
+    for (auto& [action, info] : mActions)
+    {
+        info.currentKey = info.defaultKey;
+    }
+    rebuildContext();
     saveBindings();
-}
-
-bool KeyBindingManager::matchesAction(const juce::KeyPress& key, Action action) const
-{
-    auto binding = getBinding(action);
-    return binding.keyPress == key;
 }
 
 juce::String KeyBindingManager::getActionName(Action action)
@@ -172,20 +219,14 @@ juce::String KeyBindingManager::getActionName(Action action)
         case Action::ToggleDirectoryWindow: return "Toggle Directory Window";
         case Action::OpenPreferences:       return "Open Preferences";
         case Action::ExitApplication:       return "Exit Application";
+        case Action::ToggleCueBindings:     return "Toggle Cue Bindings";
         default:                            return "Unknown";
     }
 }
 
 juce::String KeyBindingManager::getKeyString(Action action) const
 {
-    auto binding = getBinding(action);
-    return binding.keyPress.getTextDescription();
-}
-
-void KeyBindingManager::resetToDefaults()
-{
-    initializeDefaultBindings();
-    saveBindings();
+    return getKey(action).getTextDescription();
 }
 
 void KeyBindingManager::saveBindings()
@@ -198,11 +239,10 @@ void KeyBindingManager::saveBindings()
     if (settings == nullptr)
         return;
 
-    // Save each binding
-    for (const auto& pair : mBindings)
+    for (const auto& [action, info] : mActions)
     {
-        juce::String key = "keybind_" + juce::String((int)pair.first);
-        juce::String value = pair.second.keyPress.getTextDescription();
+        juce::String key = "keybind_" + juce::String(static_cast<int>(action));
+        juce::String value = info.currentKey.getTextDescription();
         settings->setValue(key, value);
     }
 
@@ -219,19 +259,21 @@ void KeyBindingManager::loadBindings()
     if (settings == nullptr)
         return;
 
-    // Load each binding
-    for (auto& pair : mBindings)
+    for (auto& [action, info] : mActions)
     {
-        juce::String key = "keybind_" + juce::String((int)pair.first);
+        juce::String key = "keybind_" + juce::String(static_cast<int>(action));
         juce::String value = settings->getValue(key, "");
-        
+
         if (value.isNotEmpty())
         {
             auto keyPress = juce::KeyPress::createFromDescription(value);
             if (keyPress.isValid())
             {
-                pair.second.keyPress = keyPress;
+                info.currentKey = keyPress;
             }
         }
     }
+
+    // Rebuild context with loaded bindings (callbacks may not be set yet)
+    rebuildContext();
 }

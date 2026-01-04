@@ -2,6 +2,7 @@
 #include "SampleLibrary.h"
 #include "SamplifyProperties.h"
 #include "SamplifyLookAndFeel.h"
+#include "PerformanceProfiler.h"
 
 #include <algorithm>
 #include <cmath>
@@ -10,12 +11,61 @@ using namespace samplore;
 
 SampleContainer::SampleContainer()
 {
-
+	// Register with SampleLibrary for thumbnail ready notifications
+	if (auto library = SamplifyProperties::getInstance()->getSampleLibrary())
+	{
+		library->addRequestProvider(this);
+	}
 }
 
 SampleContainer::~SampleContainer()
 {
+	// Unregister from SampleLibrary
+	if (auto* props = SamplifyProperties::getInstance())
+	{
+		if (auto library = props->getSampleLibrary())
+		{
+			library->removeRequestProvider(this);
+		}
+	}
 	clearItems();
+}
+
+void SampleContainer::retryVisibleThumbnails()
+{
+	// Retry thumbnail generation for visible samples that are still missing thumbnails
+	if (mLastViewportTop < 0 || mLastViewportHeight <= 0)
+		return;
+
+	int columns = getColumnCount();
+	if (columns <= 0)
+		return;
+
+	int tileHeight = getTileHeight();
+	if (tileHeight <= 0)
+		return;
+
+	int firstVisibleRow = jmax(0, (mLastViewportTop / tileHeight) - 1);
+	int lastVisibleRow = jmin(getTotalRowCount() - 1,
+	                          ((mLastViewportTop + mLastViewportHeight) / tileHeight) + 1);
+
+	int firstVisibleIndex = firstVisibleRow * columns;
+	int lastVisibleIndex = jmin((int)mCurrentSamples.size() - 1,
+	                            (lastVisibleRow + 1) * columns - 1);
+
+	for (int i = firstVisibleIndex; i <= lastVisibleIndex && i < (int)mCurrentSamples.size(); i++)
+	{
+		Sample::Reference sample = mCurrentSamples[i];
+		if (!sample.isNull())
+		{
+			auto thumbnail = sample.getThumbnail();
+			if (thumbnail == nullptr)
+			{
+				sample.generateThumbnailAndCache();
+				break; // Only start one at a time to respect throttling
+			}
+		}
+	}
 }
 
 void SampleContainer::paint (Graphics& g)
@@ -39,6 +89,8 @@ void SampleContainer::resized()
 
 void SampleContainer::updateVisibleItems(int viewportTop, int viewportHeight)
 {
+	PROFILE_SCOPE("SampleContainer::updateVisibleItems");
+
 	if (mCurrentSamples.size() == 0)
 	{
 		// Hide all tiles
@@ -48,27 +100,27 @@ void SampleContainer::updateVisibleItems(int viewportTop, int viewportHeight)
 		}
 		return;
 	}
-	
+
 	int columns = getColumnCount();
 	if (columns <= 0)
 		return;
-	
+
 	int tileWidth = getTileWidth();
 	int tileHeight = getTileHeight();
 	int padding = AppValues::getInstance().SAMPLE_TILE_CONTAINER_ITEM_PADDING;
-	
+
 	// Calculate which rows are visible (with buffer for smooth scrolling)
 	int firstVisibleRow = jmax(0, (viewportTop / tileHeight) - 1);
-	int lastVisibleRow = jmin(getTotalRowCount() - 1, 
+	int lastVisibleRow = jmin(getTotalRowCount() - 1,
 	                          ((viewportTop + viewportHeight) / tileHeight) + 1);
-	
+
 	// Calculate range of sample indices that are visible
 	int firstVisibleIndex = firstVisibleRow * columns;
-	int lastVisibleIndex = jmin((int)mCurrentSamples.size() - 1, 
+	int lastVisibleIndex = jmin((int)mCurrentSamples.size() - 1,
 	                            (lastVisibleRow + 1) * columns - 1);
-	
+
 	int visibleCount = lastVisibleIndex - firstVisibleIndex + 1;
-	
+
 	// Note: Tile pool should already be pre-allocated by preallocateTilePool()
 	// This is a safety check in case pool wasn't allocated yet
 	if ((int)mTilePool.size() < visibleCount)
@@ -76,17 +128,32 @@ void SampleContainer::updateVisibleItems(int viewportTop, int viewportHeight)
 		DBG("WARNING: Tile pool not pre-allocated, allocating during scroll (this should not happen)");
 		preallocateTilePool();
 	}
-	
-	// Update visible tiles
+
+	// Mark all tiles as potentially unused (we'll mark used ones below)
+	static std::vector<bool> tileUsedThisFrame;
+	tileUsedThisFrame.clear();
+	tileUsedThisFrame.resize(mTilePool.size(), false);
+
+	// Update visible tiles using MODULO INDEXING for stable tile reuse
+	int boundsUpdates = 0;
+	int sampleUpdates = 0;
+
 	for (int i = 0; i < visibleCount && (firstVisibleIndex + i) < (int)mCurrentSamples.size(); i++)
 	{
 		int sampleIndex = firstVisibleIndex + i;
 		int column = sampleIndex % columns;
 		int row = sampleIndex / columns;
-		
-		SampleTile* tile = mTilePool[i].get();
-		tile->setVisible(true);
-		
+
+		// KEY: Use modulo so sample[0]->pool[0], sample[1]->pool[1], sample[128]->pool[0], etc.
+		// This way tiles maintain stable sample mappings as we scroll
+		int poolIndex = sampleIndex % (int)mTilePool.size();
+		SampleTile* tile = mTilePool[poolIndex].get();
+
+		tileUsedThisFrame[poolIndex] = true;
+
+		if (!tile->isVisible())
+			tile->setVisible(true);
+
 		// Only update bounds if changed (avoids unnecessary resized() calls)
 		Rectangle<int> newBounds((column * tileWidth) + padding,
 		                         (row * tileHeight) + padding,
@@ -95,22 +162,49 @@ void SampleContainer::updateVisibleItems(int viewportTop, int viewportHeight)
 		if (tile->getBounds() != newBounds)
 		{
 			tile->setBounds(newBounds);
+			boundsUpdates++;
 		}
-		
+
 		// Only update sample if changed (avoids redundant thumbnail generation and repaints)
 		Sample::Reference newSample = mCurrentSamples[sampleIndex];
 		if (tile->getSample() != newSample)
 		{
 			tile->setSample(newSample);
+			sampleUpdates++;
 		}
 	}
-	
-	// Hide unused tiles
-	for (int i = visibleCount; i < (int)mTilePool.size(); i++)
+
+	// Hide tiles that weren't used this frame
+	for (size_t i = 0; i < mTilePool.size(); i++)
 	{
-		mTilePool[i]->setVisible(false);
+		if (!tileUsedThisFrame[i] && mTilePool[i]->isVisible())
+		{
+			mTilePool[i]->setVisible(false);
+		}
 	}
-	
+
+	// Retry thumbnail generation for visible tiles that are missing thumbnails
+	// This handles cases where thumbnails were skipped due to throttling
+	for (int i = 0; i < visibleCount && (firstVisibleIndex + i) < (int)mCurrentSamples.size(); i++)
+	{
+		int sampleIndex = firstVisibleIndex + i;
+		Sample::Reference sample = mCurrentSamples[sampleIndex];
+		if (!sample.isNull())
+		{
+			auto thumbnail = sample.getThumbnail();
+			if (thumbnail == nullptr)
+			{
+				// This sample needs a thumbnail - retry generation
+				sample.generateThumbnailAndCache();
+			}
+		}
+	}
+
+	// Debug trace for understanding update patterns
+	DBG("SampleContainer: " << boundsUpdates << " bounds, "
+	    << sampleUpdates << " samples | viewportTop=" << viewportTop
+	    << " delta=" << (viewportTop - mLastViewportTop));
+
 	mLastViewportTop = viewportTop;
 	mLastViewportHeight = viewportHeight;
 }

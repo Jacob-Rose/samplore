@@ -51,19 +51,24 @@ void TagTile::paint (Graphics& g)
 		g.setColour(mainColor.withAlpha(alpha));
 		g.fillRoundedRectangle(getLocalBounds().toFloat(), cornerSize);
 
-		// Subtle border
-		g.setColour(mainColor.darker(0.2f).withAlpha(0.6f));
+		// Subtle border using darker shade of the tag color
+		g.setColour(mainColor.darker(0.3f).withAlpha(0.7f));
 		g.drawRoundedRectangle(getLocalBounds().toFloat(), cornerSize, 1.0f);
 
-		// Text color based on background brightness
+		// Text color: use contrasting color for readability
+		// With our fixed saturation (0.65) and brightness (0.85), most colors are fairly bright
+		// Use dark text for light backgrounds, white for dark backgrounds
 		Colour textColor;
-		if (mainColor.getPerceivedBrightness() > 0.5f)
+		float luminance = mainColor.getPerceivedBrightness();
+		if (luminance > 0.55f)
 		{
-			textColor = theme.getColorForRole(ThemeManager::ColorRole::TextPrimary).darker(0.3f);
+			// Light background: use dark text with slight transparency for softer look
+			textColor = Colours::black.withAlpha(0.85f);
 		}
 		else
 		{
-			textColor = Colours::white;
+			// Dark background: use white text
+			textColor = Colours::white.withAlpha(0.95f);
 		}
 
 		g.setColour(textColor);
@@ -91,9 +96,8 @@ void TagTile::mouseUp(const MouseEvent& e)
 	{
 		if (e.mods.isLeftButtonDown())
 		{
-			//todo set sample container filter
-			String text = SamplifyMainComponent::getInstance()->getSampleExplorer().getSearchBar().getText();
-			SamplifyMainComponent::getInstance()->getSampleExplorer().getSearchBar().setText("#" + mTag);
+			// Toggle this tag in the active filter
+			SamplifyMainComponent::getInstance()->getSampleExplorer().toggleActiveTag(mTag);
 		}
 		else if (e.mods.isRightButtonDown())
 		{
@@ -110,7 +114,7 @@ void TagTile::mouseUp(const MouseEvent& e)
 					if (selection == 2)
 					{
 						parent->getSample().removeTag(tagCopy);
-						parent->repaint();
+						parent->refreshTags();
 					}
 				});
 			}
@@ -118,9 +122,72 @@ void TagTile::mouseUp(const MouseEvent& e)
 			{
 				menu.addItem(1, "Edit Tag", false, false);
 				menu.addItem(2, "Delete Tag (+ References)", true, false);
-				menu.showMenuAsync(PopupMenu::Options(), [](int selection)
+
+				// Build "Move to Collection" submenu
+				PopupMenu collectionMenu;
+				auto library = SamplifyProperties::getInstance()->getSampleLibrary();
+				StringArray collections = library->getCollections();
+
+				// Add existing collections
+				for (int i = 0; i < collections.size(); i++)
 				{
-					// Currently not implemented
+					collectionMenu.addItem(100 + i, collections[i]);
+				}
+
+				// Add "Default" option
+				collectionMenu.addItem(99, "Default");
+
+				// Separator and "New Collection..." option
+				collectionMenu.addSeparator();
+				collectionMenu.addItem(98, "New Collection...");
+
+				menu.addSubMenu("Move to Collection", collectionMenu);
+
+				String tagCopy = mTag;
+				menu.showMenuAsync(PopupMenu::Options(), [tagCopy, collections](int selection)
+				{
+					auto lib = SamplifyProperties::getInstance()->getSampleLibrary();
+
+					if (selection == 2)
+					{
+						// Delete tag
+						lib->deleteTag(tagCopy);
+					}
+					else if (selection == 99)
+					{
+						// Move to Default collection
+						lib->setTagCollection(tagCopy, "");
+					}
+					else if (selection == 98)
+					{
+						// Create new collection and move tag to it
+						// Use shared_ptr to manage AlertWindow lifetime - don't let JUCE delete it (last param = false)
+						auto alertWindow = std::make_shared<AlertWindow>("New Collection", "", MessageBoxIconType::NoIcon);
+						alertWindow->addTextEditor("collectionName", "", "Collection Name:");
+						alertWindow->addButton("OK", 1, KeyPress(KeyPress::returnKey));
+						alertWindow->addButton("Cancel", 0, KeyPress(KeyPress::escapeKey));
+
+						alertWindow->enterModalState(true, ModalCallbackFunction::create([alertWindow, tagCopy](int result)
+						{
+							if (result == 1)
+							{
+								String collectionName = alertWindow->getTextEditorContents("collectionName");
+								if (collectionName.isNotEmpty())
+								{
+									auto lib = SamplifyProperties::getInstance()->getSampleLibrary();
+									lib->addCollection(collectionName);
+									lib->setTagCollection(tagCopy, collectionName);
+								}
+							}
+							// shared_ptr will clean up AlertWindow when lambda is destroyed
+						}), false);  // false = don't delete component, shared_ptr handles it
+					}
+					else if (selection >= 100 && selection < 100 + collections.size())
+					{
+						// Move to selected collection
+						String collectionName = collections[selection - 100];
+						lib->setTagCollection(tagCopy, collectionName);
+					}
 				});
 			}
 

@@ -18,6 +18,8 @@
 
 namespace samplore
 {
+	struct FilterQuery; // Forward declaration
+
 	enum class CheckStatus
 	{
 		NotLoaded = -1,
@@ -31,7 +33,7 @@ namespace samplore
 		SampleDirectory(File file);
 		~SampleDirectory();
 		File getFile() const { return mDirectory; }
-		Sample::List getChildSamplesRecursive(juce::String query, bool ignoreCheckSystem);
+		Sample::List getChildSamplesRecursive(const FilterQuery& query, bool ignoreCheckSystem);
 		Sample::List getChildSamples();
 
 		void updateChildrenItems(CheckStatus checkStatus);

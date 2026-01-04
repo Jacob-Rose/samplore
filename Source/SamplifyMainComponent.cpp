@@ -1,13 +1,14 @@
 #include "SamplifyMainComponent.h"
 #include "SamplifyLookAndFeel.h"
 #include "ThemeManager.h"
+#include "CueManager.h"
 
 using namespace samplore;
 
 SamplifyMainComponent* SamplifyMainComponent::mInstance = nullptr;
 
-SamplifyMainComponent::SamplifyMainComponent() : 
-	mResizableEdgeDirectoryExplorer(&mDirectoryExplorer, &mResizableEdgeDirectoryExplorerBounds, ResizableEdgeComponent::Edge::rightEdge),
+SamplifyMainComponent::SamplifyMainComponent() :
+	mResizableEdgeDirectoryExplorer(&mLeftPanel, &mResizableEdgeDirectoryExplorerBounds, ResizableEdgeComponent::Edge::rightEdge),
 	mResizableEdgeFilterExplorer(&mFilterExplorer, &mResizableEdgeDirectoryExplorerBounds, ResizableEdgeComponent::Edge::leftEdge),
 	mResizableEdgeAudioPlayer(&mSamplePlayerComponent, &mResizableEdgeAudioPlayerBounds, ResizableEdgeComponent::Edge::topEdge)
 {
@@ -18,11 +19,14 @@ SamplifyMainComponent::SamplifyMainComponent() :
 	mAudioPlayer = std::make_shared<AudioPlayer>();
 	SamplifyProperties::getInstance()->setAudioPlayer(mAudioPlayer);
 
+	// Configure tooltip to show faster
+	mTooltip->setMillisecondsBeforeTipAppears(300); // Show after 300ms instead of default 700ms
+
 	mResizableEdgeDirectoryExplorerBounds.setMinimumWidth(100);
 	mResizableEdgeFilterExplorerBounds.setMinimumWidth(100);
 	mResizableEdgeAudioPlayerBounds.setMinimumHeight(100);
 	mResizableEdgeAudioPlayerBounds.setMaximumHeight(400);
-	mDirectoryExplorer.setSize(200, 1000); //todo make these save
+	mLeftPanel.setSize(200, 1000); //todo make these save
 	mFilterExplorer.setSize(200, 1000); //todo make these save
 	mSamplePlayerComponent.setSize(200, 200); //todo make these save
 	mResizableEdgeDirectoryExplorer.addMouseListener(this, false);
@@ -32,7 +36,7 @@ SamplifyMainComponent::SamplifyMainComponent() :
 	addAndMakeVisible(mResizableEdgeDirectoryExplorer);
 	addAndMakeVisible(mResizableEdgeAudioPlayer);
 
-	addAndMakeVisible(mDirectoryExplorer);
+	addAndMakeVisible(mLeftPanel);
 	addAndMakeVisible(mSampleExplorer);
 	addAndMakeVisible(mFilterExplorer);
 	addAndMakeVisible(mSamplePlayerComponent);
@@ -54,13 +58,30 @@ SamplifyMainComponent::SamplifyMainComponent() :
 	SamplifyProperties::getInstance()->getSampleLibrary()->addChangeListener(&mSampleExplorer);
 	SamplifyProperties::getInstance()->getAudioPlayer()->addChangeListener(&mSamplePlayerComponent);
 	//startTimer(100);
-	setSize(AppValues::getInstance().WINDOW_WIDTH, AppValues::getInstance().WINDOW_HEIGHT);
+	// Clamp window size to available screen area
+	auto* display = Desktop::getInstance().getDisplays().getPrimaryDisplay();
+	if (display != nullptr)
+	{
+		auto screenArea = display->userArea;
+		int maxWidth = screenArea.getWidth() - 50;  // Leave some margin
+		int maxHeight = screenArea.getHeight() - 50;
+		int width = jmin((int)AppValues::getInstance().WINDOW_WIDTH, maxWidth);
+		int height = jmin((int)AppValues::getInstance().WINDOW_HEIGHT, maxHeight);
+		setSize(width, height);
+	}
+	else
+	{
+		setSize(AppValues::getInstance().WINDOW_WIDTH, AppValues::getInstance().WINDOW_HEIGHT);
+	}
 	//initial load
-	SamplifyProperties::getInstance()->getSampleLibrary()->updateCurrentSamples("");
+	SamplifyProperties::getInstance()->getSampleLibrary()->updateCurrentSamples({});
 	
 	// Register with ThemeManager
 	ThemeManager::getInstance().addListener(this);
-	
+
+	// Register callbacks for global key bindings
+	registerKeyBindingCallbacks();
+
 	// Enable performance profiling in debug builds
 	#if JUCE_DEBUG
 		PerformanceProfiler::getInstance().setEnabled(true);
@@ -87,11 +108,15 @@ SamplifyMainComponent::~SamplifyMainComponent()
 
 bool SamplifyMainComponent::keyPressed(const KeyPress& key, Component* originatingComponent)
 {
-	auto& keyManager = KeyBindingManager::getInstance();
-	
-	// Performance profiling shortcuts (debug only)
+	// Performance profiling shortcuts (debug only) - check before context system
 	#if JUCE_DEBUG
-		if (key == KeyPress::F5Key)
+		if (key == KeyPress::F4Key)
+		{
+			auto& profiler = PerformanceProfiler::getInstance();
+			profiler.setEnabled(!profiler.isEnabled());
+			return true;
+		}
+		else if (key == KeyPress::F5Key)
 		{
 			PerformanceProfiler::getInstance().printStatistics();
 			return true;
@@ -99,43 +124,13 @@ bool SamplifyMainComponent::keyPressed(const KeyPress& key, Component* originati
 		else if (key == KeyPress::F6Key)
 		{
 			PerformanceProfiler::getInstance().reset();
-			DBG("Performance statistics reset");
 			return true;
 		}
 	#endif
-	
-	if (keyManager.matchesAction(key, KeyBindingManager::Action::PlayAudio))
-	{
-		SamplifyProperties::getInstance()->getAudioPlayer()->play();
-		return true;
-	}
-	else if (keyManager.matchesAction(key, KeyBindingManager::Action::StopAudio))
-	{
-		SamplifyProperties::getInstance()->getAudioPlayer()->stop();
-		return true;
-	}
-	else if (keyManager.matchesAction(key, KeyBindingManager::Action::TogglePlayerWindow))
-	{
-		mSamplePlayerComponent.setVisible(!mSamplePlayerComponent.isVisible());
-		return true;
-	}
-	else if (keyManager.matchesAction(key, KeyBindingManager::Action::ToggleFilterWindow))
-	{
-		mFilterExplorer.setVisible(!mFilterExplorer.isVisible());
-		return true;
-	}
-	else if (keyManager.matchesAction(key, KeyBindingManager::Action::OpenPreferences))
-	{
-		showPreferences();
-		return true;
-	}
-	else if (keyManager.matchesAction(key, KeyBindingManager::Action::ExitApplication))
-	{
-		JUCEApplication::getInstance()->systemRequestedQuit();
-		return true;
-	}
-	
-	return false;
+
+	// Use the layered input context system - checks all contexts by priority
+	// Cue context (priority 100) is checked before Global (priority 0)
+	return InputContextManager::getInstance().handleKeyPress(key);
 }
 
 void SamplifyMainComponent::changeListenerCallback(ChangeBroadcaster* source)
@@ -243,8 +238,8 @@ void SamplifyMainComponent::paint (Graphics& g)
 const int edgeSize = 8;
 void SamplifyMainComponent::resized()
 {
-	int lWidth = mDirectoryExplorer.getWidth(); //set by dragger
-	mDirectoryExplorer.setBounds(0, 0, lWidth, getHeight());
+	int lWidth = mLeftPanel.getWidth(); //set by dragger
+	mLeftPanel.setBounds(0, 0, lWidth, getHeight());
 	mResizableEdgeDirectoryExplorer.setBounds(lWidth, 0, edgeSize, getHeight());
 	lWidth += mResizableEdgeDirectoryExplorer.getWidth();
 	
@@ -260,12 +255,16 @@ void SamplifyMainComponent::resized()
 	bHeight += mResizableEdgeAudioPlayer.getHeight();
 	
 	mSampleExplorer.setBounds(lWidth, 0, getWidth() - (rWidth + lWidth), getHeight() - bHeight);
-	
+
 	// Overlay panel covers the entire component
 	mOverlayPanel.setBounds(getLocalBounds());
-	
+
 	mResizableEdgeDirectoryExplorerBounds.setMaximumWidth(getWidth() - (rWidth));
 	mResizableEdgeFilterExplorerBounds.setMaximumWidth(getWidth() - (lWidth));
+
+	// Save window size to preferences so it persists on restart
+	AppValues::getInstance().WINDOW_WIDTH = getWidth();
+	AppValues::getInstance().WINDOW_HEIGHT = getHeight();
 }
 
 SamplifyMainComponent* SamplifyMainComponent::getInstance()
@@ -303,6 +302,23 @@ void SamplifyMainComponent::showPreferences()
 	mOverlayPanel.show();
 }
 
+void SamplifyMainComponent::showCueBindingsWindow()
+{
+	if (mCueBindingsWindow == nullptr)
+	{
+		mCueBindingsWindow = std::make_unique<CueBindingsWindow>();
+	}
+	mCueBindingsWindow->setVisible(true);
+	mCueBindingsWindow->toFront(true);
+}
+
+void SamplifyMainComponent::showKeyCaptureOverlay()
+{
+	mKeyCaptureOverlay.prepareForDisplay();
+	mOverlayPanel.setContentComponent(&mKeyCaptureOverlay, false);
+	mOverlayPanel.show();
+}
+
 //==============================================================================
 // ThemeManager::Listener implementation
 void SamplifyMainComponent::themeChanged(ThemeManager::Theme newTheme)
@@ -317,4 +333,38 @@ void SamplifyMainComponent::colorChanged(ThemeManager::ColorRole role, Colour ne
 	setupLookAndFeel(getLookAndFeel());
 	mSamplePlayerComponent.updateThemeColors();
 	repaint();
+}
+
+void SamplifyMainComponent::registerKeyBindingCallbacks()
+{
+	using Action = KeyBindingManager::Action;
+	auto& keyManager = KeyBindingManager::getInstance();
+
+	keyManager.setCallback(Action::PlayAudio, [this]() {
+		SamplifyProperties::getInstance()->getAudioPlayer()->play();
+	});
+
+	keyManager.setCallback(Action::StopAudio, [this]() {
+		SamplifyProperties::getInstance()->getAudioPlayer()->stop();
+	});
+
+	keyManager.setCallback(Action::TogglePlayerWindow, [this]() {
+		mSamplePlayerComponent.setVisible(!mSamplePlayerComponent.isVisible());
+	});
+
+	keyManager.setCallback(Action::ToggleFilterWindow, [this]() {
+		mFilterExplorer.setVisible(!mFilterExplorer.isVisible());
+	});
+
+	keyManager.setCallback(Action::OpenPreferences, [this]() {
+		showPreferences();
+	});
+
+	keyManager.setCallback(Action::ExitApplication, []() {
+		JUCEApplication::getInstance()->systemRequestedQuit();
+	});
+
+	keyManager.setCallback(Action::ToggleCueBindings, [this]() {
+		showCueBindingsWindow();
+	});
 }

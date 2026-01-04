@@ -12,6 +12,7 @@
 #include "SamplePlayerComponent.h"
 #include "SamplifyProperties.h"
 #include "SamplifyLookAndFeel.h"
+#include "SamplifyMainComponent.h"
 #include "ThemeManager.h"
 #include "PerformanceProfiler.h"
 
@@ -37,9 +38,9 @@ SamplePlayerComponent::SamplePlayerComponent() : mSampleTagContainer(false)
     mSampleRemoveColorButton.setButtonText("Remove Color");
     mSampleRemoveColorButton.addListener(this);
 
-    // Parent folders button
-    mSampleDirectoryChainButton.setName("ParentFolders");
-    mSampleDirectoryChainButton.setButtonText("Parent Folders");
+    // Add key binding button
+    mSampleDirectoryChainButton.setName("AddKeyBinding");
+    mSampleDirectoryChainButton.setButtonText("Bind Key");
     mSampleDirectoryChainButton.addListener(this);
 
     // Info editor
@@ -123,15 +124,13 @@ void SamplePlayerComponent::buttonClicked(Button* b)
         samp.setColor(Colours::transparentWhite);
         resized();
     }
-    else if (b->getName() == "ParentFolders")
+    else if (b->getName() == "AddKeyBinding")
     {
-        PopupMenu dirMenu;
-        StringArray parentFolders = samp.getRelativeParentFolders();
-        for (int i = 0; i < parentFolders.size(); i++)
+        // Show key capture overlay
+        if (auto* mainComp = SamplifyMainComponent::getInstance())
         {
-            dirMenu.addItem(i + 1, parentFolders[i]);
+            mainComp->showKeyCaptureOverlay();
         }
-        dirMenu.showMenuAsync(PopupMenu::Options());
     }
 }
 
@@ -181,6 +180,48 @@ void SamplePlayerComponent::paint (Graphics& g)
         std::shared_ptr<AudioPlayer> auxPlayer = SamplifyProperties::getInstance()->getAudioPlayer();
         if (auxPlayer->getSampleReference() == samp)
         {
+            // Draw playback indicator overlay when playing
+            if (auxPlayer->getState() == AudioPlayer::TransportState::Playing)
+            {
+                PROFILE_SCOPE("SamplePlayerComponent::paint::playbackIndicator");
+                auto waveformRect = m_ThumbnailRect.toFloat();
+                auto& appValues = AppValues::getInstance();
+
+                if (appValues.PLAYBACK_INDICATOR_MODE == PlaybackIndicatorMode::StaticColor)
+                {
+                    // Static color mode
+                    g.setColour(appValues.PLAYBACK_INDICATOR_COLOR.withAlpha(0.15f));
+                    g.fillRoundedRectangle(waveformRect, 8.0f);
+                }
+                else
+                {
+                    // Rainbow modes (animated or static)
+                    float animPhase = 0.0f;
+                    if (appValues.PLAYBACK_INDICATOR_MODE == PlaybackIndicatorMode::AnimatedRainbow)
+                    {
+                        double currentTime = Time::getMillisecondCounterHiRes();
+                        animPhase = static_cast<float>(std::fmod(currentTime * 0.0002, 1.0));
+                    }
+
+                    // Create rainbow gradientai
+                    ColourGradient rainbow;
+                    rainbow.isRadial = false;
+                    rainbow.point1 = Point<float>(waveformRect.getX(), waveformRect.getCentreY());
+                    rainbow.point2 = Point<float>(waveformRect.getRight(), waveformRect.getCentreY());
+
+                    const int numColors = 7;
+                    for (int i = 0; i < numColors; ++i)
+                    {
+                        float position = static_cast<float>(i) / (numColors - 1);
+                        float hue = std::fmod(position + animPhase, 1.0f);
+                        Colour rainbowColor = Colour::fromHSV(hue, 0.7f, 1.0f, 0.15f);
+                        rainbow.addColour(position, rainbowColor);
+                    }
+
+                    g.setGradientFill(rainbow);
+                    g.fillRoundedRectangle(waveformRect, 8.0f);
+                }
+            }
             float startT = auxPlayer->getStartCueRelative();
             float currentT = auxPlayer->getRelativeTime();
             float startX = m_ThumbnailRect.getX() + (m_ThumbnailRect.getWidth() * startT);
@@ -188,16 +229,36 @@ void SamplePlayerComponent::paint (Graphics& g)
             float y1 = m_ThumbnailRect.getY();
             float y2 = m_ThumbnailRect.getBottom();
 
-            // Draw start position with subtle color
-            g.setColour(theme.getColorForRole(ThemeManager::ColorRole::TextSecondary).withAlpha(0.5f));
-            g.drawLine(startX, y1, startX, y2, 1.5f);
+            // Draw start position with animated rainbow color and triangle
+            {
+                double currentTime = Time::getMillisecondCounterHiRes();
+                float animPhase = static_cast<float>(std::fmod(currentTime * 0.0003, 1.0));
+                Colour rainbowColor = Colour::fromHSV(animPhase, 0.8f, 0.9f, 1.0f);
+
+                // Draw vertical line
+                g.setColour(rainbowColor.withAlpha(0.7f));
+                g.drawLine(startX, y1, startX, y2, 2.0f);
+
+                // Draw rainbow triangle at top
+                const float triangleSize = 10.0f;
+                Path triangle;
+                triangle.addTriangle(
+                    startX, y1,
+                    startX - triangleSize * 0.6f, y1 + triangleSize,
+                    startX + triangleSize * 0.6f, y1 + triangleSize
+                );
+                g.setColour(rainbowColor);
+                g.fillPath(triangle);
+
+                // Repaint for animation
+                repaint();
+            }
 
             // Draw current position with accent color
             if (auxPlayer->getState() == AudioPlayer::TransportState::Playing)
             {
                 g.setColour(theme.getColorForRole(ThemeManager::ColorRole::AccentSecondary));
                 g.drawLine(currentX, y1, currentX, y2, 2.0f);
-                repaint();
             }
         }
     }
@@ -267,9 +328,10 @@ void SamplePlayerComponent::mouseDown(const MouseEvent& e)
     {
         if (m_ThumbnailRect.contains(e.getMouseDownPosition()))
         {
-            float rectWidth = m_ThumbnailRect.getWidth();
-            float mouseDownX = e.getMouseDownX();
-            SamplifyProperties::getInstance()->getAudioPlayer()->playSample(mouseDownX / rectWidth);
+            float rectWidth = static_cast<float>(m_ThumbnailRect.getWidth());
+            float mouseDownX = static_cast<float>(e.getMouseDownX() - m_ThumbnailRect.getX());
+            float startPos = juce::jlimit(0.0f, 1.0f, mouseDownX / rectWidth);
+            SamplifyProperties::getInstance()->getAudioPlayer()->playSample(startPos);
         }
     }
 }

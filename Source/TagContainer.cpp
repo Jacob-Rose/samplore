@@ -127,7 +127,7 @@ void TagContainer::addTag(juce::String tag)
 	updateItemBounds();
 }
 
-int TagContainer::calculateAllRowsHeight()
+int TagContainer::calculateAllRowsHeight() const
 {
 	if (mUsedSampleTags.size() > 0)
 	{
@@ -139,7 +139,7 @@ int TagContainer::calculateAllRowsHeight()
 	}
 }
 
-int TagContainer::getRowCount()
+int TagContainer::getRowCount() const
 {
 	return mLineCount;
 }

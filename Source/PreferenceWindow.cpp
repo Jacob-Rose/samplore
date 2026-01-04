@@ -133,7 +133,28 @@ PreferencePanel::PreferencePanel()
     mThumbnailLineCountPlayer.setText(String(AppValues::getInstance().AUDIO_THUMBNAIL_LINE_COUNT_PLAYER));
     mThumbnailLineCountPlayer.addListener(this);
     addAndMakeVisible(mThumbnailLineCountPlayer);
-    
+
+    mPlaybackIndicatorLabel.setText("Playback Indicator:", dontSendNotification);
+    mPlaybackIndicatorLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
+    addAndMakeVisible(mPlaybackIndicatorLabel);
+
+    mPlaybackIndicatorModeSelector.setName("Playback Indicator Mode");
+    mPlaybackIndicatorModeSelector.addItem("Animated Rainbow", 1);
+    mPlaybackIndicatorModeSelector.addItem("Static Rainbow", 2);
+    mPlaybackIndicatorModeSelector.addItem("Static Color", 3);
+    mPlaybackIndicatorModeSelector.setSelectedId(
+        static_cast<int>(AppValues::getInstance().PLAYBACK_INDICATOR_MODE) + 1,
+        dontSendNotification
+    );
+    mPlaybackIndicatorModeSelector.addListener(this);
+    addAndMakeVisible(mPlaybackIndicatorModeSelector);
+
+    mPlaybackIndicatorColorButton.setName("Playback Indicator Color");
+    mPlaybackIndicatorColorButton.setButtonText("Choose Color");
+    mPlaybackIndicatorColorButton.addListener(this);
+    addAndMakeVisible(mPlaybackIndicatorColorButton);
+    updatePlaybackIndicatorColorButton();
+
     // ===== KEY BINDINGS SECTION =====
     mKeyBindingsLabel.setText("Key Bindings", dontSendNotification);
     mKeyBindingsLabel.setFont(FontOptions(18.0f, Font::bold));
@@ -260,6 +281,15 @@ void PreferencePanel::buttonClicked(Button* button)
             }
         });
     }
+    else if (buttonName == "Playback Indicator Color")
+    {
+        mColorEditMode = ColorEditMode::PlaybackIndicator;
+        mColourSelector = std::make_unique<ColourSelector>();
+        mColourSelector->setSize(300, 300);
+        mColourSelector->setCurrentColour(AppValues::getInstance().PLAYBACK_INDICATOR_COLOR);
+        mColourSelector->addChangeListener(this);
+        CallOutBox::launchAsynchronously(std::move(mColourSelector), button->getScreenBounds(), nullptr);
+    }
 }
 
 void PreferencePanel::changeListenerCallback(ChangeBroadcaster* source)
@@ -274,10 +304,16 @@ void PreferencePanel::changeListenerCallback(ChangeBroadcaster* source)
             theme.setCustomColor(ThemeManager::ColorRole::AccentPrimary, newColour);
             theme.setCustomColor(ThemeManager::ColorRole::WaveformPrimary, newColour);
         }
-        else // Accent
+        else if (mColorEditMode == ColorEditMode::Accent)
         {
             theme.setCustomColor(ThemeManager::ColorRole::AccentSecondary, newColour);
             theme.setCustomColor(ThemeManager::ColorRole::WaveformSecondary, newColour);
+        }
+        else // PlaybackIndicator
+        {
+            AppValues::getInstance().PLAYBACK_INDICATOR_COLOR = newColour;
+            updatePlaybackIndicatorColorButton();
+            return; // No need to update other colors
         }
 
         SamplifyMainComponent::setupLookAndFeel(getLookAndFeel());
@@ -310,6 +346,12 @@ void PreferencePanel::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
             mainComp->repaint();
         }
         repaint();
+    }
+    else if (comboBoxThatHasChanged == &mPlaybackIndicatorModeSelector)
+    {
+        int selectedId = mPlaybackIndicatorModeSelector.getSelectedId();
+        AppValues::getInstance().PLAYBACK_INDICATOR_MODE = static_cast<PlaybackIndicatorMode>(selectedId - 1);
+        updatePlaybackIndicatorColorButton();
     }
 }
 
@@ -350,6 +392,23 @@ void PreferencePanel::updateColorButtons()
     mAccentColorButton.setColour(TextButton::buttonColourId, accentColor);
     mAccentColorButton.setColour(TextButton::textColourOffId,
         accentColor.getPerceivedBrightness() > 0.5f ? Colours::black : Colours::white);
+}
+
+void PreferencePanel::updatePlaybackIndicatorColorButton()
+{
+    // Show/hide color button based on selected mode
+    bool showColorButton = AppValues::getInstance().PLAYBACK_INDICATOR_MODE == PlaybackIndicatorMode::StaticColor;
+    mPlaybackIndicatorColorButton.setVisible(showColorButton);
+
+    if (showColorButton)
+    {
+        Colour indicatorColor = AppValues::getInstance().PLAYBACK_INDICATOR_COLOR;
+        mPlaybackIndicatorColorButton.setColour(TextButton::buttonColourId, indicatorColor);
+        mPlaybackIndicatorColorButton.setColour(TextButton::textColourOffId,
+            indicatorColor.getPerceivedBrightness() > 0.5f ? Colours::black : Colours::white);
+    }
+
+    resized(); // Update layout
 }
 
 void PreferencePanel::applyColorPreset(const String& presetName)
@@ -497,8 +556,22 @@ void PreferencePanel::resized()
     // Player waveform lines row
     mThumbnailLinesPlayerLabel.setBounds(margin, y, 180, controlHeight);
     mThumbnailLineCountPlayer.setBounds(margin + 190, y, 100, controlHeight);
-    y += controlHeight + margin;
-    
+    y += controlHeight + itemSpacing;
+
+    // Playback indicator mode row
+    mPlaybackIndicatorLabel.setBounds(margin, y, 140, controlHeight);
+    mPlaybackIndicatorModeSelector.setBounds(margin + 150, y, componentWidth - margin - 150 - margin, controlHeight);
+    y += controlHeight + itemSpacing;
+
+    // Playback indicator color button (only visible for static color mode)
+    if (mPlaybackIndicatorColorButton.isVisible())
+    {
+        mPlaybackIndicatorColorButton.setBounds(margin + 150, y, componentWidth - margin - 150 - margin, controlHeight);
+        y += controlHeight + itemSpacing;
+    }
+
+    y += margin - itemSpacing; // Add spacing before separator
+
     // Separator line drawn in paint()
     y += itemSpacing;
 
@@ -563,7 +636,16 @@ void PreferencePanel::updateAllComponentColors()
     mThumbnailLineCountPlayer.setColour(TextEditor::outlineColourId, theme.getColorForRole(ThemeManager::ColorRole::Border));
     mThumbnailLineCountPlayer.applyColourToAllText(theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
     mThumbnailLineCountPlayer.repaint();
-    
+
+    // Update playback indicator controls
+    mPlaybackIndicatorLabel.setColour(Label::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
+    mPlaybackIndicatorModeSelector.setColour(ComboBox::backgroundColourId, theme.getColorForRole(ThemeManager::ColorRole::Surface));
+    mPlaybackIndicatorModeSelector.setColour(ComboBox::textColourId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));
+    mPlaybackIndicatorModeSelector.setColour(ComboBox::outlineColourId, theme.getColorForRole(ThemeManager::ColorRole::Border));
+    mPlaybackIndicatorModeSelector.setColour(ComboBox::arrowColourId, theme.getColorForRole(ThemeManager::ColorRole::TextSecondary));
+    mPlaybackIndicatorModeSelector.repaint();
+    updatePlaybackIndicatorColorButton();
+
     // Update key bindings button
     mEditKeyBindingsButton.setColour(TextButton::buttonColourId, theme.getColorForRole(ThemeManager::ColorRole::AccentSecondary));
     mEditKeyBindingsButton.setColour(TextButton::textColourOnId, theme.getColorForRole(ThemeManager::ColorRole::TextPrimary));

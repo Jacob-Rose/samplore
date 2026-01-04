@@ -99,7 +99,7 @@ void KeyBindingEditor::buttonClicked(Button* button)
 {
     if (button == &mResetButton)
     {
-        KeyBindingManager::getInstance().resetToDefaults();
+        KeyBindingManager::getInstance().resetAllKeys();
         rebuildKeyBindingList();
     }
     else if (button == &mCloseButton)
@@ -132,7 +132,7 @@ void KeyBindingEditor::rebuildKeyBindingList()
     int y = 10;
     
     // Create row for each action
-    for (int i = 0; i <= static_cast<int>(KeyBindingManager::Action::ExitApplication); ++i)
+    for (int i = 0; i <= static_cast<int>(KeyBindingManager::Action::ToggleCueBindings); ++i)
     {
         auto action = static_cast<KeyBindingManager::Action>(i);
         
@@ -221,18 +221,18 @@ bool KeyBindingEditor::keyPressed(const KeyPress& key, Component* originatingCom
     if (mIsCapturingKey)
     {
         // Set the new key binding
-        KeyBindingManager::getInstance().setBinding(mCapturingAction, key);
-        
+        KeyBindingManager::getInstance().setKey(mCapturingAction, key);
+
         // Exit capture mode
         mIsCapturingKey = false;
         mCaptureLabel.setVisible(false);
         mViewport.setVisible(true);
-        
+
         // Rebuild the list to show updated key
         rebuildKeyBindingList();
-        
+
         return true;
     }
-    
+
     return false;
 }

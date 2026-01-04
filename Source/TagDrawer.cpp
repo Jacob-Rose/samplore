@@ -44,18 +44,21 @@ void TagDrawer::DrawTagBox(Graphics& g,
 {
 	Colour color = SamplifyProperties::getInstance()->getSampleLibrary()->getTagColor(tag);
 	g.setColour(color);
-	//g.fillRoundedRectangle();
 	g.fillRoundedRectangle(bounds, roundness);
-	//g.drawRoundedRectangle();
+
+	// Draw border with darker shade
+	g.setColour(color.darker(0.3f).withAlpha(0.7f));
 	g.drawRoundedRectangle(bounds, roundness, thickness);
-	//g.drawText();
-	if (color.getBrightness() > 90)
+
+	// Text color based on perceived brightness (0.0-1.0 scale)
+	// Use dark text for light backgrounds, white for dark
+	if (color.getPerceivedBrightness() > 0.55f)
 	{
-		g.setColour(Colours::black);
+		g.setColour(Colours::black.withAlpha(0.85f));
 	}
 	else
 	{
-		g.setColour(Colours::white);
+		g.setColour(Colours::white.withAlpha(0.95f));
 	}
 	g.drawText(tag, bounds, Justification::centred, true);
 }

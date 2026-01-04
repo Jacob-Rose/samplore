@@ -15,11 +15,12 @@
 
 #include "Sample.h"
 #include "SampleTile.h"
+#include "SampleLibrary.h"
 
 namespace samplore
 {
 	// TODO rename SampleTileScrollView
-	class SampleContainer : public Component
+	class SampleContainer : public Component, public ISampleRequestProvider
 	{
 	public:
 		//========================================================
@@ -33,6 +34,11 @@ namespace samplore
 		void clearItems();
 
 		void setSampleItems(Sample::List mSamples);
+
+		//======================================================================
+		// ISampleRequestProvider interface
+		void retryVisibleThumbnails() override;
+
 		//======================================================
 		int calculateTotalHeight() const;
 		int getTotalRowCount() const;

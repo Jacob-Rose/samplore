@@ -23,7 +23,7 @@ SampleLibrary::~SampleLibrary()
 	mDirectories.clear();
 }
 
-void SampleLibrary::updateCurrentSamples(String query)
+void SampleLibrary::updateCurrentSamples(const FilterQuery& query)
 {
 	mCurrentQuery = query;
 
@@ -33,7 +33,6 @@ void SampleLibrary::updateCurrentSamples(String query)
 	}
 	mUpdateSampleFuture = std::future<Sample::List>(getAllSamplesInDirectories_Async(query));
 	mUpdatingSamples = true;
-	//mCurrentSamples = getAllSamplesInDirectories(query, false);
 	sendChangeMessage();
 }
 
@@ -119,7 +118,7 @@ Sample::List SampleLibrary::getCurrentSamples()
 StringArray samplore::SampleLibrary::getUsedTags()
 {
 	StringArray tags;
-	Sample::List allSamps = getAllSamplesInDirectories("", true);
+	Sample::List allSamps = getAllSamplesInDirectories({}, true);
 	for (int i = 0; i < allSamps.size(); i++)
 	{
 		StringArray sampleTags = allSamps[i].getTags();
@@ -147,23 +146,32 @@ void SampleLibrary::timerCallback()
 	
 }
 
-void SampleLibrary::addTag(juce::String text, Colour color)
+Colour SampleLibrary::hueToColor(float hue)
 {
-	mTags.push_back(Tag(text, color));
+	// Use fixed saturation and brightness for consistent, vibrant tag colors
+	const float saturation = 0.45f;
+	const float brightness = 0.75f;
+	return Colour::fromHSV(hue, saturation, brightness, 1.0f);
+}
+
+void SampleLibrary::addTag(juce::String text, float hue, String collection)
+{
+	mTags.push_back(Tag(text, hue, collection));
 	sendChangeMessage();
 }
 
 void SampleLibrary::addTag(juce::String text)
 {
 	Random& r = Random::getSystemRandom();
-	addTag(text, Colour(juce::uint8(r.nextInt(Range(0, 256))),
-		juce::uint8(r.nextInt(Range(0, 256))),
-		juce::uint8(r.nextInt(Range(0, 256)))));
+	// Generate random hue (0.0-1.0)
+	float hue = r.nextFloat();
+	mTags.push_back(Tag(text, hue));
+	sendChangeMessage();
 }
 
 void SampleLibrary::deleteTag(juce::String tag)
 {
-	Sample::List allSamps = getAllSamplesInDirectories("", true);
+	Sample::List allSamps = getAllSamplesInDirectories({}, true);
 	for (int i = 0; i < allSamps.size(); i++)
 	{
 		allSamps[i].removeTag(tag); //remove if exist
@@ -187,12 +195,26 @@ Colour SampleLibrary::getTagColor(String tag)
 	{
 		if (mTags[i].mTitle == tag)
 		{
-			return mTags[i].mColor;
+			return hueToColor(mTags[i].mHue);
 		}
 	}
 	//if not in list, make and then return again
 	addTag(tag);
 	return getTagColor(tag);
+}
+
+float SampleLibrary::getTagHue(String tag)
+{
+	for (int i = 0; i < mTags.size(); i++)
+	{
+		if (mTags[i].mTitle == tag)
+		{
+			return mTags[i].mHue;
+		}
+	}
+	//if not in list, make and then return again
+	addTag(tag);
+	return getTagHue(tag);
 }
 
 StringArray SampleLibrary::getTagsStringArray()
@@ -205,13 +227,15 @@ StringArray SampleLibrary::getTagsStringArray()
 	return tags;
 }
 
-void SampleLibrary::setTagColor(juce::String tag, juce::Colour newColor)
+void SampleLibrary::setTagHue(juce::String tag, float hue)
 {
 	for (int i = 0; i < mTags.size(); i++)
 	{
 		if (mTags[i].mTitle == tag)
 		{
-			mTags[i].mColor = newColor;
+			mTags[i].mHue = hue;
+			sendChangeMessage();
+			return;
 		}
 	}
 }
@@ -228,7 +252,85 @@ SampleLibrary::Tag SampleLibrary::getTag(juce::String tag)
 	return SampleLibrary::Tag::getEmptyTag();
 }
 
-Sample::List SampleLibrary::getAllSamplesInDirectories(juce::String query, bool ignoreCheckSystem)
+//==============================================================================
+// Collection management
+
+StringArray SampleLibrary::getCollections()
+{
+	return mCollectionOrder;
+}
+
+void SampleLibrary::addCollection(juce::String name)
+{
+	if (name.isEmpty())
+		return;
+
+	// Don't add duplicates
+	if (mCollectionOrder.contains(name))
+		return;
+
+	mCollectionOrder.add(name);
+	sendChangeMessage();
+}
+
+void SampleLibrary::removeCollection(juce::String name)
+{
+	if (name.isEmpty())
+		return;
+
+	// Move all tags in this collection to Default (empty string)
+	for (auto& tag : mTags)
+	{
+		if (tag.mCollection == name)
+		{
+			tag.mCollection = "";
+		}
+	}
+
+	mCollectionOrder.removeString(name);
+	sendChangeMessage();
+}
+
+void SampleLibrary::moveCollectionDown(juce::String name)
+{
+	int index = mCollectionOrder.indexOf(name);
+	if (index < 0 || index >= mCollectionOrder.size() - 1)
+		return; // Not found or already at bottom
+
+	// Swap with the next collection
+	String temp = mCollectionOrder[index];
+	mCollectionOrder.set(index, mCollectionOrder[index + 1]);
+	mCollectionOrder.set(index + 1, temp);
+	sendChangeMessage();
+}
+
+void SampleLibrary::setTagCollection(juce::String tagTitle, juce::String collectionName)
+{
+	for (auto& tag : mTags)
+	{
+		if (tag.mTitle == tagTitle)
+		{
+			tag.mCollection = collectionName;
+			sendChangeMessage();
+			return;
+		}
+	}
+}
+
+std::vector<SampleLibrary::Tag> SampleLibrary::getTagsInCollection(juce::String collection)
+{
+	std::vector<Tag> result;
+	for (const auto& tag : mTags)
+	{
+		if (tag.mCollection == collection)
+		{
+			result.push_back(tag);
+		}
+	}
+	return result;
+}
+
+Sample::List SampleLibrary::getAllSamplesInDirectories(const FilterQuery& query, bool ignoreCheckSystem)
 {
 	Sample::List list;
 	for (int i = 0; i < mDirectories.size(); i++)
@@ -244,11 +346,28 @@ Sample::List SampleLibrary::getAllSamplesInDirectories(juce::String query, bool 
 }
 
 
-std::future<Sample::List> SampleLibrary::getAllSamplesInDirectories_Async(juce::String query, bool ignoreCheckSystem)
+std::future<Sample::List> SampleLibrary::getAllSamplesInDirectories_Async(const FilterQuery& query, bool ignoreCheckSystem)
 {
 	std::future<Sample::List> asfunc = std::async(std::launch::async, &SampleLibrary::getAllSamplesInDirectories, this, query, ignoreCheckSystem);
 	startTimer(300);
 	return asfunc;
+}
+
+Sample::Reference SampleLibrary::findSampleByFile(const juce::File& file)
+{
+	FilterQuery emptyQuery;
+	Sample::List allSamples = getAllSamplesInDirectories(emptyQuery, true);
+
+	for (int i = 0; i < allSamples.size(); ++i)
+	{
+		Sample::Reference ref = allSamples[i];
+		if (!ref.isNull() && ref.getFile() == file)
+		{
+			return ref;
+		}
+	}
+
+	return Sample::Reference(nullptr);
 }
 
 void SampleLibrary::launchPreloadAllTags()
@@ -263,9 +382,9 @@ void SampleLibrary::launchPreloadAllTags()
 void SampleLibrary::preloadTags_Worker()
 {
 	DBG("Starting tag preload from all sample files...");
-	
+
 	// Get all samples without filtering (empty query, ignore check system)
-	Sample::List allSamples = getAllSamplesInDirectories("", true);
+	Sample::List allSamples = getAllSamplesInDirectories({}, true);
 	
 	// Iterate through all samples and load their properties/tags
 	int sampleCount = allSamples.size();
@@ -312,7 +431,38 @@ void SampleLibrary::preloadTags_Worker()
 	
 	DBG("Tag preload complete! Processed " + String(processedCount) + " samples");
 	mPreloadingTags = false;
-	
+
 	// Notify listeners that tags have been updated
 	sendChangeMessage();
+}
+
+//==============================================================================
+// Sample request providers
+
+void SampleLibrary::addRequestProvider(ISampleRequestProvider* provider)
+{
+	if (provider != nullptr)
+	{
+		mRequestProviders.push_back(provider);
+	}
+}
+
+void SampleLibrary::removeRequestProvider(ISampleRequestProvider* provider)
+{
+	auto it = std::find(mRequestProviders.begin(), mRequestProviders.end(), provider);
+	if (it != mRequestProviders.end())
+	{
+		mRequestProviders.erase(it);
+	}
+}
+
+void SampleLibrary::notifyThumbnailReady()
+{
+	for (auto* provider : mRequestProviders)
+	{
+		if (provider != nullptr)
+		{
+			provider->retryVisibleThumbnails();
+		}
+	}
 }
