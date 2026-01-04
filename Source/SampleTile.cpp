@@ -341,6 +341,24 @@ void SampleTile::paint (Graphics& g)
 				}
 			}
 		}
+
+		// Draw drag highlight when a tag is being dragged over this tile
+		if (mDragHighlight)
+		{
+			Colour highlightColor = theme.getColorForRole(ThemeManager::ColorRole::AccentPrimary);
+
+			// Highlight the whole widget with a border
+			g.setColour(highlightColor.withAlpha(0.5f));
+			g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(1.0f), cornerRadius, 3.0f);
+
+			// Highlight the tag area with a semi-transparent fill
+			g.setColour(highlightColor.withAlpha(0.2f));
+			g.fillRoundedRectangle(m_TagRect.toFloat(), 6.0f);
+
+			// Border around tag area
+			g.setColour(highlightColor.withAlpha(0.6f));
+			g.drawRoundedRectangle(m_TagRect.toFloat().reduced(1.0f), 6.0f, 2.0f);
+		}
 	}
 }
 
@@ -502,6 +520,7 @@ void SampleTile::mouseExit(const MouseEvent& e)
 
 void SampleTile::itemDropped(const SourceDetails & dragSourceDetails)
 {
+	mDragHighlight = false;
 	if (!mSample.isNull())
 	{
 		if (TagTile * tagComp = dynamic_cast<TagTile*>(dragSourceDetails.sourceComponent.get()))
@@ -510,6 +529,22 @@ void SampleTile::itemDropped(const SourceDetails & dragSourceDetails)
 			mTagContainer.setTags(mSample.getTags());
 		}
 	}
+	repaint();
+}
+
+void SampleTile::itemDragEnter(const SourceDetails& dragSourceDetails)
+{
+	if (dragSourceDetails.description == "Tags")
+	{
+		mDragHighlight = true;
+		repaint();
+	}
+}
+
+void SampleTile::itemDragExit(const SourceDetails& dragSourceDetails)
+{
+	mDragHighlight = false;
+	repaint();
 }
 
 void SampleTile::changeListenerCallback(ChangeBroadcaster* source)
@@ -578,6 +613,14 @@ void SampleTile::setSample(Sample::Reference sample)
 Sample::Reference SampleTile::getSample()
 {
 	return mSample;
+}
+
+void SampleTile::refreshTags()
+{
+	if (!mSample.isNull())
+	{
+		mTagContainer.setTags(mSample.getTags());
+	}
 }
 
 SampleTile::InfoIcon::InfoIcon()

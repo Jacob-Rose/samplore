@@ -16,7 +16,7 @@
 #include "JuceHeader.h"
 
 #include "SamplifyProperties.h"
-#include "TagExplorer_V2.h"
+#include "TagExplorer.h"
 
 namespace samplore
 {
@@ -33,9 +33,9 @@ namespace samplore
 		void textEditorTextChanged(TextEditor&) override;
 
 		TextEditor& getSearchBar() { return mSearchBar; }
-		TagExplorer_V2& getTagExplorer() { return mTagExplorer; }
+		TagExplorer& getTagExplorer() { return mTagExplorer; }
 	private:
-		TagExplorer_V2 mTagExplorer;
+		TagExplorer mTagExplorer;
 		TextEditor mSearchBar;
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FilterExplorer)

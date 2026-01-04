@@ -60,10 +60,13 @@ namespace samplore
 
 		bool isInterestedInDragSource(const SourceDetails& dragSourceDetails) override;
 		void itemDropped(const SourceDetails& dragSourceDetails) override;
+		void itemDragEnter(const SourceDetails& dragSourceDetails) override;
+		void itemDragExit(const SourceDetails& dragSourceDetails) override;
 		void changeListenerCallback(ChangeBroadcaster* source) override;
 
 		void setSample(Sample::Reference);
 		Sample::Reference getSample();
+		void refreshTags();
 
 		//===========================================================================
 		// ThemeManager::Listener interface
@@ -110,6 +113,9 @@ namespace samplore
 
 		// Track if this tile is the active sample (for rainbow cue animation)
 		bool mIsActiveSample = false;
+
+		// Track if a tag is being dragged over this tile
+		bool mDragHighlight = false;
 
 		// Timer for rainbow cue animation at 30hz
 		class RainbowAnimationTimer : public juce::Timer

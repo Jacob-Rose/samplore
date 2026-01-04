@@ -154,9 +154,9 @@ Colour SampleLibrary::hueToColor(float hue)
 	return Colour::fromHSV(hue, saturation, brightness, 1.0f);
 }
 
-void SampleLibrary::addTag(juce::String text, float hue)
+void SampleLibrary::addTag(juce::String text, float hue, String collection)
 {
-	mTags.push_back(Tag(text, hue));
+	mTags.push_back(Tag(text, hue, collection));
 	sendChangeMessage();
 }
 
@@ -250,6 +250,84 @@ SampleLibrary::Tag SampleLibrary::getTag(juce::String tag)
 		}
 	}
 	return SampleLibrary::Tag::getEmptyTag();
+}
+
+//==============================================================================
+// Collection management
+
+StringArray SampleLibrary::getCollections()
+{
+	return mCollectionOrder;
+}
+
+void SampleLibrary::addCollection(juce::String name)
+{
+	if (name.isEmpty())
+		return;
+
+	// Don't add duplicates
+	if (mCollectionOrder.contains(name))
+		return;
+
+	mCollectionOrder.add(name);
+	sendChangeMessage();
+}
+
+void SampleLibrary::removeCollection(juce::String name)
+{
+	if (name.isEmpty())
+		return;
+
+	// Move all tags in this collection to Default (empty string)
+	for (auto& tag : mTags)
+	{
+		if (tag.mCollection == name)
+		{
+			tag.mCollection = "";
+		}
+	}
+
+	mCollectionOrder.removeString(name);
+	sendChangeMessage();
+}
+
+void SampleLibrary::moveCollectionDown(juce::String name)
+{
+	int index = mCollectionOrder.indexOf(name);
+	if (index < 0 || index >= mCollectionOrder.size() - 1)
+		return; // Not found or already at bottom
+
+	// Swap with the next collection
+	String temp = mCollectionOrder[index];
+	mCollectionOrder.set(index, mCollectionOrder[index + 1]);
+	mCollectionOrder.set(index + 1, temp);
+	sendChangeMessage();
+}
+
+void SampleLibrary::setTagCollection(juce::String tagTitle, juce::String collectionName)
+{
+	for (auto& tag : mTags)
+	{
+		if (tag.mTitle == tagTitle)
+		{
+			tag.mCollection = collectionName;
+			sendChangeMessage();
+			return;
+		}
+	}
+}
+
+std::vector<SampleLibrary::Tag> SampleLibrary::getTagsInCollection(juce::String collection)
+{
+	std::vector<Tag> result;
+	for (const auto& tag : mTags)
+	{
+		if (tag.mCollection == collection)
+		{
+			result.push_back(tag);
+		}
+	}
+	return result;
 }
 
 Sample::List SampleLibrary::getAllSamplesInDirectories(const FilterQuery& query, bool ignoreCheckSystem)

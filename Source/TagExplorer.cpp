@@ -1,8 +1,16 @@
+/*
+  ==============================================================================
+
+    TagExplorer.cpp
+    Created: 30 May 2020 6:33:22pm
+    Author:  jacob
+
+  ==============================================================================
+*/
+
 #include "TagExplorer.h"
-#include "SamplifyProperties.h"
 #include "SamplifyLookAndFeel.h"
-#include "Sample.h"
-#include "SampleLibrary.h"
+#include "SamplifyProperties.h"
 
 using namespace samplore;
 
@@ -12,17 +20,16 @@ TagExplorer::TagExplorer()
 	mNewButtonTag.onClick = [this] { addNewTag(); };
 	addAndMakeVisible(mNewButtonTag);
 	addAndMakeVisible(mTagViewport);
-	mTagViewport.setViewedComponent(&mTagsContainer, false);
+	mTagViewport.setViewedComponent(&mScrollContent, false);
 	mTagViewport.setScrollBarsShown(true, false, true, false);
-
 	SamplifyProperties::getInstance()->getSampleLibrary()->addChangeListener(this);
-	ThemeManager::getInstance().addListener(this);
+
+	rebuildSections();
 }
 
 TagExplorer::~TagExplorer()
 {
-	ThemeManager::getInstance().removeListener(this);
-
+	// Remove from SampleLibrary to prevent dangling pointer
 	if (auto lib = SamplifyProperties::getInstance()->getSampleLibrary())
 		lib->removeChangeListener(this);
 }
@@ -32,14 +39,69 @@ void TagExplorer::resized()
 	mNewButtonTag.setBounds(0, getHeight() - 30, getWidth(), 30);
 	mTagViewport.setBounds(0, 0, getWidth(), getHeight() - 30);
 
-	// Set container width, let content determine height
+	// Calculate content width (minus scrollbar)
 	int contentWidth = mTagViewport.getWidth() - mTagViewport.getScrollBarThickness();
-	mTagsContainer.setSize(contentWidth, mTagsContainer.getHeight());
-	mTagsContainer.updateBounds();
+
+	// Stack sections vertically
+	int yPos = 0;
+	for (auto& section : mSections)
+	{
+		section->setSize(contentWidth, section->calculateHeight());
+		section->setTopLeftPosition(0, yPos);
+		yPos += section->getHeight();
+	}
+
+	// Set scroll content size
+	mScrollContent.setSize(contentWidth, yPos);
 }
 
-void TagExplorer::paint(Graphics& g)
+void TagExplorer::paint(Graphics&)
 {
+}
+
+void TagExplorer::rebuildSections()
+{
+	// Clear existing sections
+	mSections.clear();
+	mScrollContent.removeAllChildren();
+
+	auto library = SamplifyProperties::getInstance()->getSampleLibrary();
+
+	// Get ordered collections
+	StringArray collections = library->getCollections();
+
+	// Create a section for each user collection
+	for (const auto& collectionName : collections)
+	{
+		auto section = std::make_unique<TagCollectionSection>(collectionName, false);
+
+		// Wire up move down callback
+		section->onMoveDown = [this](juce::String name) {
+			SamplifyProperties::getInstance()->getSampleLibrary()->moveCollectionDown(name);
+		};
+
+		// Wire up layout changed callback for collapse/expand
+		section->onLayoutChanged = [this]() {
+			resized();
+		};
+
+		mScrollContent.addAndMakeVisible(section.get());
+		mSections.push_back(std::move(section));
+	}
+
+	// Create the default section (always at bottom)
+	auto defaultSection = std::make_unique<TagCollectionSection>("", true);
+	defaultSection->onLayoutChanged = [this]() {
+		resized();
+	};
+	mScrollContent.addAndMakeVisible(defaultSection.get());
+	mSections.push_back(std::move(defaultSection));
+
+	// Update tags in all sections
+	updateTags(mCurrentQuery);
+
+	// Trigger layout
+	resized();
 }
 
 void TagExplorer::addNewTag()
@@ -57,59 +119,43 @@ void TagExplorer::addNewTag()
 			if (tagName.isNotEmpty())
 			{
 				SamplifyProperties::getInstance()->getSampleLibrary()->addTag(tagName);
-				mTagsContainer.updateTags();
 			}
 		}
 		mAlertWindow.reset();
 	}), true);
 }
 
+void TagExplorer::updateTags(juce::String query)
+{
+	mCurrentQuery = query;
+
+	auto library = SamplifyProperties::getInstance()->getSampleLibrary();
+	StringArray collections = library->getCollections();
+
+	// Update each section with its tags
+	for (auto& section : mSections)
+	{
+		String collectionName = section->getCollectionName();
+		std::vector<SampleLibrary::Tag> tagsInCollection = library->getTagsInCollection(collectionName);
+
+		// Filter by query and extract tag names
+		StringArray filteredTags;
+		for (const auto& tag : tagsInCollection)
+		{
+			if (query.isEmpty() || tag.mTitle.containsIgnoreCase(query))
+			{
+				filteredTags.add(tag.mTitle);
+			}
+		}
+
+		section->setTags(filteredTags);
+	}
+
+	// Recalculate layout
+	resized();
+}
+
 void TagExplorer::changeListenerCallback(ChangeBroadcaster* source)
 {
-	mTagsContainer.updateTags();
-}
-
-//==============================================================================
-// Container implementation
-//==============================================================================
-
-void TagExplorer::Container::updateTags()
-{
-	auto library = SamplifyProperties::getInstance()->getSampleLibrary();
-	std::vector<SampleLibrary::Tag> allTags = library->getTags();
-
-	StringArray tagNames;
-	for (const auto& tag : allTags)
-	{
-		tagNames.add(tag.mTitle);
-	}
-
-	mTags.setTags(tagNames);
-	updateBounds();
-}
-
-void TagExplorer::Container::updateBounds()
-{
-	mTags.setSize(getWidth(), 1000); // Temporary large height for calculation
-	int contentHeight = jmax(20, mTags.calculateAllRowsHeight());
-
-	mTags.setBounds(0, 0, getWidth(), contentHeight);
-	setSize(getWidth(), contentHeight);
-}
-
-//==============================================================================
-// ThemeManager::Listener implementation
-//==============================================================================
-
-void TagExplorer::themeChanged(ThemeManager::Theme newTheme)
-{
-	mTagsContainer.repaint();
-}
-
-void TagExplorer::colorChanged(ThemeManager::ColorRole role, Colour newColor)
-{
-	if (role == ThemeManager::ColorRole::TextPrimary || role == ThemeManager::ColorRole::TextSecondary)
-	{
-		mTagsContainer.repaint();
-	}
+	rebuildSections();
 }

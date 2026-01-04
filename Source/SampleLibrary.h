@@ -50,15 +50,17 @@ namespace samplore
 		// Use function-local static to avoid static destruction order issues
 		static const Tag& getEmptyTag()
 		{
-			static const Tag emptyTag(juce::String(), 0.83f); // Magenta hue
+			static const Tag emptyTag(juce::String(), 0.83f, ""); // Magenta hue, default collection
 			return emptyTag;
 		}
 
-		/// Tag stores just a hue (0.0-1.0) for theme-consistent colors
-		Tag(juce::String title, float hue) : mTitle(title), mHue(hue) {}
+		/// Tag stores title, hue, and collection name
+		Tag(juce::String title, float hue, juce::String collection = "")
+			: mTitle(title), mHue(hue), mCollection(collection) {}
 
 		juce::String mTitle;
 		float mHue; // 0.0-1.0, used with fixed saturation/brightness
+		juce::String mCollection; // Empty string = "Default" collection
 	};
 
 		SampleLibrary();
@@ -77,7 +79,7 @@ namespace samplore
 		void timerCallback() override;
 
 		///Tag Library Merger - They are dependent on each other for results and modifications
-		void addTag(String tag, float hue);
+		void addTag(String tag, float hue, String collection = "");
 		void addTag(String tag);
 		//void renameTag(juce::String currentTagName, juce::String desiredName);
 		void deleteTag(String tag);
@@ -89,6 +91,14 @@ namespace samplore
 
 		void setTagHue(juce::String tag, float hue);
 		SampleLibrary::Tag getTag(juce::String tag);
+
+		/// Collection management
+		StringArray getCollections(); // Returns ordered list of collection names (not including Default)
+		void addCollection(juce::String name);
+		void removeCollection(juce::String name); // Moves tags to Default
+		void moveCollectionDown(juce::String name); // Swaps with next collection in order
+		void setTagCollection(juce::String tagTitle, juce::String collectionName);
+		std::vector<Tag> getTagsInCollection(juce::String collection); // Empty string = Default
 
 		/// Converts a hue to a display color with theme-appropriate saturation/brightness
 		static Colour hueToColor(float hue);
@@ -138,6 +148,7 @@ namespace samplore
 		FilterQuery mCurrentQuery;
 
 		std::vector<Tag> mTags;
+		StringArray mCollectionOrder; // Ordered collection names (Default is implicit, always last)
 		//pointer necessary to keep the check system
 		std::vector<std::shared_ptr<SampleDirectory>> mDirectories = std::vector<std::shared_ptr<SampleDirectory>>();
 

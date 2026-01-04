@@ -58,7 +58,21 @@ SamplifyMainComponent::SamplifyMainComponent() :
 	SamplifyProperties::getInstance()->getSampleLibrary()->addChangeListener(&mSampleExplorer);
 	SamplifyProperties::getInstance()->getAudioPlayer()->addChangeListener(&mSamplePlayerComponent);
 	//startTimer(100);
-	setSize(AppValues::getInstance().WINDOW_WIDTH, AppValues::getInstance().WINDOW_HEIGHT);
+	// Clamp window size to available screen area
+	auto* display = Desktop::getInstance().getDisplays().getPrimaryDisplay();
+	if (display != nullptr)
+	{
+		auto screenArea = display->userArea;
+		int maxWidth = screenArea.getWidth() - 50;  // Leave some margin
+		int maxHeight = screenArea.getHeight() - 50;
+		int width = jmin((int)AppValues::getInstance().WINDOW_WIDTH, maxWidth);
+		int height = jmin((int)AppValues::getInstance().WINDOW_HEIGHT, maxHeight);
+		setSize(width, height);
+	}
+	else
+	{
+		setSize(AppValues::getInstance().WINDOW_WIDTH, AppValues::getInstance().WINDOW_HEIGHT);
+	}
 	//initial load
 	SamplifyProperties::getInstance()->getSampleLibrary()->updateCurrentSamples({});
 	
@@ -241,12 +255,16 @@ void SamplifyMainComponent::resized()
 	bHeight += mResizableEdgeAudioPlayer.getHeight();
 	
 	mSampleExplorer.setBounds(lWidth, 0, getWidth() - (rWidth + lWidth), getHeight() - bHeight);
-	
+
 	// Overlay panel covers the entire component
 	mOverlayPanel.setBounds(getLocalBounds());
-	
+
 	mResizableEdgeDirectoryExplorerBounds.setMaximumWidth(getWidth() - (rWidth));
 	mResizableEdgeFilterExplorerBounds.setMaximumWidth(getWidth() - (lWidth));
+
+	// Save window size to preferences so it persists on restart
+	AppValues::getInstance().WINDOW_WIDTH = getWidth();
+	AppValues::getInstance().WINDOW_HEIGHT = getHeight();
 }
 
 SamplifyMainComponent* SamplifyMainComponent::getInstance()

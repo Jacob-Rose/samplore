@@ -8,6 +8,8 @@ Samplore is a cross-platform sample library manager for music producers, built w
 
 ## Build Commands
 
+**IMPORTANT**: Always use the Python scripts in `scripts/` for build operations. Do not use raw `make` commands directly.
+
 ```bash
 # First-time setup
 python3 scripts/setup.py              # Interactive wizard (installs JUCE, configures paths)
@@ -16,15 +18,16 @@ python3 scripts/setup.py              # Interactive wizard (installs JUCE, confi
 python3 scripts/configure.py          # Generates build files from .jucer
 
 # Build
-python3 scripts/build.py              # Auto-detects platform
+python3 scripts/build.py              # Release build (default)
+python3 scripts/build.py --debug      # Debug build with symbols
 python3 scripts/build.py --clean      # Clean build
-make -C Builds/LinuxMakefile CONFIG=Debug -j4    # Direct Linux build
 
 # Run
-python3 scripts/run.py
-./Builds/LinuxMakefile/build/Samplore  # Direct Linux
+python3 scripts/run.py                # Run release build
+python3 scripts/run.py --debug        # Run debug build
 
 # Debug (Linux)
+python3 scripts/debug.py              # GDB debugger
 python3 scripts/debug.py --cgdb       # Best TUI debugger
 python3 scripts/debug.py -b main      # Set breakpoint
 

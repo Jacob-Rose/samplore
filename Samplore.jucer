@@ -70,10 +70,10 @@
             <FILE id="OncQlj" name="TagContainer.h" compile="0" resource="0" file="Source/TagContainer.h" />
             <FILE id="bXnU4v" name="TagExplorer.cpp" compile="1" resource="0" file="Source/TagExplorer.cpp" />
             <FILE id="go8nGZ" name="TagExplorer.h" compile="0" resource="0" file="Source/TagExplorer.h" />
-            <FILE id="D1vfp9" name="TagExplorer_V2.h" compile="0" resource="0" file="Source/TagExplorer_V2.h" />
-            <FILE id="bKydrE" name="TagExplorer_V2.cpp" compile="1" resource="0" file="Source/TagExplorer_V2.cpp" />
             <FILE id="bJirq9" name="TagTile.cpp" compile="1" resource="0" file="Source/TagTile.cpp" />
             <FILE id="Fh8M8U" name="TagTile.h" compile="0" resource="0" file="Source/TagTile.h" />
+            <FILE id="TGCS001" name="TagCollectionSection.h" compile="0" resource="0" file="Source/TagCollectionSection.h" />
+            <FILE id="TGCS002" name="TagCollectionSection.cpp" compile="1" resource="0" file="Source/TagCollectionSection.cpp" />
           </GROUP>
         </GROUP>
         <GROUP id="{F1A95D11-ADF8-7932-5E8F-5ECB9DA1539D}" name="DirectoryExplorer">

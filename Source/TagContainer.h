@@ -35,8 +35,8 @@ namespace samplore
 
 
 		//======================================================
-		int calculateAllRowsHeight();
-		int getRowCount();
+		int calculateAllRowsHeight() const;
+		int getRowCount() const;
 	private:
 
 		void updateItemBounds();
