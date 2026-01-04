@@ -87,6 +87,14 @@ SamplifyMainComponent::SamplifyMainComponent() :
 		PerformanceProfiler::getInstance().setEnabled(true);
 		DBG("Performance profiling enabled. Press F5 to view stats, F6 to reset.");
 	#endif
+
+	// Show welcome card on first startup
+	if (!AppValues::getInstance().HAS_SEEN_WELCOME)
+	{
+		MessageManager::callAsync([this]() {
+			showWelcomeCard();
+		});
+	}
 }
 
 SamplifyMainComponent::~SamplifyMainComponent()
@@ -316,6 +324,14 @@ void SamplifyMainComponent::showKeyCaptureOverlay()
 {
 	mKeyCaptureOverlay.prepareForDisplay();
 	mOverlayPanel.setContentComponent(&mKeyCaptureOverlay, false);
+	mOverlayPanel.show();
+}
+
+void SamplifyMainComponent::showWelcomeCard()
+{
+	mWelcomeCard.resetToStart();
+	mWelcomeCard.setSize(500, 400);
+	mOverlayPanel.setContentComponent(&mWelcomeCard, false);
 	mOverlayPanel.show();
 }
 

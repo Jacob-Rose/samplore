@@ -142,6 +142,7 @@ void SamplifyProperties::loadPropertiesFile()
 		AppValues::getInstance().SAMPLE_TILE_MIN_WIDTH = (float)propFile->getDoubleValue("SAMPLE_TILE_MIN_WIDTH", 120);
 		AppValues::getInstance().AUDIO_THUMBNAIL_LINE_COUNT = (float)propFile->getDoubleValue("AUDIO_THUMBNAIL_LINE_COUNT", 50);
 		AppValues::getInstance().AUDIO_THUMBNAIL_LINE_COUNT_PLAYER = (float)propFile->getDoubleValue("AUDIO_THUMBNAIL_LINE_COUNT_PLAYER", 120);
+		AppValues::getInstance().HAS_SEEN_WELCOME = propFile->getBoolValue("HAS_SEEN_WELCOME", false);
 		AppValues::getInstance().updateDrawablesColors();
 	}
 	else
@@ -202,6 +203,7 @@ void SamplifyProperties::savePropertiesFile()
 		propFile->setValue("SAMPLE_TILE_MIN_WIDTH", AppValues::getInstance().SAMPLE_TILE_MIN_WIDTH);
 		propFile->setValue("AUDIO_THUMBNAIL_LINE_COUNT_PLAYER", AppValues::getInstance().AUDIO_THUMBNAIL_LINE_COUNT_PLAYER);
 		propFile->setValue("AUDIO_THUMBNAIL_LINE_COUNT", AppValues::getInstance().AUDIO_THUMBNAIL_LINE_COUNT);
+		propFile->setValue("HAS_SEEN_WELCOME", AppValues::getInstance().HAS_SEEN_WELCOME);
 	}
 	else
 	{

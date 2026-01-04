@@ -58,6 +58,8 @@
         <FILE id="Gih0O9" name="InfoWindow.h" compile="0" resource="0" file="Source/InfoWindow.h" />
         <FILE id="IMPWIZ001" name="ImportWizard.h" compile="0" resource="0" file="Source/ImportWizard.h" />
         <FILE id="IMPWIZ002" name="ImportWizard.cpp" compile="1" resource="0" file="Source/ImportWizard.cpp" />
+        <FILE id="WELC001" name="WelcomeCard.h" compile="0" resource="0" file="Source/WelcomeCard.h" />
+        <FILE id="WELC002" name="WelcomeCard.cpp" compile="1" resource="0" file="Source/WelcomeCard.cpp" />
       </GROUP>
       <GROUP id="{F9565290-EFC5-863F-89CF-73C02A7059FF}" name="Components">
         <FILE id="eKhF05" name="SamplePlayerComponent.h" compile="0" resource="0" file="Source/SamplePlayerComponent.h" />

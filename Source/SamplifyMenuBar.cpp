@@ -88,6 +88,13 @@ void SamplifyMainMenu::menuItemSelected(int menuItemID, int topLevelMenuIndex)
 			mainComponent->showCueBindingsWindow();
 		}
 	}
+	else if (menuItemID == showWelcomeCard)
+	{
+		if (auto* mainComponent = SamplifyMainComponent::getInstance())
+		{
+			mainComponent->showWelcomeCard();
+		}
+	}
 
 }
 
@@ -112,6 +119,8 @@ PopupMenu SamplifyMainMenu::getMenuForIndex(int menuIndex, const String& menuNam
 	}
 	else if (menuIndex == 2) //Info
 	{
+		menu.addItem(showWelcomeCard, "Intro Card", true, false);
+		menu.addSeparator();
 		menu.addItem(viewInformation, "View Information", true, false);
 		menu.addItem(visitWebsite, "Visit Website", true, false);
 	}

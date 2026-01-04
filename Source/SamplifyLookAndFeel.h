@@ -58,6 +58,8 @@ namespace samplore
 		PlaybackIndicatorMode PLAYBACK_INDICATOR_MODE = PlaybackIndicatorMode::AnimatedRainbow;
 		Colour PLAYBACK_INDICATOR_COLOR = Colour(0xFF4A9EFF);
 
+		bool HAS_SEEN_WELCOME = false;
+
 		Drawable* getDrawable(String id);
 		void loadDrawables();
 		void updateDrawablesColors();

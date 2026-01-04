@@ -44,7 +44,8 @@ namespace samplore
 		exitApplication,
 		viewInformation,
 		visitWebsite,
-		openCueBindings
+		openCueBindings,
+		showWelcomeCard
 	};
 
 		SamplifyMainMenu();

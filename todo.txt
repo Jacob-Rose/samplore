@@ -1,32 +1,31 @@
 # Samplore JUCE - Todo List
 
 
-Major Blockers:
+Major TODOs:
 [ ] (P0) Make tag for mobirise site in git history, then migrate to a github site with feature breakdown.
+[ ] (P1) Add Active player in bottom right under the tags.
+[ ] (P1) Add general import and manual import options
+    - Centralized Repository Import options
 
-Bugs:
-[ ] (P2) Custom Color Caching has some ai sloppiness to it. Whole theme manager needs to be event based over this garbage.
-[ ] (P1) Reduce AI Slop (and 5+ year code rot)
-
-Fixins:
-[ ] (P1) Add + Remove directories should be done from preferences.
+[ ] (P1) Add packs view (replace directory breakdown)
+    - make splice pack name clearer on the directory breakdown. Give directories nicknames.
+[ ] (P1) Store all our internal data in .db files in respective directories.
 
 Features:
 
+
+
 In no real order from there, but with prio:
-[ ] (P1) Generalized Keybind + Remapping System (also breadcrumbs controls)
-[ ] (P1) Create Intro Card
-    [ ] - Explain Left + Right Click Better to user until tutorial can explain.
 [ ] (P3) Add MIDI Cue Point System (maybe VST support makes sense here too as alternative)
     [ ] (P3) hold 1 second to set at the current point, 3 seconds to remove cue for any key, handle key event. Save, Load, and Reset the cue points bound to buttons, but the actual cue points are saved to the sample
     [ ] (P3) Add Exit Warning Generalized System
         - We might have various modules that all have different closing logic and messages they want to send to the user on close.
         ◦ All Cue Points will be unbound, are you sure you want to quit? For V1
-    [ ] (P3) Drum Rack mode with multiple keyboard bindings, 
 [ ] (P2) Some form of tag extraction
     [ ] (P2) BPM Extraction if relevant
     [ ] (P2) Key Extraction (are we gonna fft ourselves?)
-[ ] (P2) Add sample experiment zoone. Ability to quick try and modify.
+[ ] (P2) Add Cue Playback experiment zone. Ability to quick try, modify, and cache vst stacks.
+    [ ] (P2) Cue bindings can assign a "cue stack" they are registered to. this will also act as a choke for multiplay.
     [ ] (P3) Audio Playback Speed (With Key preserve and raw resample)
     [ ] (P3) Filters (a few stock ones)
         [ ] If we use vsts, we can use the stock preset open source ones for eq and all the common core ones.
@@ -38,4 +37,4 @@ In no real order from there, but with prio:
 [ ] (P2) Add tutorial / intro overlay guided experience.
     [ ] Make generalized named component binding system so we can generically reference hyper-specific components for tutorial or really any advanced changed ui action.
     [ ] Add ability to redo tutorial in info tab
-[ ] (P1) Add Active player in bottom right under the tags.
+

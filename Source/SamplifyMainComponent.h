@@ -28,6 +28,7 @@
 #include "UI/OverlayPanel.h"
 #include "UI/CueBindingsWindow.h"
 #include "UI/KeyCaptureOverlay.h"
+#include "WelcomeCard.h"
 
 namespace samplore
 {
@@ -75,6 +76,9 @@ namespace samplore
 		/// Shows the key capture overlay for binding a key to current sample
 		void showKeyCaptureOverlay();
 
+		/// Shows the welcome/intro card
+		void showWelcomeCard();
+
 		//==================================================================
 		// ThemeManager::Listener interface
 		void themeChanged(ThemeManager::Theme newTheme) override;
@@ -102,6 +106,7 @@ namespace samplore
 		ImportWizard mImportWizard;
 		PreferencePanel mPreferencePanel;
 		KeyCaptureOverlay mKeyCaptureOverlay;
+		WelcomeCard mWelcomeCard;
 
 		// Floating cue bindings window
 		std::unique_ptr<CueBindingsWindow> mCueBindingsWindow;
